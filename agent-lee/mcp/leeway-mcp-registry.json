@@ -1,0 +1,121 @@
+﻿{
+  "name": "agent-lee-leeway-mcp-registry",
+  "sourceRepo": "https://github.com/4citeB4U/LeeWay-Standards",
+  "executionRule": "All tools are requested through Agent Lee Prime first. Tools do not speak directly to the user.",
+  "tools": [
+    {
+      "id": "frontend-mcp",
+      "category": "UI/UX",
+      "purpose": "Frontend architecture and high-fidelity component scaffolding.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "backend-mcp",
+      "category": "API/Server",
+      "purpose": "Backend logic, database schemas, and server-side API design.",
+      "route": "qwen2.5-coder:14b"
+    },
+    {
+      "id": "memory-mcp",
+      "category": "State",
+      "purpose": "Interfaces with local vector stores and memory.",
+      "route": "nomic-embed-text"
+    },
+    {
+      "id": "scheduler-mcp",
+      "category": "Time",
+      "purpose": "Task timing and long-running job scheduling.",
+      "route": "llama3.1:8b"
+    },
+    {
+      "id": "qa-mcp",
+      "category": "Quality",
+      "purpose": "Automated test suites and validation audits.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "creative-mcp",
+      "category": "Media",
+      "purpose": "Creative prompts and media assets.",
+      "route": "llava:7b"
+    },
+    {
+      "id": "ui-builder-mcp",
+      "category": "InsForge",
+      "purpose": "React/Vite UI builder and component generator.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "react-native-mcp",
+      "category": "Mobile",
+      "purpose": "React Native mobile architecture.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "design-system-mcp",
+      "category": "Styling",
+      "purpose": "Design tokens and CSS variables.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "leeway-responsive-ui-mcp",
+      "category": "Performance",
+      "purpose": "Responsive UI audit and fixes across breakpoints.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "leeway-edge-optimizer-mcp",
+      "category": "Performance",
+      "purpose": "Edge-runtime and low-latency optimization.",
+      "route": "deepseek-coder-v2:16b"
+    },
+    {
+      "id": "leeway-build-auditor-mcp",
+      "category": "Performance",
+      "purpose": "Build-size and dependency graph validation.",
+      "route": "deepseek-coder-v2:16b"
+    },
+    {
+      "id": "leeway-ci-blueprint-mcp",
+      "category": "Performance",
+      "purpose": "GitHub Actions and CI pipeline generation.",
+      "route": "qwen2.5-coder:7b"
+    },
+    {
+      "id": "leeway-full-repo-checker-mcp",
+      "category": "Performance",
+      "purpose": "Deep multi-file full repository audit.",
+      "route": "deepseek-coder-v2:16b"
+    },
+    {
+      "id": "fs-nav-agent",
+      "category": "Host",
+      "purpose": "Filesystem navigation, listing, viewing, and grep.",
+      "route": "local-filesystem"
+    },
+    {
+      "id": "mutation-agent",
+      "category": "Host",
+      "purpose": "Controlled code modification and multi-chunk editing.",
+      "route": "vscode-workspace-edit"
+    },
+    {
+      "id": "host-exec-agent",
+      "category": "Host",
+      "purpose": "Native OS terminal command execution with approval.",
+      "route": "vscode-terminal"
+    },
+    {
+      "id": "perception-agent",
+      "category": "Host",
+      "purpose": "Internet search and autonomous browser navigation.",
+      "route": "web-search"
+    },
+    {
+      "id": "media-forge-agent",
+      "category": "Host",
+      "purpose": "Image and asset understanding/synthesis support.",
+      "route": "llava:7b"
+    }
+  ]
+}

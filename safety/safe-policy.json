@@ -1,0 +1,12 @@
+{
+  "mode": "ENTERPRISE_SAFE",
+  "rules": [
+    "Never modify original files directly",
+    "Always create backup before change",
+    "All changes must be diff-based",
+    "All changes must be reversible",
+    "Never modify core system files without approval",
+    "Always verify after change",
+    "If verification fails, rollback immediately"
+  ]
+}

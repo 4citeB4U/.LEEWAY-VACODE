@@ -1,0 +1,28 @@
+﻿{
+  "name": "agent-lee-mcp-registry",
+  "version": "0.1.0",
+  "purpose": "Registry for MCP tools used by Agent Lee inside VS Code.",
+  "tools": [
+    {
+      "id": "leeway.compliance.scan",
+      "name": "LeeWay Compliance Scanner",
+      "region": "🟣 MCP",
+      "tag": "MCP.TOOL.COMPLIANCE.SCAN",
+      "status": "local-ready"
+    },
+    {
+      "id": "leeway.compliance.fix",
+      "name": "LeeWay Compliance Auto Fixer",
+      "region": "🟣 MCP",
+      "tag": "MCP.TOOL.COMPLIANCE.FIX",
+      "status": "local-ready"
+    },
+    {
+      "id": "leeway.model.route",
+      "name": "Agent Lee Local Model Router",
+      "region": "🟣 MCP",
+      "tag": "MCP.TOOL.MODEL.ROUTE",
+      "status": "local-ready"
+    }
+  ]
+}

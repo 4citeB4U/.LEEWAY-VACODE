@@ -1,0 +1,14 @@
+{
+  "autocomplete": "qwen2.5-coder:1.5b",
+  "dailyCoder": "qwen2.5-coder:7b",
+  "heavyRepair": "qwen2.5-coder:14b",
+  "deepReasoner": "deepseek-coder-v2:16b",
+  "generalReasoner": "llama3.1:8b",
+  "codingHivePrimary": "qwen2.5-coder:14b",
+  "codingHiveVerifier": "qwen2.5-coder:7b",
+  "codingHiveReasoner": "deepseek-coder-v2:16b",
+  "visualHelper": "llava:7b",
+  "webHelper": "llama3.1:8b",
+  "generalHelper": "llama3.1:8b",
+  "embeddings": "nomic-embed-text"
+}

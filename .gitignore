@@ -1,0 +1,42 @@
+# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+env/
+
+# Nested repository internals copied into this workspace
+.git/
+
+# Build output and packaged artifacts
+out/
+dist/
+build/
+*.vsix
+*.tgz
+
+# Downloaded runtime binaries and model archives
+*.onnx
+*.ort
+*.zip
+**/piper_models/
+**/vosk_models/
+**/temp_piper/
+**/piper_bin/
+receipts/*.ndjson
+**/receipts/*.ndjson
+
+# Runtime logs, memory, and generated reports
+logs/
+memory/
+reports/
+debug.log
+*.log
+
+# Local scratch and backups
+backups/
+patches/
+sandbox/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

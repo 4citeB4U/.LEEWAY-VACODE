@@ -1,0 +1,4 @@
+﻿{
+  "name": "agent-lee-leeway-mcp-registry",
+  "tools": ["leeway.scan", "leeway.fix", "leeway.verify", "leeway.model.route"]
+}

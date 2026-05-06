@@ -1,0 +1,75 @@
+{
+  "name": "agent-lee-leeway-coding-system",
+  "displayName": "Agent Lee LeeWay Coding System",
+  "description": "Agent Lee with hard-wired workspace and external folder intelligence, Ollama model selection, approval modes, web mode, chat history, memory, law engine, and voice.",
+  "version": "1.1.0",
+  "publisher": "leeway",
+  "main": "./out/extension.js",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:agentLee.open",
+    "onCommand:agentLee.openSidebar",
+    "onCommand:agentLee.installPyCharmTools",
+    "onView:agentLee.sidebar"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentLee",
+          "title": "Agent Lee",
+          "icon": "media/leeway-standards-button.png"
+        }
+      ]
+    },
+    "views": {
+      "agentLee": [
+        {
+          "id": "agentLee.sidebar",
+          "type": "webview",
+          "name": "Agent Lee Chat"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "agentLee.open",
+        "title": "Agent Lee: Open Chat"
+      },
+      {
+        "command": "agentLee.openSidebar",
+        "title": "Agent Lee: Open Sidebar"
+      },
+      {
+        "command": "agentLee.installPyCharmTools",
+        "title": "Agent Lee: Install PyCharm Tools"
+      },
+      {
+        "command": "agentLee.newChat",
+        "title": "Agent Lee: New Chat"
+      },
+      {
+        "command": "agentLee.stopVoice",
+        "title": "Agent Lee: Stop Voice"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^2.15.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "axe-core": "^4.11.4",
+    "pixelmatch": "^7.2.0",
+    "playwright-core": "^1.59.1",
+    "pngjs": "^7.0.0"
+  }
+}
