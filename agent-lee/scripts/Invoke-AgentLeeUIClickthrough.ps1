@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.INVOKE_AGENTLEEUICLICKTHROUGH
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$WorkspaceDir = (Join-Path $PSScriptRoot ".."),
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
@@ -97,3 +105,4 @@ if (-not $KeepOpen) {
   Steps = $steps
   KeptOpen = [bool]$KeepOpen
 }
+

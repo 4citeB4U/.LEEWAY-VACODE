@@ -1,4 +1,12 @@
-﻿# Agent Lee GitHub Policy
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.GITHUB.GITHUB_POLICY
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# Agent Lee GitHub Policy
 
 Agent Lee may use GitHub, Git, and branches, but must follow enterprise-safe rules.
 
@@ -32,3 +40,4 @@ Worker agents may prepare changes, but Agent Lee decides:
 - verification gate
 - push approval
 - PR creation
+

@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.ORCHESTRATOR
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import { buildContext } from "./file-intelligence";
 import { store } from "./memory";
 import { loadSovereignContext } from "./governance-loader";
@@ -485,3 +493,4 @@ INTERNAL INSTRUCTIONS:
     return null;
   }
 }
+

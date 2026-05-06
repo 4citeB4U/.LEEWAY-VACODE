@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.LAUNCH_AGENTLEE_ISOLATED
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$WorkspaceDir = (Join-Path $PSScriptRoot ".."),
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
@@ -25,3 +33,4 @@ if ($Wait) {
 $proc = Start-Process -FilePath $CodeCmdPath -ArgumentList $arguments -PassThru
 Write-Host "Launched VS Code PID $($proc.Id)" -ForegroundColor Green
 $proc.Id
+

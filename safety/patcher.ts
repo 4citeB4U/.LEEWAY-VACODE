@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UTIL
+TAG: CORE.SAFETY.PATCHER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 
 export function createPatch(file: string, content: string) {
@@ -12,3 +20,4 @@ export function createPatch(file: string, content: string) {
   fs.writeFileSync(patchPath, JSON.stringify(patch, null, 2));
   return patchPath;
 }
+

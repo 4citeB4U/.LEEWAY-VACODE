@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SUPERVISOR.STATE_LOGGER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 
 export function logEvent(event: string, data: any) {
@@ -9,3 +17,4 @@ export function logEvent(event: string, data: any) {
   };
   fs.appendFileSync(path, JSON.stringify(entry) + "\n");
 }
+

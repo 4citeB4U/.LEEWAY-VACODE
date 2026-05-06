@@ -1,4 +1,12 @@
-﻿export const IGNORED_PATHS = [
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.DRIFT_FILTER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+export const IGNORED_PATHS = [
   "node_modules",
   ".git",
   "dist",
@@ -55,3 +63,4 @@ export function classifyDrift(filePath: string, changeType: string) {
     reason: "Relevant source change"
   };
 }
+

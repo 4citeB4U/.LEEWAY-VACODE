@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.RUNTIME_SETTINGS
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -94,3 +102,4 @@ export function saveRuntimeSettings(state: RuntimeState) {
   ensureDir();
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(state, null, 2), "utf8");
 }
+

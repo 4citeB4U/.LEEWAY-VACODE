@@ -1,9 +1,17 @@
-# 🧠 Agent Lee — LeeWay Autonomous Engineering System
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.README_MD
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+# ðŸ§  Agent Lee â€” LeeWay Autonomous Engineering System
 
 /*
-LEEWAY HEADER — DO NOT REMOVE
+LEEWAY HEADER â€” DO NOT REMOVE
 
-REGION: 🟢 CORE
+REGION: ðŸŸ¢ CORE
 TAG: CORE.DOCUMENTATION.README.MAIN
 
 COLOR_ONION_HEX:
@@ -36,15 +44,15 @@ MIT
 
 ---
 
-## 📘 Overview
+## ðŸ“˜ Overview
 
-**Agent Lee** is a **LeeWay Standards–compliant, governance-first coding system** designed to operate as a **self-regulating engineering runtime** inside Visual Studio Code and beyond.
+**Agent Lee** is a **LeeWay Standardsâ€“compliant, governance-first coding system** designed to operate as a **self-regulating engineering runtime** inside Visual Studio Code and beyond.
 
 Unlike traditional AI assistants, Agent Lee enforces strict operational law, verifies all changes against a **GOLD baseline**, and autonomously repairs system drift through controlled multi-agent workflows.
 
 ---
 
-## 🧩 Core Principles: The Sovereign Law
+## ðŸ§© Core Principles: The Sovereign Law
 
 ### 1. Law Over Intelligence
 All actions are governed by the **Agent Lee Law Engine**. Intelligence is secondary to compliance.
@@ -64,7 +72,7 @@ If GOLD is lost:
 
 ---
 
-## ⚙️ The 8-Stage Sovereign Cycle
+## âš™ï¸ The 8-Stage Sovereign Cycle
 
 Every action taken by Agent Lee passes through the unbreakable 8-stage sequence:
 
@@ -81,7 +89,7 @@ Every action taken by Agent Lee passes through the unbreakable 8-stage sequence:
 
 ---
 
-## 🏛️ The Core 7 Families of Agents
+## ðŸ›ï¸ The Core 7 Families of Agents
 
 | Agent Name | Family | Purpose |
 | :--- | :--- | :--- |
@@ -95,7 +103,7 @@ Every action taken by Agent Lee passes through the unbreakable 8-stage sequence:
 
 ---
 
-## 🔌 The MCP Agent Fleet (Machine Control)
+## ðŸ”Œ The MCP Agent Fleet (Machine Control)
 
 | Agent Name | Category | Purpose |
 | :--- | :--- | :--- |
@@ -107,18 +115,18 @@ Every action taken by Agent Lee passes through the unbreakable 8-stage sequence:
 
 ---
 
-## 🧪 System Behavior & Scenarios
+## ðŸ§ª System Behavior & Scenarios
 
 | Scenario | Result | Action |
 | :--- | :--- | :--- |
-| **Unsafe action** | 🔴 BLOCKED | Law Engine intervention. |
-| **System drift** | 🟡 REPAIR | Auto-Medic triggered. |
-| **Verification fail** | 🟠 RETRY | Recursive fix loop. |
-| **GOLD missing** | 🚫 HALT | Execution suspended until GOLD restored. |
+| **Unsafe action** | ðŸ”´ BLOCKED | Law Engine intervention. |
+| **System drift** | ðŸŸ¡ REPAIR | Auto-Medic triggered. |
+| **Verification fail** | ðŸŸ  RETRY | Recursive fix loop. |
+| **GOLD missing** | ðŸš« HALT | Execution suspended until GOLD restored. |
 
 ---
 
-## 🚀 Command Encyclopedia
+## ðŸš€ Command Encyclopedia
 
 ### Terminal (CLI) Usage
 ```bash
@@ -139,7 +147,7 @@ leeway map        # Architecture discovery
 
 ---
 
-## 🎨 Color Coordination Matrix
+## ðŸŽ¨ Color Coordination Matrix
 
 | Token | Hex Code | Visual Reference |
 | :--- | :--- | :--- |
@@ -150,12 +158,13 @@ leeway map        # Architecture discovery
 
 ---
 
-## 👤 Author
+## ðŸ‘¤ Author
 **Leonard Lee**
 *Freelance Full-Stack Developer & AI Systems Architect*
 [GitHub: 4citeB4U](https://github.com/4citeB4U)
 
 ---
 
-## 🔥 Final Statement
+## ðŸ”¥ Final Statement
 > "Code is not just written. It is governed, verified, and maintained. The Hive Mind is active."
+

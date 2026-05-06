@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.BUILD_AGENTLEEVSIX
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$ExtensionDir,
   [string]$OutputName = "agent-lee-1.1.0-sovereign-runtime.vsix"
@@ -42,3 +50,4 @@ finally {
 
 Write-Host "Built VSIX: $outputPath" -ForegroundColor Green
 $outputPath
+

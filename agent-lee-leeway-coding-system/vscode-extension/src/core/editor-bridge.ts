@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.EDITOR_BRIDGE
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 import { execFile } from "child_process";
@@ -100,3 +108,4 @@ export function installPyCharmTooling() {
 
   return `Installed Agent Lee PyCharm tools into ${targets.length} PyCharm configuration folder(s).`;
 }
+

@@ -1,4 +1,12 @@
-﻿param(
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.LOG_AGENTLEEEVENT
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
+param(
   [string]$Type = "info",
   [string]$Agent = "agent-lee",
   [string]$Message = "",
@@ -23,3 +31,4 @@ $Entry = [PSCustomObject]@{
 $Line = $Entry | ConvertTo-Json -Compress
 Add-Content "$LogDir\agent-lee-$Date.jsonl" $Line
 Add-Content "$Root\memory\db\agent-lee-memory.jsonl" $Line
+

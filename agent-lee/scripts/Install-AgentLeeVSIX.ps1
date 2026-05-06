@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.INSTALL_AGENTLEEVSIX
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$VsixPath,
   [string]$ExtensionDir,
@@ -39,3 +47,4 @@ Write-Host "Installed VSIX: $resolvedVsix" -ForegroundColor Green
   UserDataDir = $UserDataDir
   ExtensionsDir = $ExtensionsDir
 }
+

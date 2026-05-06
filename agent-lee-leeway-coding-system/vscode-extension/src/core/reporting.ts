@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.REPORTING
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -127,3 +135,4 @@ export function writeFrontendEvidenceReport(input: FrontendEvidenceInput) {
   }, null, 2), "utf8");
   return file;
 }
+

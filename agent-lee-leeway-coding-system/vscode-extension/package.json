@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "DATA",
+    "TAG": "CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.PACKAGE",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "name": "agent-lee-leeway-coding-system",
   "displayName": "Agent Lee LeeWay Coding System",
   "description": "Agent Lee with hard-wired workspace and external folder intelligence, Ollama model selection, approval modes, web mode, chat history, memory, law engine, and voice.",
@@ -78,3 +84,4 @@
     "pngjs": "^7.0.0"
   }
 }
+

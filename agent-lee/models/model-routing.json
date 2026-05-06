@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "AI",
+    "TAG": "CORE.AGENT_LEE.MODELS.MODEL_ROUTING",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "autocomplete": "qwen2.5-coder:1.5b",
   "dailyCoder": "qwen2.5-coder:7b",
   "heavyRepair": "qwen2.5-coder:14b",
@@ -12,3 +18,4 @@
   "generalHelper": "llama3.1:8b",
   "embeddings": "nomic-embed-text"
 }
+

@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "MCP",
+    "TAG": "CORE.AGENT_LEE.MCP.GENERATED_CAPABILITY_CATALOG",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "generatedAt": "2026-05-04T10:58:07.551Z",
   "sources": [
     "D:\\MCP-VS-code-Antigavity",

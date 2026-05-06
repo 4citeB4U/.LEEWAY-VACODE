@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.VOICE_ADAPTER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 import { execFile, ChildProcess } from "child_process";
@@ -95,3 +103,4 @@ export function speakWithVoice(text: string, onError?: (message: string) => void
 
   return true;
 }
+

@@ -1,4 +1,10 @@
-﻿{
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "MCP",
+    "TAG": "CORE.AGENT_LEE.MCP.LEEWAY_MCP_REGISTRY",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "name": "agent-lee-leeway-mcp-registry",
   "sourceRepo": "https://github.com/4citeB4U/LeeWay-Standards",
   "executionRule": "All tools are requested through Agent Lee Prime first. Tools do not speak directly to the user.",
@@ -119,3 +125,4 @@
     }
   ]
 }
+

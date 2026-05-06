@@ -1,4 +1,12 @@
-﻿let active = 0;
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.SCHEDULER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+let active = 0;
 const MAX = 2;
 
 export function requestExecution(agent: string) {
@@ -10,3 +18,4 @@ export function requestExecution(agent: string) {
 export function releaseExecution() {
   if (active > 0) active--;
 }
+

@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: AI
+TAG: CORE.AGENT_LEE.VOICE.SPEAK_AGENTLEEPIPER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [Parameter(Mandatory=$true)]
   [string]$Text,
@@ -85,3 +93,4 @@ $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
 $synth.Rate = 0
 $synth.Volume = 90
 $synth.Speak($clean)
+

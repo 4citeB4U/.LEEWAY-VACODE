@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.COLLECT_AGENTLEEEVIDENCE
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$RootDir = (Join-Path $PSScriptRoot "..\.."),
   [string]$VsixPath,
@@ -48,3 +56,4 @@ $summary | ConvertTo-Json -Depth 5 | Out-File (Join-Path $OutputDir "summary.jso
 
 Write-Host "Collected evidence in $OutputDir" -ForegroundColor Green
 $summary
+

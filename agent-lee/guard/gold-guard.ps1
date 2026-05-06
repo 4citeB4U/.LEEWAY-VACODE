@@ -1,4 +1,12 @@
-﻿$Root = "$HOME\.leeway-vscode"
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.GUARD.GOLD_GUARD
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
+$Root = "$HOME\.leeway-vscode"
 $Verify = "$Root\scripts\run-full-test.ps1"
 $Log = "$Root\logs\daily\gold-guard.log"
 
@@ -29,3 +37,4 @@ while ($true) {
 
   Start-Sleep -Seconds 300
 }
+

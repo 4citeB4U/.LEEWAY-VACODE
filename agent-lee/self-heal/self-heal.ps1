@@ -1,4 +1,12 @@
-﻿param(
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SELF_HEAL.SELF_HEAL
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
+param(
   [int]$MaxAttempts = 3
 )
 
@@ -139,3 +147,4 @@ Return JSON patch only.
 Add-Content "$Logs\self-heal.log" "[FAIL] Could not restore GOLD"
 Write-Receipt "fail" $MaxAttempts
 exit 1
+

@@ -1,5 +1,13 @@
 /*
-LEEWAY HEADER — DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.LLMPROVIDER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+/*
+LEEWAY HEADER â€” DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.SDK.LLMPROVIDER.MAIN
@@ -60,3 +68,4 @@ export const LLMProvider = {
 if (typeof window !== 'undefined') {
   (window as any).LLMProvider = LLMProvider;
 }
+

@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.GOVERNANCE_LOADER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -52,3 +60,4 @@ export function loadSovereignContext(): SovereignContext {
     constitutionalRule: extractRule(contractText)
   };
 }
+

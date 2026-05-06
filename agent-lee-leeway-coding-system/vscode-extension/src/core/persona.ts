@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.PERSONA
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import { loadSovereignContext } from "./governance-loader";
 
 const FALLBACK_PERSONA = `
@@ -24,3 +32,4 @@ export function getAgentLeePersonaSummary() {
     `Poetry level: ${defaults.poetryLevel ?? 2}`
   ].join("\n");
 }
+

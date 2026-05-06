@@ -8,7 +8,8 @@ param(
   [switch]$SkipBuild,
   [switch]$SkipPackage,
   [switch]$Install,
-  [switch]$CheckOllama
+  [switch]$CheckOllama,
+  [switch]$AllLocalFiles
 )
 
 $ErrorActionPreference = "Stop"
@@ -28,12 +29,33 @@ function New-Check {
 }
 
 function Test-LeeWayCompliance {
-  param([string]$Root)
+  param(
+    [string]$Root,
+    [switch]$AllLocalFiles
+  )
 
   $extensions = @(".ts", ".js", ".ps1", ".json", ".md", ".txt")
   $ignoredSegments = "\\(node_modules|\.git|\.venv|out|logs|memory|reports|backups|patches|sandbox)\\"
-  $files = Get-ChildItem -Path $Root -Recurse -File |
-    Where-Object { $_.FullName -notmatch $ignoredSegments -and $extensions -contains $_.Extension }
+  Push-Location $Root
+  try {
+    if (-not $AllLocalFiles) {
+      $gitFiles = & git ls-files 2>$null
+      if ($LASTEXITCODE -eq 0 -and $gitFiles) {
+        $files = $gitFiles |
+          Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_).ToLowerInvariant() } |
+          ForEach-Object { Get-Item -LiteralPath $_ }
+      } else {
+        $files = Get-ChildItem -Path $Root -Recurse -File |
+          Where-Object { $_.FullName -notmatch $ignoredSegments -and $extensions -contains $_.Extension }
+      }
+    } else {
+      $files = Get-ChildItem -Path $Root -Recurse -File |
+        Where-Object { $_.FullName -notmatch $ignoredSegments -and $extensions -contains $_.Extension }
+    }
+  }
+  finally {
+    Pop-Location
+  }
 
   $inspected = 0
   $withHeader = 0
@@ -47,8 +69,8 @@ function Test-LeeWayCompliance {
 
     $inspected++
     $hasHeader = $text -match "LEEWAY_HEADER" -or $text -match "LEEWAY HEADER"
-    $hasRegion = $text -match "REGION:"
-    $hasTag = $text -match "TAG:"
+    $hasRegion = $text -match "REGION:" -or $text -match '"REGION"\s*:'
+    $hasTag = $text -match "TAG:" -or $text -match '"TAG"\s*:'
     $hasPipeline = $text -match "DISCOVERY_PIPELINE"
 
     if ($hasHeader -and $hasRegion -and $hasTag -and $hasPipeline) {
@@ -178,7 +200,7 @@ if ($CheckOllama) {
   }
 }
 
-$compliance = Test-LeeWayCompliance -Root $resolvedWorkspace
+$compliance = Test-LeeWayCompliance -Root $resolvedWorkspace -AllLocalFiles:$AllLocalFiles
 $checks.Add((New-Check "LeeWay compliance above 70" (-not $compliance.blocking) "Score: $($compliance.score)"))
 
 $report = [pscustomobject]@{

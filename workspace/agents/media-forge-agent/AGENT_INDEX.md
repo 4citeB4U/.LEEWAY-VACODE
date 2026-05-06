@@ -1,4 +1,12 @@
-﻿# media-forge-agent
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.WORKSPACE.AGENTS.MEDIA_FORGE_AGENT.AGENT_INDEX
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# media-forge-agent
 
 ## Purpose
 Local Agent Lee workspace folder for this MCP/agent.
@@ -12,3 +20,4 @@ Local Agent Lee workspace folder for this MCP/agent.
 
 ## Rule
 This agent writes summaries here. Large raw output goes to memory/db or archive.
+

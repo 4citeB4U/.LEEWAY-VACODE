@@ -1,4 +1,12 @@
-﻿# leeway-responsive-ui-mcp
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.WORKSPACE.AGENTS.LEEWAY_RESPONSIVE_UI_MCP.AGENT_INDEX
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# leeway-responsive-ui-mcp
 
 ## Purpose
 Local Agent Lee workspace folder for this MCP/agent.
@@ -12,3 +20,4 @@ Local Agent Lee workspace folder for this MCP/agent.
 
 ## Rule
 This agent writes summaries here. Large raw output goes to memory/db or archive.
+

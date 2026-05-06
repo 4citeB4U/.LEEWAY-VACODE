@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.RESOLVE_AGENTLEEEXTENSION
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$ExtensionDir
 )
@@ -37,3 +45,4 @@ foreach ($candidate in $candidates) {
 }
 
 throw "Could not find the Agent Lee VS Code extension folder. Checked: $($candidates -join ', ')"
+

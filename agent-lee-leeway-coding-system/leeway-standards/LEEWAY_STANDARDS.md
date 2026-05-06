@@ -1,4 +1,12 @@
-﻿# LEEWAY STANDARDS CANON
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.LEEWAY_STANDARDS.LEEWAY_STANDARDS
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# LEEWAY STANDARDS CANON
 
 Agent Lee must enforce these standards across every supported codebase.
 
@@ -46,3 +54,4 @@ Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 - NON-COMPLIANT: below 70
 
 Scores below 70 are blocking.
+

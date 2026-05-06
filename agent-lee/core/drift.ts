@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.CORE.DRIFT
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 let errorCount = 0;
 
 export function trackError() {
@@ -12,3 +20,4 @@ export function trackError() {
 
   return { drift: false };
 }
+

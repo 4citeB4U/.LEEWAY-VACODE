@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UTIL
+TAG: CORE.SAFETY.BACKUP
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 
 export function backupFile(file: string) {
@@ -8,3 +16,4 @@ export function backupFile(file: string) {
   fs.copyFileSync(file, dest);
   return dest;
 }
+

@@ -1,4 +1,10 @@
-﻿{
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "DATA",
+    "TAG": "CORE.AGENT_LEE.GITHUB.GITHUB_REGISTRY",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "name": "agent-lee-github-control",
   "enabled": true,
   "tools": {
@@ -16,3 +22,4 @@
   ],
   "helper": "C:\Users\Leona\.leeway-vscode\agent-lee\github\\Invoke-AgentLeeGitHub.ps1"
 }
+

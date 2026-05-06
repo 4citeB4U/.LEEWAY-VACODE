@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "UTIL",
+    "TAG": "CORE.SAFETY.SAFE_POLICY",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "mode": "ENTERPRISE_SAFE",
   "rules": [
     "Never modify original files directly",
@@ -10,3 +16,4 @@
     "If verification fails, rollback immediately"
   ]
 }
+

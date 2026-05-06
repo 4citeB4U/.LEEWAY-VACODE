@@ -1,3 +1,11 @@
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.DOCS.AGENT_LEE_PACKAGED_VALIDATION
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
 # Agent Lee Packaged Validation And Reuse Guide
 
 This guide shows how to build, install, launch, validate, and document a packaged VS Code agent like Agent Lee using a repeatable PowerShell workflow.
@@ -84,3 +92,4 @@ That still gives you a real UI click-through against the live VS Code window.
 3. Update the command-palette steps in `Invoke-AgentLeeUIClickthrough.ps1`.
 4. Point evidence collection at that agent's log and memory folders.
 5. Keep isolated `--user-data-dir` and `--extensions-dir` paths so test runs never contaminate a normal VS Code profile.
+

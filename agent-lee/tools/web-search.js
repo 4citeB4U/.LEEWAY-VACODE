@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.TOOLS.WEB_SEARCH
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.webSearch = webSearch;

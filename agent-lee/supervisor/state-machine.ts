@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SUPERVISOR.STATE_MACHINE
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 
 const ROOT = process.env.USERPROFILE + "\\.leeway-vscode";
@@ -44,3 +52,4 @@ export async function runStateMachine(task: string, planner: any, executor: any,
 
   return "SUCCESS: Task completed with verification.";
 }
+

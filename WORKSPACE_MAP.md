@@ -1,4 +1,12 @@
-﻿# Agent Lee Workspace Map
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.WORKSPACE_MAP
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# Agent Lee Workspace Map
 
 Root:
 C:\Users\Leona\.leeway-vscode
@@ -26,3 +34,4 @@ Each agent has:
 Use:
 
 powershell -ExecutionPolicy Bypass -File "C:\Users\Leona\.leeway-vscode\agent-lee\Log-AgentLeeEvent.ps1" -Type "info" -Agent "agent-lee" -Message "Agent Lee started"
+

@@ -1,4 +1,12 @@
-﻿# leeway-full-repo-checker-mcp
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.WORKSPACE.AGENTS.LEEWAY_FULL_REPO_CHECKER_MCP.AGENT_INDEX
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+-->
+
+# leeway-full-repo-checker-mcp
 
 ## Purpose
 Local Agent Lee workspace folder for this MCP/agent.
@@ -12,3 +20,4 @@ Local Agent Lee workspace folder for this MCP/agent.
 
 ## Rule
 This agent writes summaries here. Large raw output goes to memory/db or archive.
+

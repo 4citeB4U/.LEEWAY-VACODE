@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.INVOKE_AGENTLEECURRENTWINDOWCLICKTHROUGH
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$WindowTitleContains = "Visual Studio Code",
   [int]$BetweenStepsMs = 1800
@@ -50,3 +58,4 @@ foreach ($step in $steps) {
   WindowTitle = $window.MainWindowTitle
   Steps = $steps
 }
+

@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.REMOTE_CONTEXT
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 export type RemoteContext = {
   url: string;
   label: string;
@@ -57,3 +65,4 @@ export async function fetchRemoteContext(url: string): Promise<RemoteContext> {
     summary: `REMOTE_URL: ${url}\nCONTENT_TYPE: ${contentType || "unknown"}\nCONTENT:\n${body.slice(0, 6000)}`
   };
 }
+

@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "AI",
+    "TAG": "CORE.AGENT_LEE.VOICE.VOICE_RUNTIME",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "engine": "piper-local",
   "fallbackEngine": "windows-sapi",
   "personaSpeechMode": "Charming_Professional",
@@ -8,3 +14,4 @@
   "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx.json",
   "sampleRate": 22050
 }
+

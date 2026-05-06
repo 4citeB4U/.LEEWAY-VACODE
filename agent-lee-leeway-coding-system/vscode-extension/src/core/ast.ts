@@ -1,4 +1,12 @@
-﻿import * as fs from "fs";
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UI
+TAG: CORE.AGENT_LEE_LEEWAY_CODING_SYSTEM.VSCODE_EXTENSION.SRC.CORE.AST
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+import * as fs from "fs";
 import * as path from "path";
 
 const IGNORE = ["node_modules",".git","dist","out","build",".next",".vite","coverage"];
@@ -32,3 +40,4 @@ export function readCodebaseContext(root: string, maxFiles = 35, maxChars = 2200
     .map(file => `FILE: ${file}\n${fs.readFileSync(file, "utf8").slice(0, maxChars)}`)
     .join("\n\n");
 }
+

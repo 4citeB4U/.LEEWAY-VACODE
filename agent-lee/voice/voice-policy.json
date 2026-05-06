@@ -1,4 +1,10 @@
-﻿{
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "AI",
+    "TAG": "CORE.AGENT_LEE.VOICE.VOICE_POLICY",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
   "voiceIdentity": "Agent Lee",
   "ttsMode": "vscode-speech-first",
   "fallbackMode": "windows-sapi",
@@ -17,3 +23,4 @@
     "maxSpokenSentences": 6
   }
 }
+

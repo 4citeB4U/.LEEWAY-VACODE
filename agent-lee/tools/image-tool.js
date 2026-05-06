@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.TOOLS.IMAGE_TOOL
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.analyzeImage = analyzeImage;

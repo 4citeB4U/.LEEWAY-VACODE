@@ -1,3 +1,11 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: UTIL
+TAG: CORE.SAFETY.SCANNER
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -21,3 +29,4 @@ export function scanCodebase(dir: string, out: any[] = []) {
 
   return out;
 }
+

@@ -1,3 +1,11 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.SCRIPTS.RUN_AGENTLEEPACKAGEDVALIDATION
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+#>
+
 param(
   [string]$WorkspaceDir = (Join-Path $PSScriptRoot "..\.."),
   [string]$ExtensionDir,
@@ -51,3 +59,4 @@ $evidence = & (Join-Path $PSScriptRoot "Collect-AgentLeeEvidence.ps1") `
   uiRun = $uiRun
   evidence = $evidence
 }
+
