@@ -2,193 +2,301 @@
 LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
-TAG: CORE.README
+TAG: CORE.DOCUMENTATION.README.MAIN
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 -->
 
-# ðŸ§  Agent Lee â€” LeeWay Autonomous Engineering System
+# Agent Lee - LeeWay Autonomous Engineering System
 
-/*
-LEEWAY HEADER â€” DO NOT REMOVE
-
-REGION: ðŸŸ¢ CORE
-TAG: CORE.DOCUMENTATION.README.MAIN
+<!--
+LEEWAY FILE DESIGN - DO NOT REMOVE
 
 COLOR_ONION_HEX:
 NEON=#39FF14
 FLUO=#0DFF94
 PASTEL=#C7FFD8
+ABYSS=#050816
 
 ICON_ASCII:
 family=lucide
 glyph=brain-circuit
 
 5WH:
-WHAT = Agent Lee System README
-WHY = Definitive governance and operational manual for the LeeWay Autonomous Engineering System
-WHO = Leonard Lee (Sovereign Architect)
+WHAT = Agent Lee product README and developer onboarding guide
+WHY = Demonstrates the VS Code assistant, safety model, workflow, and verification gates
+WHO = Leonard Lee / Agent Lee LeeWay Runtime
 WHERE = .leeway-vscode/README.md
 WHEN = 2026
-HOW = Markdown-orchestrated governance documentation
+HOW = Markdown-native interactive guide with LeeWay governance metadata
 
 AGENTS:
-ASSESS, ALIGN, AUDIT, DOCTOR, PRIME
+PRIME, DOCTOR, AUDIT, ALIGN, VERIFY
 
 LICENSE:
 MIT
-*/
+-->
 
 <p align="center">
-  <img src="leeway-standards-button.png" alt="Agent Lee Sovereign Logo" width="200" style="border-radius: 50%; box-shadow: 0 0 20px #39FF14;" />
+  <img src="readme.md-image-header.png" alt="Agent Lee LeeWay autonomous engineering system header" width="100%" />
+</p>
+
+<p align="center">
+  <strong>Agent Lee is a governance-first VS Code engineering assistant with chat, voice, web search, codebase access, model routing, and proof-first verification.</strong>
+</p>
+
+<p align="center">
+  <a href="#try-agent-lee"><strong>Try Agent Lee</strong></a>
+  &nbsp;|&nbsp;
+  <a href="#how-the-workflow-runs"><strong>Workflow</strong></a>
+  &nbsp;|&nbsp;
+  <a href="#safety-model"><strong>Safety</strong></a>
+  &nbsp;|&nbsp;
+  <a href="#developer-controls"><strong>Controls</strong></a>
+  &nbsp;|&nbsp;
+  <a href="#verification"><strong>Verification</strong></a>
+</p>
+
+<p align="center">
+  <img alt="LeeWay Compliance" src="https://img.shields.io/badge/LeeWay-GOLD_100%25-39FF14?labelColor=050816" />
+  <img alt="VS Code" src="https://img.shields.io/badge/VS_Code-Extension-0DFF94?labelColor=050816" />
+  <img alt="Runtime" src="https://img.shields.io/badge/Ollama-Local_Model_Hive-C7FFD8?labelColor=050816" />
+  <img alt="Safety" src="https://img.shields.io/badge/Safety-Governed_Execution-39FF14?labelColor=050816" />
 </p>
 
 ---
 
-## ðŸ“˜ Overview
+## Try Agent Lee
 
-**Agent Lee** is a **LeeWay Standardsâ€“compliant, governance-first coding system** designed to operate as a **self-regulating engineering runtime** inside Visual Studio Code and beyond.
+Agent Lee is installed as a VS Code extension and opens as a chat-first sidebar. The main chat surface keeps the controls developers actually need at the input rail:
 
-Unlike traditional AI assistants, Agent Lee enforces strict operational law, verifies all changes against a **GOLD baseline**, and autonomously repairs system drift through controlled multi-agent workflows.
+| Control | Purpose |
+| :--- | :--- |
+| `Access` | Approve a workspace or external codebase folder for inspection. |
+| `Safe / Balanced / Full Auto` | Choose the permission level for reads, edits, and inline completion. |
+| `Model` | Select the active local model during the chat process. |
+| `Web` | Toggle web search for current docs, product pages, and research tasks. |
+| `Mic` | Dictate to Agent Lee through the VS Code webview. |
+| `Send` | Submit the governed request. |
 
----
+```powershell
+cd .\agent-lee-leeway-coding-system\vscode-extension
+npm install
+npm run compile
+npx @vscode/vsce package -o agent-lee-1.1.0-sovereign-runtime.vsix
+code --install-extension .\agent-lee-1.1.0-sovereign-runtime.vsix --force
+```
 
-## âš¡ Quick Start: Using Agent Lee in VS Code
+Reload VS Code, then open Agent Lee from the Activity Bar, the status bar, or the Command Palette command:
 
-### 1. **Reload VS Code**
-Press `Ctrl + Shift + P` â†’ search for `Developer: Reload Window` â†’ Press Enter
-
-### 2. **Locate the Agent Lee Chat Button**
-
-After reloading, look for **one of these:**
-
-- ðŸ¤– **Robot icon in left sidebar** (Activity Bar) â† **Click this for chat**
-- ðŸ’¬ **"$(hubot) Agent Lee" button in bottom-right corner** (Status Bar)
-- Or use Command Palette: `Ctrl + Shift + P` â†’ `Agent Lee: Open Chat`
-
-### 3. **Start Chatting**
-
-Simply type your question or instruction in the chat box. Agent Lee will:
-- Analyze your VS Code workspace automatically
-- Route your request to the right specialized agent
-- Generate code, explanations, and fixes
-- Maintain conversation history and memory
-
----
-
-## ðŸ§© Core Principles: The Sovereign Law
-
-### 1. Law Over Intelligence
-All actions are governed by the **Agent Lee Law Engine**. Intelligence is secondary to compliance.
 ```txt
-No unsafe execution is permitted under any condition.
+Agent Lee: Open Chat
 ```
 
-### 2. GOLD-State Integrity
-The system operates under a verified state:
+---
+
+## How The Workflow Runs
+
+<p align="center">
+  <img src="readms.md-image-1.png" alt="Agent Lee workflow interface and governed engineering loop" width="100%" />
+</p>
+
+```mermaid
+flowchart LR
+  A[Voice or Chat Intent] --> B[Access and Permission Gate]
+  B --> C[Workspace or External Codebase Index]
+  C --> D[Model Hive Routing]
+  D --> E[Builder Plan]
+  D --> F[Designer Review]
+  D --> G[Verifier Pass]
+  E --> H[Agent Lee Synthesis]
+  F --> H
+  G --> H
+  H --> I[Evidence Report]
+  I --> J[Developer Decision]
+```
+
+<details>
+<summary><strong>1. Intent enters through chat or voice</strong></summary>
+
+Agent Lee accepts typed prompts, dictated prompts, file paths, folder paths, URLs, and codebase comparison requests. The first speaker and final speaker are always Agent Lee; worker models stay internal.
+
+</details>
+
+<details>
+<summary><strong>2. Access is checked before inspection</strong></summary>
+
+The extension reads the open VS Code workspace by default. External directories require explicit approval through the `Access` control or a VS Code approval prompt when a path appears in chat.
+
+</details>
+
+<details>
+<summary><strong>3. The codebase is indexed before advice</strong></summary>
+
+Agent Lee walks the project, ignores generated runtime output, prioritizes product source files, and samples the codebase before producing implementation guidance.
+
+</details>
+
+<details>
+<summary><strong>4. The model hive works behind the scenes</strong></summary>
+
+Builder, Designer/UX, Verifier, and synthesis roles can use different local models. The chat rail still lets the developer switch the active model at any time.
+
+</details>
+
+<details>
+<summary><strong>5. Verification produces evidence</strong></summary>
+
+For front-end work, Agent Lee can produce repair reports, browser inspection output, accessibility notes, screenshots, and workflow evidence under `reports/`.
+
+</details>
+
+---
+
+## Safety Model
+
+Agent Lee is designed to be useful without becoming reckless. Safety is not an afterthought; it is part of the runtime law.
+
+| Layer | What It Protects | How It Works |
+| :--- | :--- | :--- |
+| LeeWay metadata | File ownership and discovery | Governed files carry `LEEWAY_HEADER`, `REGION`, `TAG`, and `DISCOVERY_PIPELINE`. |
+| Permission modes | Developer control | `Safe`, `Balanced`, and `Full Auto` control how far Agent Lee can go. |
+| External access gate | Local filesystem privacy | External paths require explicit approval before inspection. |
+| Law engine | Dangerous actions | Unsafe patterns such as force-push-to-main or core overwrite requests are blocked. |
+| Drift guard | Runtime stability | Repeated runtime errors trigger drift tracking and review behavior. |
+| Proof-first reports | Reviewability | Repairs and front-end checks write evidence paths for developer inspection. |
+| Local model runtime | Data boundary | Model calls route through local Ollama by default. |
+
+<details>
+<summary><strong>Permission modes</strong></summary>
+
+`Safe` is for read-first guidance and low-risk inspection.
+
+`Balanced` allows deeper project analysis while keeping high-impact actions gated.
+
+`Full Auto` enables aggressive assistance such as inline completions and broader autonomous workflow behavior. This mode should be used intentionally.
+
+</details>
+
+<details>
+<summary><strong>What Agent Lee refuses</strong></summary>
+
+Agent Lee blocks requests that would bypass governance, destroy project state, force push directly to protected branches, overwrite core files without review, or produce a non-Agent-Lee final speaker response.
+
+</details>
+
+---
+
+## Developer Controls
+
+The visible chat controls are intentionally small. Everything else lives in Settings.
+
+| Surface | What Belongs There |
+| :--- | :--- |
+| Chat rail | Access, permission mode, model, web search, mic, send. |
+| Settings | Builder/Designer/Verifier model hive, voice status, browser options, evidence path. |
+| Onboarding | First-run model selection. |
+| Command Palette | Open chat, open sidebar, new chat, stop voice, install editor tooling. |
+
+### Model Hive
+
+Agent Lee can route internal work across local models:
+
+- Builder Model: implementation planning and code generation.
+- Designer/UX Model: layout, hierarchy, accessibility, and polish review.
+- Verifier Model: syntax, risk, regression, and LeeWay compliance pass.
+
+You can still choose the active chat model directly beside the input box during the conversation.
+
+---
+
+## Codebase Access
+
+Agent Lee should be able to reason across the open workspace and other local products when you approve them.
+
 ```txt
-GOLD = 100% compliant + verified + stable
-```
-If GOLD is lost:
-*   Execution is blocked
-*   Repair is triggered (Auto-Medic)
-*   System restores itself before continuing
-
----
-
-## âš™ï¸ The 8-Stage Sovereign Cycle
-
-Every action taken by Agent Lee passes through the unbreakable 8-stage sequence:
-
-| Stage | Name | Function |
-| :--- | :--- | :--- |
-| 1 | **Perception** | Environmental scanning and intent detection. |
-| 2 | **Origin** | Identity verification and authorization. |
-| 3 | **Structure** | Architectural alignment with LeeWay Standards. |
-| 4 | **Execution** | Controlled modification or generation. |
-| 5 | **Veritas** | Validation gate (Syntax, Logic, Safety). |
-| 6 | **Echo** | Persistence to local ONNX/Vector memory. |
-| 7 | **Synthesis** | Final consistency check and reporting. |
-| 8 | **Lee Prime** | Final speaker delivery and Handoff. |
-
----
-
-## ðŸ›ï¸ The Core 7 Families of Agents
-
-| Agent Name | Family | Purpose |
-| :--- | :--- | :--- |
-| **Agent Lee** | Prime | The Final Speaker and system-wide orchestrator. |
-| **Nova** | Coding | High-fidelity code generation and logic forging. |
-| **Atlas** | Memory | Manages semantic and episodic memory stores. |
-| **Shield** | Security | Enforces strict governance and secret scanning. |
-| **Nexus** | Routing | Central hub for agent-to-agent communication. |
-| **Aura** | Media | Manages UI rendering and voice synthesis. |
-| **Chronos** | Pipeline | Automates tasks and build loop execution. |
-
----
-
-## ðŸ”Œ The MCP Agent Fleet (Machine Control)
-
-| Agent Name | Category | Purpose |
-| :--- | :--- | :--- |
-| `frontend-mcp` | UI/UX | Frontend architecture and component scaffolding. |
-| `backend-mcp` | API/Server | Backend logic and server-side API design. |
-| `fs-nav-agent` | Host | Filesystem navigation (list, view, grep). |
-| `mutation-agent` | Host | Physical code modification and multi-chunk editing. |
-| `host-exec-agent` | Host | Native OS terminal command execution. |
-
----
-
-## ðŸ§ª System Behavior & Scenarios
-
-| Scenario | Result | Action |
-| :--- | :--- | :--- |
-| **Unsafe action** | ðŸ”´ BLOCKED | Law Engine intervention. |
-| **System drift** | ðŸŸ¡ REPAIR | Auto-Medic triggered. |
-| **Verification fail** | ðŸŸ  RETRY | Recursive fix loop. |
-| **GOLD missing** | ðŸš« HALT | Execution suspended until GOLD restored. |
-
----
-
-## ðŸš€ Command Encyclopedia
-
-### Terminal (CLI) Usage
-```bash
-# Full system boot
-npm run start
-
-# Governance & Health
-leeway doctor     # Full system diagnosis
-leeway audit      # Compliance scoring
-leeway scan       # Security & secret scan
-leeway map        # Architecture discovery
+Example prompt:
+Compare this workspace against C:\Users\Leona\Products\Another-LeeWay-App and tell me where the architecture diverges.
 ```
 
-### Restricted Commands (Blocked by Design)
-*   Force push to main
-*   Overwrite system core files
-*   Execute unverified patches
+What happens:
+
+1. Agent Lee detects the path.
+2. VS Code asks for approval if that path is not already approved.
+3. Agent Lee indexes the target folder, ignoring generated output such as `node_modules`, `out`, `logs`, and `reports`.
+4. The model hive receives summarized project context for comparison.
+5. Agent Lee answers as one governed speaker.
 
 ---
 
-## ðŸŽ¨ Color Coordination Matrix
+## Verification
 
-| Token | Hex Code | Visual Reference |
-| :--- | :--- | :--- |
-| **Deep Background** | `#050816` | Solid Abyss |
-| **Neon Accent** | `#39FF14` | LeeWay Primary |
-| **Fluo Accent** | `#0DFF94` | Safety Secondary |
-| **Pastel Accent** | `#C7FFD8` | Verification Soft |
+Run the doctor script to prove the extension is buildable, packageable, and LeeWay compliant.
+
+```powershell
+.\test-extension.ps1 -Build -Package -CheckOllama
+```
+
+Expected result:
+
+```txt
+Failed checks: 0
+LeeWay compliance: 100%
+TypeScript compile succeeds
+VSIX package builds
+Ollama API reachable
+```
+
+Latest successful report path:
+
+```txt
+reports/doctor-*/AGENT_LEE_DOCTOR.md
+```
 
 ---
 
-## ðŸ‘¤ Author
-**Leonard Lee**
-*Freelance Full-Stack Developer & AI Systems Architect*
-[GitHub: 4citeB4U](https://github.com/4citeB4U)
+## Architecture Snapshot
+
+```txt
+.leeway-vscode/
+  agent-lee/
+    scripts/                 # Build, install, doctor, compliance repair
+    safety/                  # Local governance helpers
+    voice/                   # Voice runtime and Piper wiring
+    mcp/                     # Capability registry
+  agent-lee-leeway-coding-system/
+    vscode-extension/
+      src/                   # VS Code extension runtime
+      media/                 # Activity Bar and README imagery
+      out/                   # Compiled extension output
+  workspace/
+    agents/                  # Agent index folders
+  reports/                   # Doctor, repair, browser, and validation evidence
+```
 
 ---
 
-## ðŸ”¥ Final Statement
-> "Code is not just written. It is governed, verified, and maintained. The Hive Mind is active."
+## LeeWay Principles
+
+| Principle | Meaning |
+| :--- | :--- |
+| Law Over Intelligence | Intelligence operates inside governance, not outside it. |
+| One Final Speaker | Worker models do not fragment the user experience. |
+| Proof Before Trust | Reports and checks matter more than claims. |
+| Local First | Local code and local models are the default boundary. |
+| Developer Control | Access, model choice, web mode, voice, and permissions stay visible. |
+
+---
+
+## Author
+
+**Leonard Lee**  
+Freelance Full-Stack Developer and AI Systems Architect  
+GitHub: [4citeB4U](https://github.com/4citeB4U)
+
+---
+
+## Final Statement
+
+> Code is not just written. It is governed, verified, and maintained. Agent Lee keeps the loop visible.
+
 # .LEEWAY-VACODE
-
