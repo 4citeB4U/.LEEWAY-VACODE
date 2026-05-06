@@ -5,7 +5,7 @@
     "TAG": "CORE.AGENT_LEE.MCP.GENERATED_CAPABILITY_CATALOG",
     "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
   },
-  "generatedAt": "2026-05-04T10:58:07.551Z",
+  "generatedAt": "2026-05-06T05:38:17.712Z",
   "sources": [
     "D:\\MCP-VS-code-Antigavity",
     "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards",

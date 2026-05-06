@@ -270,14 +270,15 @@ function getHtml() {
 body{margin:0;font-family:var(--vscode-font-family);color:var(--vscode-foreground);background:linear-gradient(180deg,var(--vscode-sideBar-background),var(--vscode-editor-background));height:100vh;display:flex;flex-direction:column}
 .header{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:12px 14px;border-bottom:1px solid var(--vscode-panel-border)}
 .title{font-weight:800;font-size:15px}
-.sub{font-size:11px;opacity:.82;line-height:1.4}
+.sub{font-size:11px;opacity:.78;line-height:1.35;max-width:340px}
 .stack{display:flex;flex-direction:column;gap:6px}
 .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 select,button,textarea{font-family:inherit}
-select{background:var(--vscode-dropdown-background);color:var(--vscode-dropdown-foreground);border:1px solid var(--vscode-panel-border);border-radius:8px;padding:6px 8px}
-button{border:0;border-radius:8px;padding:7px 10px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);cursor:pointer}
+select{background:var(--vscode-dropdown-background);color:var(--vscode-dropdown-foreground);border:1px solid var(--vscode-panel-border);border-radius:6px;padding:6px 8px;min-width:0}
+button{border:0;border-radius:6px;padding:7px 10px;background:var(--vscode-button-background);color:var(--vscode-button-foreground);cursor:pointer;white-space:nowrap}
 button.secondary{background:transparent;border:1px solid var(--vscode-panel-border);color:var(--vscode-foreground)}
-.shell{padding:12px 14px;border-bottom:1px solid var(--vscode-panel-border);display:flex;flex-direction:column;gap:10px}
+.icon-btn{width:34px;min-width:34px;padding:7px 0;text-align:center}
+.toolbar-btn{min-width:42px}
 .badges{display:flex;gap:8px;flex-wrap:wrap}
 .badge{padding:4px 8px;border-radius:999px;border:1px solid var(--vscode-panel-border);font-size:11px}
 .badge.ok{background:rgba(46,160,67,.18)}
@@ -288,29 +289,33 @@ button.secondary{background:transparent;border:1px solid var(--vscode-panel-bord
 .model-status{margin-top:6px;font-size:11px;opacity:.88}
 .model-status.ok{color:var(--vscode-testing-iconPassed)}
 .model-status.warn{color:var(--vscode-testing-iconQueued)}
-.details{border-bottom:1px solid var(--vscode-panel-border);padding:0 14px 12px}
-.settings{display:none;border:1px solid var(--vscode-panel-border);border-radius:12px;padding:12px;background:rgba(255,255,255,.02);margin-top:10px}
+.details{border-bottom:1px solid var(--vscode-panel-border);padding:0 14px}
+.settings{display:none;border:1px solid var(--vscode-panel-border);border-radius:8px;padding:12px;background:rgba(255,255,255,.02);margin:10px 0 12px}
 .settings.open{display:block}
 .settings-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
 .settings-block{margin-top:10px}
 .settings-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;opacity:.7;margin-bottom:8px}
 .chat{flex:1;overflow-y:auto;padding:12px 14px}
-.msg{border:1px solid var(--vscode-panel-border);border-radius:12px;padding:10px 11px;margin-bottom:10px;white-space:pre-wrap;line-height:1.5}
+.msg{border:1px solid var(--vscode-panel-border);border-radius:8px;padding:10px 11px;margin-bottom:10px;white-space:pre-wrap;line-height:1.5}
 .user{background:var(--vscode-input-background)}
 .agent{background:rgba(255,255,255,.03)}
 .composer{border-top:1px solid var(--vscode-panel-border);padding:12px 14px}
-textarea{width:100%;height:110px;box-sizing:border-box;padding:10px;border-radius:12px;border:1px solid var(--vscode-panel-border);background:var(--vscode-input-background);color:var(--vscode-input-foreground)}
-.composer-actions{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:8px}
-.send{flex:1}
+textarea{width:100%;min-height:74px;max-height:160px;resize:vertical;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid var(--vscode-panel-border);background:var(--vscode-input-background);color:var(--vscode-input-foreground)}
+.composer-actions{display:grid;grid-template-columns:auto minmax(84px,.65fr) minmax(120px,1.35fr) auto auto auto;gap:7px;align-items:center;margin-top:8px}
+.send{min-width:54px}
 .meta{font-size:11px;opacity:.82}
 .status-line{font-size:11px;opacity:.88}
+.onboarding{display:none;border-bottom:1px solid var(--vscode-panel-border);padding:12px 14px;background:rgba(46,160,67,.08)}
+.onboarding.open{display:block}
+.onboarding-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+@media(max-width:430px){.composer-actions{grid-template-columns:auto 1fr 1fr auto auto auto}.header{flex-direction:column}.header-actions{width:100%}.header-actions select{flex:1}}
 </style>
 </head>
 <body>
 <div class="header">
   <div class="stack">
     <div class="title">Agent Lee</div>
-    <div class="sub">Front-end website and application master. Surgical edits, full page creation, three-model orchestration, and proof-first verification.</div>
+    <div class="sub">Chat-first engineering assistant with external codebase access, web mode, voice, and selectable models.</div>
     <div class="status-line" id="status">Checking runtime...</div>
   </div>
   <div class="header-actions">
@@ -320,47 +325,58 @@ textarea{width:100%;height:110px;box-sizing:border-box;padding:10px;border-radiu
   </div>
 </div>
 
-<div class="shell">
-  <div class="badges">
-    <span class="badge ok" id="workspaceBadge">Workspace: checking...</span>
-    <span class="badge" id="voiceStatus">Voice: checking...</span>
-    <span class="badge" id="hiveStatus">Hive: checking...</span>
-  </div>
-
-  <div class="grid">
-    <div class="model-card">
-      <div class="model-label">Builder Model</div>
-      <select id="builderModel" onchange="setRoleModel('builderModel', this.value)"></select>
-      <div class="model-status" id="builderStatus">Waiting for Ollama...</div>
-    </div>
-    <div class="model-card">
-      <div class="model-label">Designer/UX Model</div>
-      <select id="designerModel" onchange="setRoleModel('designerModel', this.value)"></select>
-      <div class="model-status" id="designerStatus">Waiting for Ollama...</div>
-    </div>
-    <div class="model-card">
-      <div class="model-label">Verifier Model</div>
-      <select id="verifierModel" onchange="setRoleModel('verifierModel', this.value)"></select>
-      <div class="model-status" id="verifierStatus">Waiting for Ollama...</div>
-    </div>
+<div class="onboarding" id="onboarding">
+  <div class="settings-title">Model Setup</div>
+  <div class="meta">Choose the default chat model now, then fine tune Builder, Designer, and Verifier models in Settings.</div>
+  <div class="onboarding-actions">
+    <select id="onboardingModel" onchange="setRoleModel('builderModel', this.value)"></select>
+    <button onclick="finishOnboarding()">Use Model</button>
+    <button class="secondary" onclick="openSettingsFromOnboarding()">Advanced</button>
   </div>
 </div>
 
 <div class="details">
   <div class="settings" id="settingsPanel">
-    <div class="settings-title">Runtime</div>
+    <div class="settings-title">Runtime Status</div>
+    <div class="badges">
+      <span class="badge ok" id="workspaceBadge">Workspace: checking...</span>
+      <span class="badge" id="voiceStatus">Voice: checking...</span>
+      <span class="badge" id="hiveStatus">Hive: checking...</span>
+    </div>
+
+    <div class="settings-block">
+      <div class="settings-title">Model Hive</div>
+      <div class="grid">
+        <div class="model-card">
+          <div class="model-label">Builder Model</div>
+          <select id="builderModel" onchange="setRoleModel('builderModel', this.value)"></select>
+          <div class="model-status" id="builderStatus">Waiting for Ollama...</div>
+        </div>
+        <div class="model-card">
+          <div class="model-label">Designer/UX Model</div>
+          <select id="designerModel" onchange="setRoleModel('designerModel', this.value)"></select>
+          <div class="model-status" id="designerStatus">Waiting for Ollama...</div>
+        </div>
+        <div class="model-card">
+          <div class="model-label">Verifier Model</div>
+          <select id="verifierModel" onchange="setRoleModel('verifierModel', this.value)"></select>
+          <div class="model-status" id="verifierStatus">Waiting for Ollama...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-block">
+      <div class="settings-title">Permissions And Tools</div>
     <div class="settings-row">
-      <select id="approval" onchange="setApproval(this.value)">
+      <select id="approval" onchange="setApproval(this.value); syncQuickApproval(this.value)">
         <option value="safe">SAFE</option>
         <option value="balanced">BALANCED</option>
         <option value="full">FULL AUTO</option>
       </select>
-      <button class="secondary" id="webBtn" onclick="toggleWeb()">Web Off</button>
       <button class="secondary" id="voiceBtn" onclick="toggleVoice()">Voice On</button>
       <button class="secondary" id="browserVisualBtn" onclick="toggleBrowserVisual()">Visual Browser On</button>
       <button class="secondary" id="browserCursorBtn" onclick="toggleBrowserCursor()">Show Cursor On</button>
       <button class="secondary" onclick="stopVoice()">Stop Voice</button>
-      <button class="secondary" onclick="mic()">Mic</button>
     </div>
     <div class="settings-row">
       <label class="meta" for="browserSlowMo">Browser slow motion</label>
@@ -370,6 +386,7 @@ textarea{width:100%;height:110px;box-sizing:border-box;padding:10px;border-radiu
         <option value="400">400ms</option>
         <option value="700">700ms</option>
       </select>
+    </div>
     </div>
 
     <div class="settings-block">
@@ -382,10 +399,18 @@ textarea{width:100%;height:110px;box-sizing:border-box;padding:10px;border-radiu
 <div class="chat" id="chat"></div>
 
 <div class="composer">
-  <textarea id="input" placeholder="Describe a front-end change or page you want. Agent Lee will inspect the real project first, use the Builder, Designer/UX, and Verifier models internally, and produce one governed response."></textarea>
+  <textarea id="input" placeholder="Ask Agent Lee. Include a file or folder path when you want another codebase inspected or compared."></textarea>
   <div class="composer-actions">
-    <div class="meta">Agent Lee reads the existing project before touching the page.</div>
-    <button class="send" onclick="send()">Send</button>
+    <button class="secondary toolbar-btn" title="Approve or pick codebase access" onclick="chooseAccess()">Access</button>
+    <select id="quickApproval" title="Access permissions" onchange="setApproval(this.value); syncSettingsApproval(this.value)">
+      <option value="safe">Safe</option>
+      <option value="balanced">Balanced</option>
+      <option value="full">Full Auto</option>
+    </select>
+    <select id="activeModel" title="Chat model" onchange="setRoleModel('builderModel', this.value)"></select>
+    <button class="secondary toolbar-btn" id="webBtn" title="Web search" onclick="toggleWeb()">Web Off</button>
+    <button class="secondary icon-btn" title="Voice input" onclick="mic()">Mic</button>
+    <button class="send" title="Send message" onclick="send()">Send</button>
   </div>
 </div>
 
@@ -406,7 +431,10 @@ function render(role,text){
 }
 
 function setApproval(v){ vscode.postMessage({command:"setState", key:"approval", value:v}); }
+function syncSettingsApproval(v){ const el=document.getElementById("approval"); if(el) el.value=v; }
+function syncQuickApproval(v){ const el=document.getElementById("quickApproval"); if(el) el.value=v; }
 function setRoleModel(key,value){ vscode.postMessage({command:"setState", key, value}); vscode.postMessage({command:"refreshRuntime"}); }
+function chooseAccess(){ vscode.postMessage({command:"chooseAccess"}); }
 
 function toggleWeb(){
   const b=document.getElementById("webBtn");
@@ -442,6 +470,14 @@ function setBrowserSlowMo(value){
 
 function stopVoice(){ vscode.postMessage({command:"stopVoice"}); }
 function toggleSettings(){ document.getElementById("settingsPanel").classList.toggle("open"); }
+function openSettingsFromOnboarding(){
+  document.getElementById("settingsPanel").classList.add("open");
+  finishOnboarding();
+}
+function finishOnboarding(){
+  localStorage.setItem("agentLeeOnboarded","true");
+  document.getElementById("onboarding").classList.remove("open");
+}
 
 function send(){
   const input=document.getElementById("input");
@@ -471,6 +507,7 @@ function newChat(){ vscode.postMessage({command:"newConversation"}); }
 
 function setModelOptions(selectId, models, selected){
   const s=document.getElementById(selectId);
+  if(!s) return;
   s.innerHTML="";
   models.forEach(m=>{
     const o=document.createElement("option");
@@ -486,10 +523,13 @@ window.addEventListener("message",e=>{
   const msg=e.data;
 
   if(msg.command==="modelOptions"){
+    setModelOptions("activeModel", msg.models, msg.selection.builderModel);
+    setModelOptions("onboardingModel", msg.models, msg.selection.builderModel);
     setModelOptions("builderModel", msg.models, msg.selection.builderModel);
     setModelOptions("designerModel", msg.models, msg.selection.designerModel);
     setModelOptions("verifierModel", msg.models, msg.selection.verifierModel);
     document.getElementById("approval").value = msg.state.approval;
+    document.getElementById("quickApproval").value = msg.state.approval;
     document.getElementById("webBtn").textContent = msg.state.web ? "Web On" : "Web Off";
     document.getElementById("voiceBtn").textContent = msg.state.voice ? "Voice On" : "Voice Off";
     document.getElementById("browserVisualBtn").textContent = msg.state.browserVisualMode ? "Visual Browser On" : "Visual Browser Off";
@@ -551,6 +591,9 @@ window.addEventListener("message",e=>{
 });
 
 vscode.postMessage({command:"ready"});
+if(!localStorage.getItem("agentLeeOnboarded")){
+  document.getElementById("onboarding").classList.add("open");
+}
 </script>
 </body>
 </html>`;
@@ -640,6 +683,21 @@ async function handle(webview: vscode.Webview, msg: any) {
     persistRuntime();
   }
 
+  if (msg.command === "chooseAccess") {
+    const selection = await vscode.window.showOpenDialog({
+      canSelectFiles: false,
+      canSelectFolders: true,
+      canSelectMany: false,
+      title: "Allow Agent Lee to inspect a codebase folder"
+    });
+
+    if (selection?.[0]) {
+      const target = selection[0].fsPath;
+      approvedExternalRoots.add(target);
+      webview.postMessage({ command: "response", text: `Access approved for external codebase:\n${target}\n\nMention this path in chat when you want Agent Lee to inspect or compare it.` });
+    }
+  }
+
   if (msg.command === "refreshRuntime") {
     await postRuntimeInfo(webview);
   }
@@ -719,10 +777,62 @@ function openPanel(context: vscode.ExtensionContext) {
   panel.webview.onDidReceiveMessage((msg) => handle(panel.webview, msg));
 }
 
+let completionInFlight = false;
+
+function cleanCompletion(text: string) {
+  return text
+    .replace(/```[a-zA-Z0-9_-]*\n?/g, "")
+    .replace(/```/g, "")
+    .split("\n")
+    .slice(0, 8)
+    .join("\n")
+    .trimEnd();
+}
+
+function registerAgentLeeCompletions(context: vscode.ExtensionContext) {
+  context.subscriptions.push(vscode.languages.registerInlineCompletionItemProvider({ scheme: "file" }, {
+    async provideInlineCompletionItems(document, position, _context, token) {
+      if (runtimeState.approval !== "full") return [];
+      if (completionInFlight) return [];
+
+      const prefix = document.lineAt(position.line).text.slice(0, position.character);
+      if (prefix.trim().length < 8) return [];
+
+      const startLine = Math.max(0, position.line - 45);
+      const endLine = Math.min(document.lineCount - 1, position.line + 25);
+      const before = document.getText(new vscode.Range(startLine, 0, position.line, position.character));
+      const after = document.getText(new vscode.Range(position.line, position.character, endLine, document.lineAt(endLine).text.length));
+
+      const prompt = [
+        "You are Agent Lee's inline code completion worker.",
+        "Return only the exact next code text to insert. No markdown, no explanation.",
+        `File: ${document.fileName}`,
+        `Language: ${document.languageId}`,
+        "Before cursor:",
+        before,
+        "After cursor:",
+        after
+      ].join("\n");
+
+      try {
+        completionInFlight = true;
+        const result = cleanCompletion(await ollama(prompt, runtimeState.builderModel));
+        if (token.isCancellationRequested || !result) return [];
+        return [new vscode.InlineCompletionItem(result, new vscode.Range(position, position))];
+      } catch {
+        return [];
+      } finally {
+        completionInFlight = false;
+      }
+    }
+  }));
+}
+
 export function activate(context: vscode.ExtensionContext) {
   const provider = new Provider();
 
   context.subscriptions.push(vscode.window.registerWebviewViewProvider("agentLee.sidebar", provider));
+  registerAgentLeeCompletions(context);
 
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   item.text = "$(hubot) Agent Lee";

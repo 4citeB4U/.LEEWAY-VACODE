@@ -29,6 +29,7 @@ receipts/*.ndjson
 logs/
 memory/
 reports/
+agent-lee/config/
 debug.log
 *.log
 

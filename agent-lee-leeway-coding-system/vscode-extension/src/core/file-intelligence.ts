@@ -9,7 +9,7 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 import * as fs from "fs";
 import * as path from "path";
 
-const IGNORE = new Set(["node_modules", ".git", "dist", "out", "build", ".next", ".vite", "coverage", ".cache", ".turbo"]);
+const IGNORE = new Set(["node_modules", ".git", "dist", "out", "build", ".next", ".vite", "coverage", ".cache", ".turbo", ".venv", "logs", "reports"]);
 const CODE_EXT = /\.(ts|tsx|js|jsx|json|html|css|md|mjs|cjs|py|ps1|yaml|yml|xml|sql)$/i;
 
 export function extractPathFromPrompt(prompt: string): string {
@@ -25,7 +25,7 @@ export function extractUrlFromPrompt(prompt: string): string {
   return url ? url[0].trim() : "";
 }
 
-export function walkFiles(root: string, out: string[] = [], max = 800) {
+export function walkFiles(root: string, out: string[] = [], max = 2500) {
   if (!root || !fs.existsSync(root) || out.length >= max) return out;
 
   for (const item of fs.readdirSync(root)) {
@@ -45,11 +45,22 @@ export function walkFiles(root: string, out: string[] = [], max = 800) {
 
 export function buildContext(root: string) {
   const files = walkFiles(root);
-  const samples = files.slice(0, 50).map((file) => {
+  const priority = files.sort((a, b) => {
+    const score = (file: string) => {
+      const base = path.basename(file).toLowerCase();
+      if (base === "package.json" || base === "readme.md") return 0;
+      if (/\.(tsx|ts|jsx|js)$/i.test(file)) return 1;
+      if (/\.(html|css|json)$/i.test(file)) return 2;
+      return 3;
+    };
+    return score(a) - score(b) || a.localeCompare(b);
+  });
+
+  const samples = priority.slice(0, 120).map((file) => {
     try {
       return {
         file,
-        preview: fs.readFileSync(file, "utf8").slice(0, 1800)
+        preview: fs.readFileSync(file, "utf8").slice(0, 2600)
       };
     } catch {
       return null;
