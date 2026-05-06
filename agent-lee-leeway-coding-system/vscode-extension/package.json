@@ -4,6 +4,11 @@
   "description": "Agent Lee with hard-wired workspace and external folder intelligence, Ollama model selection, approval modes, web mode, chat history, memory, law engine, and voice.",
   "version": "1.1.0",
   "publisher": "leeway",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/4citeB4U/.LEEWAY-VACODE.git"
+  },
   "main": "./out/extension.js",
   "engines": {
     "vscode": "^1.90.0"

@@ -1,6 +1,6 @@
 param(
-  [string]$WorkspaceDir = (Join-Path $PSScriptRoot ".."),
-  [string]$ExtensionDir = (Join-Path $PSScriptRoot "..\vscode-extension"),
+  [string]$WorkspaceDir = (Join-Path $PSScriptRoot "..\.."),
+  [string]$ExtensionDir,
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
   [string]$UserDataDir = (Join-Path $env:TEMP "agent-lee-vscode-profile"),
   [string]$ExtensionsDir = (Join-Path $env:TEMP "agent-lee-vscode-extensions"),
@@ -10,11 +10,13 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+$resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
+
 if (-not $SkipBuild) {
-  & (Join-Path $PSScriptRoot "Build-AgentLeeVSIX.ps1") -ExtensionDir $ExtensionDir | Out-Null
+  & (Join-Path $PSScriptRoot "Build-AgentLeeVSIX.ps1") -ExtensionDir $resolvedExtensionDir | Out-Null
 }
 
-$vsixPath = Join-Path (Resolve-Path $ExtensionDir).Path "agent-lee-1.1.0-sovereign-runtime.vsix"
+$vsixPath = Join-Path $resolvedExtensionDir "agent-lee-1.1.0-sovereign-runtime.vsix"
 
 & (Join-Path $PSScriptRoot "Install-AgentLeeVSIX.ps1") `
   -VsixPath $vsixPath `

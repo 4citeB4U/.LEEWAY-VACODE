@@ -1,13 +1,19 @@
 param(
-  [string]$RootDir = (Join-Path $PSScriptRoot ".."),
-  [string]$VsixPath = (Join-Path $PSScriptRoot "..\vscode-extension\agent-lee-1.1.0-sovereign-runtime.vsix"),
+  [string]$RootDir = (Join-Path $PSScriptRoot "..\.."),
+  [string]$VsixPath,
+  [string]$ExtensionDir,
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
   [string]$UserDataDir = (Join-Path $env:TEMP "agent-lee-vscode-profile"),
   [string]$ExtensionsDir = (Join-Path $env:TEMP "agent-lee-vscode-extensions"),
-  [string]$OutputDir = (Join-Path (Join-Path $PSScriptRoot "..\reports") ("packaged-validation-" + (Get-Date -Format "yyyy-MM-ddTHH-mm-ss")))
+  [string]$OutputDir = (Join-Path (Join-Path $PSScriptRoot "..\..\reports") ("packaged-validation-" + (Get-Date -Format "yyyy-MM-ddTHH-mm-ss")))
 )
 
 $ErrorActionPreference = "Stop"
+
+$resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
+if (-not $VsixPath) {
+  $VsixPath = Join-Path $resolvedExtensionDir "agent-lee-1.1.0-sovereign-runtime.vsix"
+}
 
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
@@ -29,6 +35,7 @@ $extensionsList | Out-File (Join-Path $OutputDir "installed-extensions.txt") -En
 $summary = [pscustomobject]@{
   collectedAt = (Get-Date).ToString("o")
   rootDir = (Resolve-Path $RootDir).Path
+  extensionDir = $resolvedExtensionDir
   vsixPath = (Resolve-Path $VsixPath).Path
   userDataDir = $UserDataDir
   extensionsDir = $ExtensionsDir
