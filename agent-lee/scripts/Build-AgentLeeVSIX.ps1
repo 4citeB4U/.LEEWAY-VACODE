@@ -8,7 +8,7 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 
 param(
   [string]$ExtensionDir,
-  [string]$OutputName = "agent-lee-1.1.0-sovereign-runtime.vsix"
+  [string]$OutputName = "agent-lee-1.1.1-sovereign-runtime.vsix"
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,7 +39,7 @@ try {
     throw "Compile finished, but out\extension.js was not created."
   }
 
-  & npx.cmd @vscode/vsce package -o $OutputName
+  & npx.cmd @vscode/vsce package --no-rewrite-relative-links -o $OutputName
   if ($LASTEXITCODE -ne 0) {
     throw "VSIX packaging failed."
   }

@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 function Get-LeeWayRegion {
   param([string]$Path)
 
-  if ($Path -match "(^|/)agent-lee-leeway-coding-system/vscode-extension/src|(^|/)workspace/agents") { return "UI" }
+  if ($Path -match "(^|/)agent-lee/vscode-extension/src|(^|/)workspace/agents") { return "UI" }
   if ($Path -match "(^|/)agent-lee/(core|supervisor|verification)|orchestrator|law|scheduler") { return "CORE" }
   if ($Path -match "(^|/)agent-lee/(mcp)|mcp") { return "MCP" }
   if ($Path -match "(^|/)agent-lee/(voice|models)|memory|conversation|LLM|model") { return "AI" }

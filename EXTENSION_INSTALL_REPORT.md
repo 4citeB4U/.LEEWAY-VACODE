@@ -6,87 +6,82 @@ TAG: CORE.EXTENSION_INSTALL_REPORT
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 -->
 
-# Agent Lee Extension - Installation & Test Report
+# Agent Lee Extension Install Report
 
-## âœ… Installation Status: SUCCESS
+## Current Package
 
-### Test Results
-- [âœ“] Extension folder exists
-- [âœ“] package.json valid  
-- [âœ“] out/extension.js compiled
-- [âœ“] Media icon present
-- [âœ“] Activation events configured
-- [âœ“] VS Code engine compatible (^1.90.0)
+| Field | Value |
+| :--- | :--- |
+| Extension | Agent Lee LeeWay Coding System |
+| Package name | `agent-lee-leeway-coding-system` |
+| Version | `1.1.1` |
+| Publisher | `leeway` |
+| VS Code engine | `^1.90.0` |
+| Main entry | `./out/extension.js` |
+| Current source | `agent-lee/vscode-extension` |
+| README | `agent-lee/vscode-extension/README.md` |
+| README images | `agent-lee/vscode-extension/media/readme-header.png`, `agent-lee/vscode-extension/media/readme-system-flow.png` |
 
-### Installation Details
-- **Location**: `C:\Users\Leona\.vscode\extensions\leeway.agent-lee-leeway-coding-system-1.1.0`
-- **Name**: Agent Lee LeeWay Coding System
-- **Version**: 1.1.0
-- **Package Size**: 2.15 MB
+## Verified Surfaces
 
-## ðŸš€ How to Test the Extension
+| Surface | Status |
+| :--- | :--- |
+| Activity Bar container | Present: `agentLee` |
+| Sidebar webview | Present: `agentLee.sidebar` |
+| Status Bar launcher | Present: `$(hubot) Agent Lee` |
+| Packaged icon | Present: `media/leeway-standards-button.png` |
+| README imagery | Present in extension media folder |
+| Command Palette actions | Present |
+| Ollama model selection | Present |
+| Three-model hive | Present |
+| Chat history | Present |
+| Voice controls | Present |
+| Web lookup | Present |
+| Browser validation | Present |
+| PyCharm tooling command | Present |
 
-### Method 1: Reload VS Code (Recommended)
-1. In VS Code, press **Ctrl + Shift + P** to open Command Palette
-2. Type "Developer: Reload Window" and press Enter
-3. VS Code will restart with the extension active
+## Commands
 
-### Method 2: Look for Agent Lee in VS Code
-After reloading, you should see:
+| Command | Purpose |
+| :--- | :--- |
+| `Agent Lee: Open Chat` | Opens the chat panel. |
+| `Agent Lee: Open Sidebar` | Opens the Activity Bar sidebar. |
+| `Agent Lee: Open README` | Opens the packaged README. |
+| `Agent Lee: Install PyCharm Tools` | Installs helper tooling into detected PyCharm config folders. |
+| `Agent Lee: New Chat` | Starts a new local conversation. |
+| `Agent Lee: Stop Voice` | Stops active voice playback. |
 
-**In the Activity Bar (left sidebar):**
-- A new icon labeled "Agent Lee" with the robot icon
-- Click it to open the Agent Lee Chat sidebar
+## Runtime Features Explained
 
-**In the Command Palette:**
-- Press Ctrl + Shift + P
-- Search for "Agent Lee" to see these commands:
-  - Agent Lee: Open Chat
-  - Agent Lee: Open Sidebar
-  - Agent Lee: Install PyCharm Tools
-  - Agent Lee: New Chat
-  - Agent Lee: Stop Voice
+Agent Lee now documents the real current feature set in both the repo README and packaged extension README:
 
-**In the Status Bar:**
-- Bottom-right corner shows "$(hubot) Agent Lee" button
-- Click to open chat in a panel view
+- Workspace file inspection before answering.
+- External local folder approval.
+- Remote URL context extraction.
+- Builder, Designer/UX, and Verifier Ollama model routing.
+- `SAFE`, `BALANCED`, and `FULL AUTO` approval modes.
+- Web lookup toggle.
+- Voice output and mic input.
+- Conversation history and memory logs.
+- Law engine, scheduler, and drift tracking.
+- Capability catalog from local agent/MCP registry sources.
+- Browser screenshots, reports, visual diffs, accessibility checks, performance checks, network summaries, broken link checks, missing image checks, and flow reports.
 
-## ðŸ“‹ Extension Features Enabled
-- âœ“ Webview sidebar (agentLee.sidebar)
-- âœ“ Activity bar container
-- âœ“ Status bar button
-- âœ“ Multiple activation events
-- âœ“ Command palette integration
-- âœ“ Chat history support
-- âœ“ Model selection (Builder, Designer/UX, Verifier)
-- âœ“ Voice support
-- âœ“ Web mode
-- âœ“ Browser automation
+## Build Command
 
-## âš™ï¸ Configuration
-- **Main entry**: `./out/extension.js`
-- **Compiled from**: TypeScript sources in `src/`
-- **Dependencies**: 6 npm packages installed
-- **Dev dependencies**: TypeScript, VS Code API types, vsce
+```powershell
+.\agent-lee\scripts\Build-AgentLeeVSIX.ps1
+```
 
-## ðŸ” Quick Troubleshooting
-If you don't see the Agent Lee icon:
+Default VSIX output:
 
-1. **Hard reload**: Press Ctrl + Shift + P â†’ "Developer: Reload Window"
-2. **Check installation**: Verify the folder exists in `C:\Users\Leona\.vscode\extensions\`
-3. **Check logs**: In VS Code, View â†’ Output â†’ select "Extension Host" from dropdown
-4. **Reinstall if needed**: 
-   ```powershell
-   code --uninstall-extension leeway.agent-lee-leeway-coding-system
-   code --install-extension "c:\Users\Leona\.leeway-vscode\agent-lee\vscode-extension\agent-lee-leeway-coding-system-latest.vsix"
-   ```
+```txt
+agent-lee-1.1.1-sovereign-runtime.vsix
+```
 
-## âœ¨ Next Steps
-1. Reload VS Code (Ctrl + Shift + R)
-2. Click the Agent Lee icon in the Activity Bar
-3. The sidebar will open showing the Agent Lee Chat interface
-4. Start using the extension!
+## Full Doctor Command
 
----
-*Test completed: May 4, 2026*
+```powershell
+.\test-extension.ps1 -Build -Package -CheckOllama
+```
 

@@ -34,7 +34,6 @@ if ($ExtensionDir) {
 }
 
 $candidates += @(
-  (Join-Path $workspaceRoot "agent-lee-leeway-coding-system\vscode-extension"),
   (Join-Path $agentLeeRoot "vscode-extension")
 )
 
