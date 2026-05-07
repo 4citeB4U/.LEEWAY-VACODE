@@ -6,12 +6,20 @@
     "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
   },
   "engine": "piper-local",
+  "preferVoiceServer": false,
+  "voiceWsUrl": "ws://localhost:8765/ws",
   "fallbackEngine": "windows-sapi",
-  "personaSpeechMode": "Charming_Professional",
+  "personaSpeechMode": "Producer_Protocol",
   "interruptionPolicy": "kill-current-and-replace",
   "piperExecutable": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\voice\\server\\piper_bin\\piper.exe",
-  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx",
-  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx.json",
-  "sampleRate": 22050
+  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx",
+  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx.json",
+  "sampleRate": 22050,
+  "selectedVoiceId": "en_US-norman-medium",
+  "selectedVoiceLabel": "Agent Lee Locked Voice - Norman",
+  "tuning": {
+    "sampleTrimRatio": 0.95,
+    "playbackRateRatio": 0.9116
+  }
 }
 

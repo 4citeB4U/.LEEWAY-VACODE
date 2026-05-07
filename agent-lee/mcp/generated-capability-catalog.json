@@ -1,17 +1,20 @@
 {
-  "leeway": {
-    "LEEWAY_HEADER": "DO NOT REMOVE",
-    "REGION": "MCP",
-    "TAG": "CORE.AGENT_LEE.MCP.GENERATED_CAPABILITY_CATALOG",
-    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
-  },
-  "generatedAt": "2026-05-06T05:38:17.712Z",
+  "generatedAt": "2026-05-07T01:06:45.529Z",
   "sources": [
     "D:\\MCP-VS-code-Antigavity",
+    "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards",
     "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards",
     "C:\\Users\\Leona\\.leeway-vscode\\workspace\\agents"
   ],
   "entries": [
+    {
+      "id": "src:agents:legacy:AgentLee.ts",
+      "kind": "agent",
+      "label": "AgentLee",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\AgentLee.ts",
+      "category": "legacy"
+    },
     {
       "id": "src:agents:AgentLee.ts",
       "kind": "agent",
@@ -21,11 +24,11 @@
       "category": "AgentLee.ts"
     },
     {
-      "id": "src:agents:legacy:AgentLee.ts",
+      "id": "src:agents:legacy:AgentLeeBT.ts",
       "kind": "agent",
-      "label": "AgentLee",
+      "label": "AgentLeeBT",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\AgentLee.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\AgentLeeBT.ts",
       "category": "legacy"
     },
     {
@@ -37,19 +40,27 @@
       "category": "AgentLeeBT.ts"
     },
     {
-      "id": "src:agents:legacy:AgentLeeBT.ts",
+      "id": "src:agents:governance:align-agent.js",
       "kind": "agent",
-      "label": "AgentLeeBT",
+      "label": "align-agent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\AgentLeeBT.ts",
-      "category": "legacy"
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\governance\\align-agent.js",
+      "category": "governance"
+    },
+    {
+      "id": "src:agents:discovery:architecture-map-agent.js",
+      "kind": "agent",
+      "label": "architecture-map-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\architecture-map-agent.js",
+      "category": "discovery"
     },
     {
       "id": "src:agents:rtc:aria.ts",
       "kind": "agent",
       "label": "aria",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\aria.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\aria.ts",
       "category": "rtc"
     },
     {
@@ -57,16 +68,40 @@
       "kind": "agent",
       "label": "Aria",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Aria.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Aria.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:governance:assess-agent.js",
+      "kind": "agent",
+      "label": "assess-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\governance\\assess-agent.js",
+      "category": "governance"
     },
     {
       "id": "src:agents:legacy:Atlas.ts",
       "kind": "agent",
       "label": "Atlas",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Atlas.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Atlas.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:governance:audit-agent.js",
+      "kind": "agent",
+      "label": "audit-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\governance\\audit-agent.js",
+      "category": "governance"
+    },
+    {
+      "id": "src:agents:standards:authority-agent.js",
+      "kind": "agent",
+      "label": "authority-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\authority-agent.js",
+      "category": "standards"
     },
     {
       "id": "backend-mcp",
@@ -86,11 +121,19 @@
       "category": "External MCP"
     },
     {
+      "id": "backend-mcp",
+      "kind": "mcp",
+      "label": "backend-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\backend-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "src:agents:rtc:bus.ts",
       "kind": "agent",
       "label": "bus",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\bus.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\bus.ts",
       "category": "rtc"
     },
     {
@@ -101,6 +144,22 @@
       "description": "UI Agent Canvas Manager",
       "location": "D:\\MCP-VS-code-Antigavity\\canvas-mcp",
       "category": "External MCP"
+    },
+    {
+      "id": "canvas-mcp",
+      "kind": "mcp",
+      "label": "canvas-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\canvas-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:integrity:circular-dependency-agent.js",
+      "kind": "agent",
+      "label": "circular-dependency-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\circular-dependency-agent.js",
+      "category": "integrity"
     },
     {
       "id": "creative-mcp",
@@ -120,6 +179,22 @@
       "category": "External MCP"
     },
     {
+      "id": "creative-mcp",
+      "kind": "mcp",
+      "label": "creative-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\creative-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:integrity:dependency-graph-agent.js",
+      "kind": "agent",
+      "label": "dependency-graph-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\dependency-graph-agent.js",
+      "category": "integrity"
+    },
+    {
       "id": "design-system-mcp",
       "kind": "mcp",
       "label": "Design System Mcp",
@@ -137,12 +212,92 @@
       "category": "External MCP"
     },
     {
+      "id": "design-system-mcp",
+      "kind": "mcp",
+      "label": "design-system-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\design-system-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:standards:discovery-pipeline-agent.js",
+      "kind": "agent",
+      "label": "discovery-pipeline-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\discovery-pipeline-agent.js",
+      "category": "standards"
+    },
+    {
+      "id": "src:agents:discovery:docs-agent.js",
+      "kind": "agent",
+      "label": "docs-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\docs-agent.js",
+      "category": "discovery"
+    },
+    {
+      "id": "src:agents:orchestration:doctor-agent.js",
+      "kind": "agent",
+      "label": "doctor-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\orchestration\\doctor-agent.js",
+      "category": "orchestration"
+    },
+    {
+      "id": "src:agents:integrity:duplicate-logic-agent.js",
+      "kind": "agent",
+      "label": "duplicate-logic-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\duplicate-logic-agent.js",
+      "category": "integrity"
+    },
+    {
       "id": "src:agents:legacy:Echo.ts",
       "kind": "agent",
       "label": "Echo",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Echo.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Echo.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:mcp:endpoint-agent.js",
+      "kind": "agent",
+      "label": "endpoint-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\endpoint-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "endpoint-agent",
+      "kind": "mcp",
+      "label": "endpoint-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\endpoint-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:mcp:env-agent.js",
+      "kind": "agent",
+      "label": "env-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\env-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "env-agent",
+      "kind": "mcp",
+      "label": "env-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\env-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:discovery:explain-agent.js",
+      "kind": "agent",
+      "label": "explain-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\explain-agent.js",
+      "category": "discovery"
     },
     {
       "id": "frontend-mcp",
@@ -171,6 +326,14 @@
       "category": "External MCP"
     },
     {
+      "id": "frontend-mcp",
+      "kind": "mcp",
+      "label": "frontend-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\frontend-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "fs-nav-agent",
       "kind": "agent",
       "label": "Fs Nav Agent",
@@ -179,12 +342,52 @@
       "category": "Local Workspace"
     },
     {
+      "id": "src:agents:mcp:fs-nav-agent.js",
+      "kind": "agent",
+      "label": "fs-nav-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\fs-nav-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "fs-nav-agent",
+      "kind": "mcp",
+      "label": "fs-nav-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\fs-nav-agent.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "src:agents:rtc:governor.ts",
       "kind": "agent",
       "label": "governor",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\governor.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\governor.ts",
       "category": "rtc"
+    },
+    {
+      "id": "src:agents:standards:header-agent.js",
+      "kind": "agent",
+      "label": "header-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\header-agent.js",
+      "category": "standards"
+    },
+    {
+      "id": "src:agents:mcp:health-agent-lite.js",
+      "kind": "agent",
+      "label": "health-agent-lite",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\health-agent-lite.js",
+      "category": "mcp"
+    },
+    {
+      "id": "health-agent-lite",
+      "kind": "mcp",
+      "label": "health-agent-lite",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\health-agent-lite.js",
+      "category": "MCP Agent"
     },
     {
       "id": "host-exec-agent",
@@ -195,12 +398,36 @@
       "category": "Local Workspace"
     },
     {
+      "id": "src:agents:mcp:host-exec-agent.js",
+      "kind": "agent",
+      "label": "host-exec-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\host-exec-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "host-exec-agent",
+      "kind": "mcp",
+      "label": "host-exec-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\host-exec-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:integrity:import-agent.js",
+      "kind": "agent",
+      "label": "import-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\import-agent.js",
+      "category": "integrity"
+    },
+    {
       "id": "InsForge",
       "kind": "server",
       "label": "InsForge",
       "source": "LeeWay-Standards",
       "description": "-NoProfile -ExecutionPolicy Bypass -Command node C:\\\\Tools\\\\vscode-mcp-tooling\\\\src\\\\tool.js insforge",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
       "category": "VS Code MCP Server"
     },
     {
@@ -211,6 +438,22 @@
       "description": "InsForge Frontend Component Generator",
       "location": "D:\\MCP-VS-code-Antigavity\\insforge-frontend-mcp",
       "category": "External MCP"
+    },
+    {
+      "id": "insforge-frontend-mcp",
+      "kind": "mcp",
+      "label": "insforge-frontend-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\insforge-frontend-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:discovery:intent-registry-agent.js",
+      "kind": "agent",
+      "label": "intent-registry-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\intent-registry-agent.js",
+      "category": "discovery"
     },
     {
       "id": "leeway-build-auditor-mcp",
@@ -262,6 +505,14 @@
       "category": "External MCP"
     },
     {
+      "id": "leeway-build-auditor-mcp",
+      "kind": "mcp",
+      "label": "leeway-build-auditor-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-build-auditor-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "leeway-ci-blueprint-mcp",
       "kind": "mcp",
       "label": "leeway-ci-blueprint-mcp",
@@ -269,6 +520,14 @@
       "description": "LeeWay CI/CD Blueprint Generator",
       "location": "D:\\MCP-VS-code-Antigavity\\leeway-ci-blueprint-mcp",
       "category": "External MCP"
+    },
+    {
+      "id": "leeway-ci-blueprint-mcp",
+      "kind": "mcp",
+      "label": "leeway-ci-blueprint-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-ci-blueprint-mcp.js",
+      "category": "MCP Agent"
     },
     {
       "id": "leeway-deployment-target-mcp",
@@ -280,6 +539,14 @@
       "category": "External MCP"
     },
     {
+      "id": "leeway-deployment-target-mcp",
+      "kind": "mcp",
+      "label": "leeway-deployment-target-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-deployment-target-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "leeway-edge-optimizer-mcp",
       "kind": "mcp",
       "label": "leeway-edge-optimizer-mcp",
@@ -287,6 +554,14 @@
       "description": "LeeWay Edge Optimization Engine",
       "location": "D:\\MCP-VS-code-Antigavity\\leeway-edge-optimizer-mcp",
       "category": "External MCP"
+    },
+    {
+      "id": "leeway-edge-optimizer-mcp",
+      "kind": "mcp",
+      "label": "leeway-edge-optimizer-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-edge-optimizer-mcp.js",
+      "category": "MCP Agent"
     },
     {
       "id": "leeway-full-repo-checker-mcp",
@@ -298,6 +573,14 @@
       "category": "External MCP"
     },
     {
+      "id": "leeway-full-repo-checker-mcp",
+      "kind": "mcp",
+      "label": "leeway-full-repo-checker-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-full-repo-checker-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "leeway-responsive-ui-mcp",
       "kind": "mcp",
       "label": "leeway-responsive-ui-mcp",
@@ -307,12 +590,20 @@
       "category": "External MCP"
     },
     {
+      "id": "leeway-responsive-ui-mcp",
+      "kind": "mcp",
+      "label": "leeway-responsive-ui-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\leeway-responsive-ui-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "LeewayleewayStitch",
       "kind": "server",
       "label": "LeewayleewayStitch",
       "source": "LeeWay-Standards",
       "description": "-NoProfile -ExecutionPolicy Bypass -Command node C:\\\\Tools\\\\vscode-mcp-tooling\\\\src\\\\tool.js stitch",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
       "category": "VS Code MCP Server"
     },
     {
@@ -320,7 +611,7 @@
       "kind": "agent",
       "label": "LeewayStandardsAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\LeewayStandardsAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\LeewayStandardsAgent.ts",
       "category": "legacy"
     },
     {
@@ -328,8 +619,24 @@
       "kind": "agent",
       "label": "LiveConductorAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\LiveConductorAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\LiveConductorAgent.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:mcp:manifest-agent.js",
+      "kind": "agent",
+      "label": "manifest-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\manifest-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "manifest-agent",
+      "kind": "mcp",
+      "label": "manifest-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\manifest-agent.js",
+      "category": "MCP Agent"
     },
     {
       "id": "media-forge-agent",
@@ -340,12 +647,44 @@
       "category": "Local Workspace"
     },
     {
+      "id": "src:agents:mcp:media-forge-agent.js",
+      "kind": "agent",
+      "label": "media-forge-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\media-forge-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "media-forge-agent",
+      "kind": "mcp",
+      "label": "media-forge-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\media-forge-agent.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "memory-mcp",
       "kind": "mcp",
       "label": "Memory Mcp",
       "source": "Workspace",
       "location": "C:\\Users\\Leona\\.leeway-vscode\\workspace\\agents\\memory-mcp",
       "category": "Local Workspace"
+    },
+    {
+      "id": "src:agents:orchestration:memory-agent.js",
+      "kind": "agent",
+      "label": "memory-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\orchestration\\memory-agent.js",
+      "category": "orchestration"
+    },
+    {
+      "id": "src:agents:orchestration:memory-agent-lite.js",
+      "kind": "agent",
+      "label": "memory-agent-lite",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\orchestration\\memory-agent-lite.js",
+      "category": "orchestration"
     },
     {
       "id": "memory-mcp",
@@ -357,12 +696,44 @@
       "category": "External MCP"
     },
     {
+      "id": "memory-mcp",
+      "kind": "mcp",
+      "label": "memory-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\memory-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:integrity:module-policy-agent.js",
+      "kind": "agent",
+      "label": "module-policy-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\module-policy-agent.js",
+      "category": "integrity"
+    },
+    {
       "id": "mutation-agent",
       "kind": "agent",
       "label": "Mutation Agent",
       "source": "Workspace",
       "location": "C:\\Users\\Leona\\.leeway-vscode\\workspace\\agents\\mutation-agent",
       "category": "Local Workspace"
+    },
+    {
+      "id": "src:agents:mcp:mutation-agent.js",
+      "kind": "agent",
+      "label": "mutation-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\mutation-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "mutation-agent",
+      "kind": "mcp",
+      "label": "mutation-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\mutation-agent.js",
+      "category": "MCP Agent"
     },
     {
       "id": "nano-banana",
@@ -378,7 +749,7 @@
       "kind": "agent",
       "label": "nexus",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\nexus.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\nexus.ts",
       "category": "rtc"
     },
     {
@@ -386,7 +757,7 @@
       "kind": "agent",
       "label": "Nexus",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Nexus.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Nexus.ts",
       "category": "legacy"
     },
     {
@@ -394,7 +765,7 @@
       "kind": "agent",
       "label": "Nova",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Nova.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Nova.ts",
       "category": "legacy"
     },
     {
@@ -402,7 +773,7 @@
       "kind": "agent",
       "label": "observer",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\observer.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\observer.ts",
       "category": "rtc"
     },
     {
@@ -414,12 +785,44 @@
       "category": "Local Workspace"
     },
     {
+      "id": "src:agents:mcp:perception-agent.js",
+      "kind": "agent",
+      "label": "perception-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\perception-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "perception-agent",
+      "kind": "mcp",
+      "label": "perception-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\perception-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:security:permission-agent.js",
+      "kind": "agent",
+      "label": "permission-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\permission-agent.js",
+      "category": "security"
+    },
+    {
       "id": "src:agents:legacy:Pixel.ts",
       "kind": "agent",
       "label": "Pixel",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Pixel.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Pixel.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:standards:placement-agent.js",
+      "kind": "agent",
+      "label": "placement-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\placement-agent.js",
+      "category": "standards"
     },
     {
       "id": "Playwright",
@@ -427,8 +830,64 @@
       "label": "Playwright",
       "source": "LeeWay-Standards",
       "description": "-NoProfile -ExecutionPolicy Bypass -Command node C:\\\\Tools\\\\vscode-mcp-tooling\\\\src\\\\tool.js playwright",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
       "category": "VS Code MCP Server"
+    },
+    {
+      "id": "src:agents:security:policy-agent.js",
+      "kind": "agent",
+      "label": "policy-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\policy-agent.js",
+      "category": "security"
+    },
+    {
+      "id": "src:agents:mcp:port-agent.js",
+      "kind": "agent",
+      "label": "port-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\port-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "port-agent",
+      "kind": "mcp",
+      "label": "port-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\port-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:security:privacy-agent.js",
+      "kind": "agent",
+      "label": "privacy-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\privacy-agent.js",
+      "category": "security"
+    },
+    {
+      "id": "src:agents:mcp:process-agent.js",
+      "kind": "agent",
+      "label": "process-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\process-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "process-agent",
+      "kind": "mcp",
+      "label": "process-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\process-agent.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:security:prompt-security-agent.js",
+      "kind": "agent",
+      "label": "prompt-security-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\prompt-security-agent.js",
+      "category": "security"
     },
     {
       "id": "qa-mcp",
@@ -448,6 +907,14 @@
       "category": "External MCP"
     },
     {
+      "id": "qa-mcp",
+      "kind": "mcp",
+      "label": "qa-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\qa-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "react-native-mcp",
       "kind": "mcp",
       "label": "React Native Mcp",
@@ -465,27 +932,67 @@
       "category": "External MCP"
     },
     {
+      "id": "react-native-mcp",
+      "kind": "mcp",
+      "label": "react-native-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\react-native-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:integrity:refactor-scan-agent.js",
+      "kind": "agent",
+      "label": "refactor-scan-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\refactor-scan-agent.js",
+      "category": "integrity"
+    },
+    {
+      "id": "src:agents:standards:region-agent.js",
+      "kind": "agent",
+      "label": "region-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\region-agent.js",
+      "category": "standards"
+    },
+    {
       "id": "src:agents:rtc:registry.ts",
       "kind": "agent",
       "label": "registry",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\registry.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\registry.ts",
       "category": "rtc"
+    },
+    {
+      "id": "src:agents:standards:registry-agent.js",
+      "kind": "agent",
+      "label": "registry-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\registry-agent.js",
+      "category": "standards"
     },
     {
       "id": "src:agents:rtc:repair.ts",
       "kind": "agent",
       "label": "repair",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\repair.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\repair.ts",
       "category": "rtc"
+    },
+    {
+      "id": "src:agents:orchestration:router-agent.js",
+      "kind": "agent",
+      "label": "router-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\orchestration\\router-agent.js",
+      "category": "orchestration"
     },
     {
       "id": "src:agents:legacy:RouterAgent.ts",
       "kind": "agent",
       "label": "RouterAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\RouterAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\RouterAgent.ts",
       "category": "legacy"
     },
     {
@@ -493,15 +1000,31 @@
       "kind": "agent",
       "label": "runtime",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\runtime.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\runtime.ts",
       "category": "rtc"
+    },
+    {
+      "id": "src:agents:mcp:runtime-agent.js",
+      "kind": "agent",
+      "label": "runtime-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\runtime-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "runtime-agent",
+      "kind": "mcp",
+      "label": "runtime-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\runtime-agent.js",
+      "category": "MCP Agent"
     },
     {
       "id": "src:agents:legacy:SafetyRedactionAgent.ts",
       "kind": "agent",
       "label": "SafetyRedactionAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\SafetyRedactionAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\SafetyRedactionAgent.ts",
       "category": "legacy"
     },
     {
@@ -509,7 +1032,7 @@
       "kind": "agent",
       "label": "Sage",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Sage.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Sage.ts",
       "category": "legacy"
     },
     {
@@ -517,7 +1040,7 @@
       "kind": "agent",
       "label": "scaler",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\scaler.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\scaler.ts",
       "category": "rtc"
     },
     {
@@ -538,11 +1061,35 @@
       "category": "External MCP"
     },
     {
+      "id": "scheduler-mcp",
+      "kind": "mcp",
+      "label": "scheduler-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\scheduler-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
+      "id": "src:agents:discovery:schema-agent.js",
+      "kind": "agent",
+      "label": "schema-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\schema-agent.js",
+      "category": "discovery"
+    },
+    {
+      "id": "src:agents:security:secret-scan-agent.js",
+      "kind": "agent",
+      "label": "secret-scan-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\secret-scan-agent.js",
+      "category": "security"
+    },
+    {
       "id": "src:agents:rtc:sentinel.ts",
       "kind": "agent",
       "label": "sentinel",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\sentinel.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\sentinel.ts",
       "category": "rtc"
     },
     {
@@ -550,15 +1097,23 @@
       "kind": "agent",
       "label": "Shield",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\Shield.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\Shield.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:discovery:sitemap-agent.js",
+      "kind": "agent",
+      "label": "sitemap-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\discovery\\sitemap-agent.js",
+      "category": "discovery"
     },
     {
       "id": "src:agents:service:common:standards-agent-supervisor.js",
       "kind": "agent",
       "label": "standards-agent-supervisor",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\service\\common\\standards-agent-supervisor.js",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\service\\common\\standards-agent-supervisor.js",
       "category": "service"
     },
     {
@@ -566,7 +1121,7 @@
       "kind": "agent",
       "label": "standards-service-agents",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\service\\common\\standards-service-agents.js",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\service\\common\\standards-service-agents.js",
       "category": "service"
     },
     {
@@ -583,7 +1138,7 @@
       "kind": "agent",
       "label": "StreamingSTTAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\StreamingSTTAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\StreamingSTTAgent.ts",
       "category": "legacy"
     },
     {
@@ -591,8 +1146,24 @@
       "kind": "agent",
       "label": "StreamingTTSAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\StreamingTTSAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\StreamingTTSAgent.ts",
       "category": "legacy"
+    },
+    {
+      "id": "src:agents:integrity:syntax-agent.js",
+      "kind": "agent",
+      "label": "syntax-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\integrity\\syntax-agent.js",
+      "category": "integrity"
+    },
+    {
+      "id": "src:agents:standards:tag-agent.js",
+      "kind": "agent",
+      "label": "tag-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\standards\\tag-agent.js",
+      "category": "standards"
     },
     {
       "id": "TestSprite",
@@ -600,8 +1171,32 @@
       "label": "TestSprite",
       "source": "LeeWay-Standards",
       "description": "-NoProfile -ExecutionPolicy Bypass -Command node C:\\\\Tools\\\\vscode-mcp-tooling\\\\src\\\\tool.js testsprite",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\adapters\\mcp\\vscode-mcp-tooling\\vscode-mcp-settings-snippet.json",
       "category": "VS Code MCP Server"
+    },
+    {
+      "id": "src:agents:security:tool-access-agent.js",
+      "kind": "agent",
+      "label": "tool-access-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\security\\tool-access-agent.js",
+      "category": "security"
+    },
+    {
+      "id": "src:agents:mcp:transport-agent.js",
+      "kind": "agent",
+      "label": "transport-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\transport-agent.js",
+      "category": "mcp"
+    },
+    {
+      "id": "transport-agent",
+      "kind": "mcp",
+      "label": "transport-agent",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\transport-agent.js",
+      "category": "MCP Agent"
     },
     {
       "id": "ui-builder-mcp",
@@ -621,11 +1216,19 @@
       "category": "External MCP"
     },
     {
+      "id": "ui-builder-mcp",
+      "kind": "mcp",
+      "label": "ui-builder-mcp",
+      "source": "LeeWay-Standards",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\mcp\\ui-builder-mcp.js",
+      "category": "MCP Agent"
+    },
+    {
       "id": "src:agents:rtc:vector.ts",
       "kind": "agent",
       "label": "vector",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\vector.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\vector.ts",
       "category": "rtc"
     },
     {
@@ -633,7 +1236,7 @@
       "kind": "agent",
       "label": "VisionAgent",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\legacy\\VisionAgent.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\legacy\\VisionAgent.ts",
       "category": "legacy"
     },
     {
@@ -641,14 +1244,14 @@
       "kind": "agent",
       "label": "ward",
       "source": "LeeWay-Standards",
-      "location": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\agents\\rtc\\ward.ts",
+      "location": "C:\\Users\\Leona\\.leeway-vscode\\LeeWay-Standards\\src\\agents\\rtc\\ward.ts",
       "category": "rtc"
     }
   ],
   "counts": {
-    "total": 76,
-    "mcps": 34,
-    "agents": 38,
+    "total": 152,
+    "mcps": 64,
+    "agents": 84,
     "servers": 4
   }
 }
