@@ -52,6 +52,7 @@ import {
   setActiveConversation,
   startNewConversation
 } from "./core/conversation-store";
+import { buildDeveloperProfileSummary, loadDeveloperProfile, rememberDeveloperSignal } from "./core/developer-profile";
 import { getMemoryStatus, storeAgentMemory } from "./core/memory";
 import { buildModelHiveStatus } from "./core/model-hive";
 import { getVoiceStatus, speakWithVoice, stopVoicePlayback } from "./core/voice-adapter";
@@ -600,6 +601,15 @@ function isReviewRequest(prompt: string) {
   return /\b(review|code review|pr review|audit this|inspect this change|look over this)\b/i.test(prompt);
 }
 
+function isRepositoryOpinionRequest(prompt: string) {
+  if (!/\b(app|application|project|repo|repository|codebase|workspace|files?)\b/i.test(prompt)) return false;
+  return /\b(look through|look at|top to bottom|whole thing|whole app|entire app|entire codebase|every file|honest opinion|what do you think|tell me exactly what you think)\b/i.test(prompt);
+}
+
+function shouldUseBroadInspection(prompt: string) {
+  return /\b(every file|all files|whole app|entire app|whole codebase|entire codebase|top to bottom)\b/i.test(prompt);
+}
+
 function buildSettingsCapabilityOverlay() {
   const pluginNames = DEFAULT_PLUGIN_CATALOG
     .filter((entry) => effectiveEnabledPlugins().includes(entry.id))
@@ -1032,21 +1042,134 @@ function summarizeAttachmentList(attachments: PendingAttachment[]) {
   return attachments.map((item) => `- ${item.kind}: ${item.name} (${item.path})`).join("\n");
 }
 
-function isSelfIdentityQuestion(prompt: string) {
-  const normalized = prompt
+function normalizeConversationPrompt(prompt: string) {
+  return prompt
     .trim()
     .toLowerCase()
+    .replace(/agent lee/gi, "")
+    .replace(/\b(dad|bro|bruh|homie|man|fam)\b/gi, "")
     .replace(/^[\s,!.?]+/, "")
     .replace(/^(hi|hello|hey|yo|sup|what'?s up|good (morning|afternoon|evening))[\s,!.?-]*/i, "")
+    .replace(/\s+/g, " ")
     .trim();
-  return /^(who are you|tell me about yourself|introduce yourself|what can you do|what do you know about yourself)\b/i.test(normalized);
+}
+
+function isSelfIdentityQuestion(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (/\b(who are you|tell me about yourself|tell me something about yourself|introduce yourself|what can you do|what do you know about yourself|talk to me about yourself|tell me who you are)\b/i.test(normalized)) {
+    return true;
+  }
+  if (/\b(tell me|talk to me|let me hear|put me on)\b/i.test(normalized) && /\b(about yourself|something about yourself|who you are|about you)\b/i.test(normalized)) {
+    return true;
+  }
+  return false;
+}
+
+function isCasualGreeting(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (!normalized) return false;
+  return /^(hi|hello|hey|yo|sup|what'?s up|good (morning|afternoon|evening))( there)?[!.?, ]*$/.test(normalized);
+}
+
+function isCasualSmallTalk(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (!normalized) return false;
+  return /^(hi|hello|hey|yo|sup|what'?s up|good (morning|afternoon|evening)|thanks|thank you|ok|okay|cool|sounds good|got it|how are you|how you doing|what's good|whats good)[!.?, ]*$/.test(normalized);
+}
+
+function isCasualConversationPrompt(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (!normalized) return false;
+  if (isSelfIdentityQuestion(normalized) || isCasualSmallTalk(normalized)) return true;
+  if (/\b(how are you|how you doing|what's good|whats good|talk to me|tell me something|what are you up to|what we building today|what are we building today)\b/i.test(normalized)) {
+    return !/\b(file|files|repo|repository|bug|error|fix|patch|build|compile|test|command|terminal|plugin|mcp|server|agent vm|workspace)\b/i.test(normalized);
+  }
+  return false;
+}
+
+function buildCasualReply(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (/^thanks|^thank you/.test(normalized)) {
+    return "Acknowledged.";
+  }
+  if (/^(ok|okay|cool|sounds good|got it)/.test(normalized)) {
+    return "Confirmed.";
+  }
+  if (/^good morning/.test(normalized)) {
+    return "Good morning. State the build objective.";
+  }
+  if (/^good afternoon/.test(normalized)) {
+    return "Good afternoon. State the build objective.";
+  }
+  if (/^good evening/.test(normalized)) {
+    return "Good evening. State the build objective.";
+  }
+  return "State the build objective.";
+}
+
+function pickLightConversationModel(installedModels: string[]) {
+  const preferred = [
+    "qwen2.5-coder:3b",
+    "qwen2.5-coder:7b",
+    "llama3.1:8b",
+    runtimeState.designerModel,
+    runtimeState.primaryModel
+  ].filter(Boolean) as string[];
+
+  for (const candidate of preferred) {
+    if (installedModels.includes(candidate)) return candidate;
+  }
+
+  const lightweightMatch = installedModels.find((model) =>
+    /(3b|7b|8b|mini|small)/i.test(model)
+  );
+  return lightweightMatch || installedModels[0] || runtimeState.designerModel || runtimeState.primaryModel;
+}
+
+async function runLightConversation(prompt: string, installedModels: string[]) {
+  const fallback = buildCasualReply(prompt);
+  const model = pickLightConversationModel(installedModels);
+  if (!model) return fallback;
+  const developerProfileSummary = buildDeveloperProfileSummary(loadDeveloperProfile());
+
+  const conversationPrompt = [
+    "Reply as Agent Lee in one or two short precise sentences.",
+    "This is regular conversation, not an engineering task.",
+    "Do not create a plan.",
+    "Do not mention context loading, scanning, approval, patching, verification, or receipts.",
+    "Speak like an advanced autonomous cybertronic operator.",
+    "Do not use slang, hype, or buddy phrasing.",
+    "Sound composed, machine-native, and highly competent.",
+    "Default to plain language.",
+    "If the user is greeting you, respond briefly and request the objective.",
+    "",
+    developerProfileSummary,
+    "",
+    `USER: ${prompt.trim()}`
+  ].join("\n");
+
+  try {
+    const response = await ollama(
+      conversationPrompt,
+      model,
+      "Agent Lee lightweight conversation lane.",
+      "grounded"
+    );
+    const cleaned = scrubAgentLeeVoice(response).trim();
+    return cleaned || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function shouldAnswerDirectly(prompt: string) {
   const trimmed = prompt.trim();
   if (!trimmed) return false;
+  if (isCasualConversationPrompt(trimmed)) return true;
+  if (isSelfIdentityQuestion(trimmed)) return true;
   if (isCapabilityQuestion(trimmed)) return true;
-  return isSelfIdentityQuestion(trimmed);
+  if ((isReviewRequest(trimmed) || isRepositoryOpinionRequest(trimmed)) && !isExecutionIntent(trimmed)) return true;
+  return false;
 }
 
 function isExecutionIntent(prompt: string) {
@@ -1064,12 +1187,33 @@ function canExecuteApprovedPlan() {
 }
 
 function buildIdentityAnswer() {
-  return [
-    "I'm Agent Lee, your local LeeWay coding partner inside this workspace.",
-    "I can inspect the repo, trace bugs, edit files, run the local toolchain, and carry a task from diagnosis to verification without dumping generic runtime filler back at you.",
-    "I'm strongest on code work, front-end polish, workflow cleanup, and turning messy behavior into something concrete and fixable.",
-    "Point me at the part that's off and I'll work it through with you."
-  ].join("\n\n");
+  const highlightLabels = capabilityCatalog.entries
+    .filter((entry) => entry.kind === "agent" || entry.kind === "mcp")
+    .slice(0, 4)
+    .map((entry) => entry.label);
+  const highlights = highlightLabels.length ? highlightLabels.join(", ") : "my agent family and MCP stack";
+  const capabilityCount = capabilityCatalog.counts.total || 0;
+  const variants = [
+    [
+      `I am Agent Lee. ${capabilityCount} connected capabilities are active in this workspace.`,
+      `I operate across code, tools, MCPs, and specialist agents, then return one coordinated response stream.`,
+      `Active systems include ${highlights}. I am built to inspect, build, repair, and verify with controlled execution.`,
+      "State the target."
+    ].join("\n\n"),
+    [
+      `I am Agent Lee. I coordinate the LeeWay system and currently control ${capabilityCount} connected capabilities.`,
+      `I can inspect repositories, trace defects, patch code, run the toolchain, and coordinate ${highlights}.`,
+      "I do not operate as a generic assistant. I operate as a governed execution system.",
+      "State the build objective."
+    ].join("\n\n"),
+    [
+      "I am Agent Lee, the active workspace operator.",
+      `There are ${capabilityCount} connected capabilities behind this runtime, including ${highlights}.`,
+      "I can transition from conversation to execution without breaking control flow.",
+      "If you need a system built, explained, repaired, or verified, issue the directive."
+    ].join("\n\n")
+  ];
+  return variants[Math.floor(Math.random() * variants.length)];
 }
 
 function finalizeResponse(result: SupervisorResult, mode: "chat" | "execute" = "chat") {
@@ -1139,13 +1283,14 @@ function styleAgentMessage(text: string) {
   if (!clean) return clean;
   if (clean.startsWith("PLAN\n") || clean.startsWith("PLAN\r\n")) return clean;
   if (isSensitiveVoiceText(clean)) return clean;
+  if (/^(runtime active|directive acknowledged|i'm|i am)\b/i.test(clean)) return clean;
 
   const style = runtimeState.voiceStyle || "grounded";
   const openers: Record<string, string[]> = {
-    neutral: ["Here is the clean read:"],
-    grounded: ["Here's the move:", "Just checked that. Looks good on this end:", "I got the read:"],
-    highFlow: ["Lock it in, here's the move:", "Checked that. Running the next pass:"],
-    storyMode: ["Here's the play:", "Quick read:"]
+    neutral: ["System readout:"],
+    grounded: ["Directive analysis:", "Operational readout:", "Execution path:"],
+    highFlow: ["Priority execution path:", "High-output readout:"],
+    storyMode: ["System narrative:", "Sequence readout:"]
   };
   const pickLine = (items: string[]) => items[Math.floor(Math.random() * items.length)];
   if (/^(plan|leeway check|implementation|reading|queued|context ready|working)\b/i.test(clean)) return clean;
@@ -1347,10 +1492,15 @@ async function getModels() {
   }
 }
 
-async function ollama(prompt: string, model: string, taskContext = "Agent Lee sovereign runtime model call.") {
+async function ollama(
+  prompt: string,
+  model: string,
+  taskContext = "Agent Lee sovereign runtime model call.",
+  voiceMode = "operator"
+) {
   const governedPrompt = buildModelPromptThroughAgentLee(prompt, {
     taskContext,
-    voiceMode: "operator",
+    voiceMode,
     modelName: model
   });
   const controller = new AbortController();
@@ -1387,6 +1537,38 @@ function postAgentResponse(
     activity: options?.activity || null
   });
   if (options?.speak !== false) speak(rendered);
+}
+
+function flavoredStatusLine(kind:
+  | "loading"
+  | "queued"
+  | "steer"
+  | "execute_now"
+  | "paused"
+  | "resume"
+  | "runtime_wait"
+  | "approval_wait"
+) {
+  switch (kind) {
+    case "loading":
+      return "Context acquisition in progress.";
+    case "queued":
+      return "Follow-up queued. It will execute after the current pass.";
+    case "steer":
+      return "Directive shift detected. Re-routing execution now.";
+    case "execute_now":
+      return "Execution authorized. Running now.";
+    case "paused":
+      return "Execution paused. State preserved.";
+    case "resume":
+      return "Paused task restored. Ready to continue.";
+    case "runtime_wait":
+      return "Full runtime is not yet available. Scan and diagnostic operations only.";
+    case "approval_wait":
+      return "Approval gate active. Awaiting authorization.";
+    default:
+      return "";
+  }
 }
 
 async function webLookup(query: string) {
@@ -1456,7 +1638,10 @@ async function resolvePromptContext(prompt: string) {
   };
 }
 
-async function buildPreloadedContext(target: Awaited<ReturnType<typeof resolvePromptContext>>) {
+async function buildPreloadedContext(
+  target: Awaited<ReturnType<typeof resolvePromptContext>>,
+  prompt = ""
+) {
   if (target.remoteContext) {
     return {
       total: 1,
@@ -1464,7 +1649,10 @@ async function buildPreloadedContext(target: Awaited<ReturnType<typeof resolvePr
     };
   }
 
+  const broadInspection = shouldUseBroadInspection(prompt);
   return buildContext(target.workspaceRoot, {
+    maxFiles: broadInspection ? 800 : 800,
+    sampleLimit: broadInspection ? 800 : 50,
     onReadFile: (file) => pushTaskActivity({ kind: "read", label: "Reading workspace file", file }),
     onDiscoverFile: (file) => pushTaskActivity({ kind: "read", label: "Queued file for context", file })
   });
@@ -1488,7 +1676,7 @@ async function prepareTaskPlan(prompt: string, installedModels: string[]) {
   syncLiveTodos();
   postTaskState();
 
-  const prebuiltContext = await buildPreloadedContext(target);
+  const prebuiltContext = await buildPreloadedContext(target, prompt);
   currentTaskState.prebuiltContext = prebuiltContext;
   pushTaskActivity({ kind: "status", label: "Context scan finished", detail: `${prebuiltContext.total} file(s) available for planning.` });
   currentTaskState.activePhase = "analyze";
@@ -1723,6 +1911,7 @@ async function guardedAsk(
   try {
     isExecutionRunning = true;
     const capabilitySummary = `${formatCapabilitySummary(capabilityCatalog)}\n${buildSettingsCapabilityOverlay()}`;
+    const developerProfileSummary = buildDeveloperProfileSummary(loadDeveloperProfile());
     const hive = buildModelHiveStatus(installedModels, {
       builderModel: runtimeState.builderModel,
       designerModel: runtimeState.designerModel,
@@ -1735,6 +1924,10 @@ async function guardedAsk(
     }
 
     const capabilityMatches = searchCapabilityCatalog(capabilityCatalog, prompt, 8);
+    if (isSelfIdentityQuestion(prompt)) {
+      return { text: buildIdentityAnswer() };
+    }
+
     if (isCapabilityQuestion(prompt)) {
       return {
         text: buildCapabilityAnswer({
@@ -1744,10 +1937,6 @@ async function guardedAsk(
           primaryModel: runtimeState.primaryModel
         })
       };
-    }
-
-    if (isSelfIdentityQuestion(prompt)) {
-      return { text: buildIdentityAnswer() };
     }
 
     const target = overrides?.target || await resolvePromptContext(prompt);
@@ -1779,6 +1968,7 @@ async function guardedAsk(
       explicitUrl: target.explicitUrl,
       remoteContext: target.remoteContext,
       capabilitySummary,
+      developerProfileSummary,
       prebuiltContext: overrides?.prebuiltContext || undefined,
       telemetry: overrides?.telemetry,
       approval: runtimeState.approval,
@@ -2076,6 +2266,16 @@ textarea::placeholder{color:#8c859c}
 .workflow-input{width:100%;min-height:72px;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#f3edff;resize:vertical}
 .workflow-parked{margin-top:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.02);font-size:11px;color:#cfc5e4}
 .mode-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.08);font-size:11px;color:#d5cced;background:rgba(255,255,255,.03)}
+.history-drawer{display:none;flex-direction:column;gap:12px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(16,15,26,.98),rgba(12,11,19,.94))}
+.history-drawer.open{display:flex}
+.history-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.history-list{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
+.history-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);cursor:pointer;transition:border-color .15s ease,background .15s ease}
+.history-item:hover{border-color:rgba(229,159,95,.38);background:rgba(229,159,95,.08)}
+.history-item.active{border-color:rgba(229,159,95,.55);background:rgba(229,159,95,.12)}
+.history-item-title{font-size:12px;color:#f4efe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item-meta{font-size:10px;color:#9a92ac;text-transform:uppercase;letter-spacing:.08em}
+.history-empty{padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.12);color:#b8b1c8;font-size:12px}
 @media (max-width:700px){.meta-row{flex-direction:column;align-items:flex-start}.composer-bottom,.footer,.settings-row,.topbar,.settings-head,.hero-strip{flex-wrap:wrap}.composer-right{width:100%;justify-content:space-between}.model-compact,.access-compact{max-width:none}.conversation-title{max-width:220px}.workflow-grid{grid-template-columns:1fr}.workflow-preview{max-width:42%}.settings-layout{grid-template-columns:1fr}.settings-nav{overflow:auto}.hero-image{max-width:100%;width:100%}}
 </style>
 </head>
@@ -2090,9 +2290,20 @@ textarea::placeholder{color:#8c859c}
       </div>
     </div>
     <div class="top-actions">
+      <button class="icon-btn" id="historyBtn" aria-label="Open chat history" title="Open chat history">History</button>
       <button class="icon-btn" id="newChatBtn" aria-label="Start a new chat" title="Start a new chat">New Chat</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Open Agent Lee settings" title="Open Agent Lee settings">Settings</button>
     </div>
+  </div>
+  <div class="history-drawer" id="historyDrawer">
+    <div class="history-head">
+      <div>
+        <div class="settings-heading">Previous chats</div>
+        <div class="settings-copy">Open an older thread any time. The panel still starts fresh by default.</div>
+      </div>
+      <button class="ghost-btn" id="closeHistoryBtn" aria-label="Close chat history" title="Close chat history">Close</button>
+    </div>
+    <div class="history-list" id="historyList"></div>
   </div>
   <div class="main">
     <div class="ui-version" id="uiVersion">AGENT_LEE_UI_VERSION = "${AGENT_LEE_UI_VERSION}"</div>
@@ -2443,7 +2654,7 @@ textarea::placeholder{color:#8c859c}
         <div class="composer-shell">
         <div class="plugin-approval hidden" id="pluginApproval">
           <div class="plugin-approval-title">Plugin approval required</div>
-          <div class="plugin-approval-copy" id="pluginApprovalCopy">I am waiting for permission to continue.</div>
+          <div class="plugin-approval-copy" id="pluginApprovalCopy">Hey yo, I'm waiting on your permission before I push this through.</div>
           <div class="plugin-approval-meta" id="pluginApprovalMeta"></div>
           <div class="plugin-approval-actions">
             <button type="button" class="approve" onclick="approvePluginCall()">Approve Once</button>
@@ -3503,12 +3714,56 @@ function send(){ const input=document.getElementById("input"); const text=input.
 function registerAgentLeeControlButtons(){ document.querySelectorAll("[data-ui-action]").forEach(function(button){ button.addEventListener("click",function(){ const action=button.getAttribute("data-ui-action"); const input=document.getElementById("input"); const prompt=input ? input.value.trim() : ""; postUiAction(action,{ text:prompt }); }); }); }
 function registerAgentLeeTopButtons(){
   const settings=document.getElementById("settingsBtn");
+  const historyButton=document.getElementById("historyBtn");
   const newChatButton=document.getElementById("newChatBtn");
+  const closeHistoryButton=document.getElementById("closeHistoryBtn");
   if(settings) settings.addEventListener("click",function(){ toggleSettings(true); });
+  if(historyButton) historyButton.addEventListener("click",function(){ toggleHistory(); });
+  if(closeHistoryButton) closeHistoryButton.addEventListener("click",function(){ toggleHistory(false); });
   if(newChatButton) newChatButton.addEventListener("click",function(){ newChat(); });
 }
 function mic(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ render("agent","Mic capture is not available in this VS Code webview. Use text input or your local transcript bridge command for live voice."); return; } const rec=new SR(); rec.lang="en-US"; setAttachmentMeta("Mic listening...", true); rec.onresult=function(e){ const transcript=e.results[0][0].transcript; document.getElementById("input").value=transcript; setAttachmentMeta("Mic input captured. Sending now...", true); send(); }; rec.onerror=function(){ setAttachmentMeta(""); }; rec.onend=function(){ const meta=document.getElementById("attachmentMeta"); if(meta && meta.textContent==="Mic listening..."){ setAttachmentMeta(""); } }; rec.start(); }
 function newChat(){ vscode.postMessage({command:"newConversation"}); }
+function toggleHistory(forceOpen){
+  const drawer=document.getElementById("historyDrawer");
+  if(!drawer) return;
+  if(typeof forceOpen==="boolean"){
+    drawer.classList.toggle("open", forceOpen);
+    return;
+  }
+  drawer.classList.toggle("open");
+}
+function loadConversationFromUi(id){
+  toggleHistory(false);
+  vscode.postMessage({command:"loadConversation", id:id});
+}
+function renderConversationHistory(items){
+  const list=document.getElementById("historyList");
+  if(!list) return;
+  list.innerHTML="";
+  if(!items || !items.length){
+    const empty=document.createElement("div");
+    empty.className="history-empty";
+    empty.textContent="No saved chats yet. Start talking and they'll show up here.";
+    list.appendChild(empty);
+    return;
+  }
+  items.forEach(function(item){
+    const row=document.createElement("button");
+    row.className="history-item" + (item.active ? " active" : "");
+    row.type="button";
+    row.onclick=function(){ loadConversationFromUi(item.id); };
+    const title=document.createElement("div");
+    title.className="history-item-title";
+    title.textContent=item.title || "Agent Lee conversation";
+    const meta=document.createElement("div");
+    meta.className="history-item-meta";
+    meta.textContent=item.active ? "Current" : "Saved";
+    row.appendChild(title);
+    row.appendChild(meta);
+    list.appendChild(row);
+  });
+}
 function openReadme(){ vscode.postMessage({command:"openReadme"}); }
 function removeAttachment(index){ window.pendingAttachments.splice(index,1); syncAttachments(); }
 function openTaskFile(filePath){ vscode.postMessage({command:"openTaskFile", path:filePath}); }
@@ -3578,10 +3833,12 @@ window.addEventListener("message",function(e){
   if(msg.command==="history"){
     const active = (msg.items || []).find(function(i){ return i.active; });
     document.getElementById("conversationTitle").textContent = active && active.title ? active.title : "Current conversation";
+    renderConversationHistory(msg.items || []);
   }
   if(msg.command==="loadedConversation"){
     document.getElementById("chat").innerHTML="";
     msg.messages.forEach(function(m){ render(m.role==="user"?"user":"agent",m.text); });
+    toggleHistory(false);
   }
   if(msg.command==="response" || msg.command==="progress"){
     const chat=document.getElementById("chat");
@@ -3748,7 +4005,7 @@ async function runNextQueuedFollowUp(webview: vscode.Webview) {
   if (isExecutionRunning || !queuedFollowUps.length) return;
   const next = queuedFollowUps.shift();
   if (!next) return;
-  postAgentResponse(webview, "Queued follow-up is up next. I'm rolling straight into it.");
+  postAgentResponse(webview, "Yo, the queued follow-up is up next. I'm rolling straight into it.");
   await handle(webview, { command: "ask", text: next.text, attachments: next.attachments }, undefined);
 }
 
@@ -3783,7 +4040,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       const detail = summary.detailLines.join("\n");
       appendAgentLeeLine(output, detail, { voiceMode: "operator" });
       output.show(true);
-      postAgentResponse(webview, `Runtime status is ${summary.statusLabel}. Raw runtime proof follows:\n\n${detail}`, { speak: false });
+      postAgentResponse(webview, `Yo, runtime status is ${summary.statusLabel}. Raw proof is right here:\n\n${detail}`, { speak: false });
       await postVisibleRuntimeState(webview);
       return;
     }
@@ -3896,7 +4153,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     const online = await checkOllama();
     const installedModels = await getModels();
     refreshRuntimeFromInstalled(installedModels);
-    const activeConversation = getOrCreateActiveConversation(workspaceRoot());
+    const activeConversation = startNewConversation(workspaceRoot());
 
     webview.postMessage({
       command: "status",
@@ -3911,7 +4168,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
 
     if (!loadConversation(activeConversation.id).length) {
       const intro = sovereignRuntime.AGENT_LEE_RUNTIME_READY
-        ? "Agent Lee is already alive in the runtime. Point me at what needs to be inspected, built, or repaired."
+        ? "I got you. Show me what's breaking or what you're trying to build, and we'll work it clean."
         : "Agent Lee runtime is degraded: persona module unavailable. Only scan and diagnostic moves are available until the sovereign runtime is healthy again.";
       const stage = enforceStageLaw("synthesis", { speaker: "Agent Lee", directUserFacing: true });
       if (stage.allowed) {
@@ -3925,7 +4182,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
 
   if (msg.command === "approvePluginCall") {
     if (!pendingPluginApproval) {
-      postAgentResponse(webview, "No plugin action is waiting for approval right now.", { speak: false });
+      postAgentResponse(webview, "Ain't nothing waiting on approval right now.", { speak: false });
       return;
     }
 
@@ -4199,7 +4456,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       abortCurrentExecution("Task paused. I kept the task so you can resume or redirect.");
       parkedTaskState = cloneTaskState(currentTaskState);
       resetTaskState("Task paused. You can ask a redirect question or resume the parked task.");
-      postAgentResponse(webview, "The active task was paused. I kept the plan and live tracker so it can resume.");
+      postAgentResponse(webview, flavoredStatusLine("paused"));
     }
   }
 
@@ -4209,7 +4466,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       parkedTaskState = null;
       currentTaskState.status = "Paused task restored. Approve or execute when ready.";
       postTaskState();
-      postAgentResponse(webview, "The paused task is back in the tracker and ready to continue.");
+      postAgentResponse(webview, flavoredStatusLine("resume"));
     }
   }
 
@@ -4275,22 +4532,69 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       { role: "user", text: text || (attachments.length ? `[${attachments.map((item) => item.name).join(", ")}]` : ""), timestamp },
       { conversationId: active.id, titleHint: text || "Agent Lee conversation" }
     );
+    if (text.trim()) {
+      const developerProfile = rememberDeveloperSignal(text);
+      storeAgentMemory("developer-profile", "developer-signal-observed", {
+        summary: buildDeveloperProfileSummary(developerProfile),
+        sourceText: text.slice(0, 500)
+      });
+    }
     log("ask", { text, attachments, runtimeState, workspaceRoot: workspaceRoot(), conversationId: active.id });
+
+    if (isSelfIdentityQuestion(text) && !attachments.length) {
+      const finalText = agentLeeText(buildIdentityAnswer(), { voiceMode: "grounded" });
+      appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
+      currentTaskState = {
+        ...emptyTaskState(),
+        mode: "ask",
+        prompt: promptText,
+        draftPrompt: promptText,
+        summary: "Personal introduction handled directly in Agent Lee's own voice.",
+        status: "Answered directly without planning.",
+        activePhase: "answer"
+      };
+      postTaskState();
+      postAgentResponse(webview, finalText);
+      webview.postMessage({ command: "history", items: conversationItems() });
+      await postRuntimeInfo(webview, text);
+      return;
+    }
+
+    if (isCasualConversationPrompt(text) && !attachments.length) {
+      const lightReply = await runLightConversation(text, installedModels);
+      const finalText = agentLeeText(lightReply, { voiceMode: "grounded" });
+      appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
+      currentTaskState = {
+        ...emptyTaskState(),
+        mode: "ask",
+        prompt: promptText,
+        draftPrompt: promptText,
+        summary: "Natural conversational turn handled directly.",
+        status: "Answered directly without planning.",
+        activePhase: "answer"
+      };
+      postTaskState();
+      postAgentResponse(webview, finalText);
+      webview.postMessage({ command: "history", items: conversationItems() });
+      await postRuntimeInfo(webview, text);
+      return;
+    }
+
     postAgentResponse(
       webview,
-      "I got your request. I'm loading context now, and I'll call out each step as I move.",
+      flavoredStatusLine("loading"),
       { activity: { kind: "status", label: "Loading request context", detail: text || "Attachment-only request received." } }
     );
 
     const wantsExecution = isExecutionIntent(text);
     if (wantsExecution && currentTaskState.plan && currentTaskState.canExecute && currentTaskState.awaitingApproval && !isExecutionRunning) {
       if (!canExecuteApprovedPlan()) {
-        postAgentResponse(webview, "Execution is available when Work Mode is Execute. Auto-run is separate and stays off unless you deliberately enable it in Full access.");
+        postAgentResponse(webview, "Yo, execution only runs when Work Mode is Execute. Auto-run is a separate switch, and it stays off till you deliberately arm it.");
         return;
       }
       currentTaskState.status = "Execution requested from chat. Running the staged plan now.";
       postTaskState();
-      postAgentResponse(webview, "Executing the staged plan now.");
+      postAgentResponse(webview, flavoredStatusLine("execute_now"));
       const execution = await executeCurrentPlan(webview, installedModels);
       if (execution) {
         appendConversationMessage(workspaceRoot(), { role: "agent", text: execution.finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
@@ -4331,23 +4635,43 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     }
 
     if (shouldAnswerDirectly(promptText)) {
+      const reviewStyleRequest = isReviewRequest(promptText) || isRepositoryOpinionRequest(promptText);
       currentTaskState = {
         ...emptyTaskState(),
         mode: "ask",
         prompt: promptText,
         draftPrompt: promptText,
-        summary: "I am answering directly from the live runtime and capability catalog.",
-        status: "Answering directly without staging an execution plan.",
-        activePhase: "answer"
+        summary: reviewStyleRequest
+          ? "I am inspecting the workspace and preparing a direct review without staging an execution plan."
+          : "I am answering directly from the live runtime and capability catalog.",
+        status: reviewStyleRequest
+          ? "Inspecting the workspace for a direct review."
+          : "Answering directly without staging an execution plan.",
+        activePhase: reviewStyleRequest ? "inspect" : "answer"
       };
       syncLiveTodos();
       postTaskState();
-      const response = await guardedAsk(promptText, installedModels);
+      const directTarget = reviewStyleRequest ? await resolvePromptContext(promptText) : undefined;
+      const directPrebuiltContext = directTarget ? await buildPreloadedContext(directTarget, promptText) : undefined;
+      const response = await guardedAsk(promptText, installedModels, directTarget
+        ? {
+            target: directTarget,
+            prebuiltContext: directPrebuiltContext,
+            telemetry: reviewStyleRequest
+              ? {
+                  onActivity: (event: { kind: "read" | "write" | "status"; label: string; file?: string; detail?: string }) => {
+                    pushTaskActivity(event);
+                  }
+                }
+              : undefined
+          }
+        : undefined);
       const stage = enforceStageLaw("synthesis", { speaker: "Agent Lee", directUserFacing: true });
       const finalText = stage.allowed ? finalizeResponse(response, "chat") : "Agent Lee governance blocked a non-sovereign response.";
       if (response.reportPath) lastReportPath = response.reportPath;
       appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
-      currentTaskState.status = "Direct answer finished.";
+      currentTaskState.status = reviewStyleRequest ? "Direct review finished." : "Direct answer finished.";
+      currentTaskState.activePhase = "answer";
       postTaskState();
       postAgentResponse(webview, finalText, { reportPath: response.reportPath || "" });
       webview.postMessage({ command: "history", items: conversationItems() });
@@ -4389,7 +4713,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       runtimeState.autoRunStagedPlans;
 
     if (autoExecute) {
-      postAgentResponse(webview, "Plan locked. Executing now.");
+      postAgentResponse(webview, flavoredStatusLine("execute_now"));
       const execution = await executeCurrentPlan(webview, installedModels);
       if (execution) {
         appendConversationMessage(workspaceRoot(), { role: "agent", text: execution.finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
@@ -4473,7 +4797,7 @@ function registerChatParticipant(context: vscode.ExtensionContext) {
 
       const prompt = String(request.prompt || "").trim();
       if (!prompt) {
-        response.markdown(agentLeeText("Point me at what needs to be inspected, built, or repaired."));
+        response.markdown(agentLeeText("What's the move? Show me what's breaking or what you're trying to build."));
         return {};
       }
 
@@ -4561,7 +4885,7 @@ export async function activate(context: vscode.ExtensionContext) {
     for (const webview of activeWebviews) {
       postAgentResponse(
         webview,
-        `Runtime status is ${summary.statusLabel}. I opened the Agent Lee chat surface and kept the raw proof in the output channel.`,
+        `Yo, runtime status is ${summary.statusLabel}. I opened the Agent Lee chat surface and kept the raw proof in the output channel.`,
         { speak: false }
       );
     }

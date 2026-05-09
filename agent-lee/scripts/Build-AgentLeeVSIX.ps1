@@ -40,8 +40,8 @@ try {
     throw "TypeScript compile failed."
   }
 
-  if (-not (Test-Path "out\extension.js")) {
-    throw "Compile finished, but out\extension.js was not created."
+  if (-not (Test-Path "dist\extension.js")) {
+    throw "Compile finished, but dist\extension.js was not created."
   }
 
   & npx.cmd @vscode/vsce package --no-rewrite-relative-links -o $OutputName

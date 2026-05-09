@@ -11,15 +11,20 @@ param(
   [string]$ExtensionDir,
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
   [string]$UserDataDir = (Join-Path $env:TEMP "agent-lee-vscode-profile"),
-  [string]$ExtensionsDir = (Join-Path $env:TEMP "agent-lee-vscode-extensions")
+  [string]$ExtensionsDir = (Join-Path $env:TEMP "agent-lee-vscode-extensions"),
+  [switch]$LiveProfile
 )
 
 $ErrorActionPreference = "Stop"
 
 if (-not $VsixPath) {
   $resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
+  $buildOutput = & (Join-Path $PSScriptRoot "Build-AgentLeeVSIX.ps1") -ExtensionDir $resolvedExtensionDir
+  $VsixPath = @($buildOutput | Where-Object { $_ })[-1]
   $package = Get-Content (Join-Path $resolvedExtensionDir "package.json") -Raw | ConvertFrom-Json
-  $VsixPath = Join-Path $resolvedExtensionDir "$($package.name)-$($package.version).vsix"
+  if (-not $VsixPath) {
+    $VsixPath = Join-Path $resolvedExtensionDir "$($package.name)-$($package.version).vsix"
+  }
 }
 
 if (-not (Test-Path $CodeCmdPath)) {
@@ -27,15 +32,22 @@ if (-not (Test-Path $CodeCmdPath)) {
 }
 
 $resolvedVsix = (Resolve-Path $VsixPath).Path
-New-Item -ItemType Directory -Force -Path $UserDataDir | Out-Null
-New-Item -ItemType Directory -Force -Path $ExtensionsDir | Out-Null
+if ($LiveProfile) {
+  Write-Host "Installing VSIX into the live VS Code profile" -ForegroundColor Yellow
+  & $CodeCmdPath `
+    --install-extension $resolvedVsix `
+    --force
+} else {
+  New-Item -ItemType Directory -Force -Path $UserDataDir | Out-Null
+  New-Item -ItemType Directory -Force -Path $ExtensionsDir | Out-Null
 
-Write-Host "Installing VSIX into isolated VS Code profile" -ForegroundColor Cyan
-& $CodeCmdPath `
-  --user-data-dir $UserDataDir `
-  --extensions-dir $ExtensionsDir `
-  --install-extension $resolvedVsix `
-  --force
+  Write-Host "Installing VSIX into isolated VS Code profile" -ForegroundColor Cyan
+  & $CodeCmdPath `
+    --user-data-dir $UserDataDir `
+    --extensions-dir $ExtensionsDir `
+    --install-extension $resolvedVsix `
+    --force
+}
 
 if ($LASTEXITCODE -ne 0) {
   throw "VSIX install failed."
@@ -45,7 +57,8 @@ Write-Host "Installed VSIX: $resolvedVsix" -ForegroundColor Green
 
 [pscustomobject]@{
   VsixPath = $resolvedVsix
-  UserDataDir = $UserDataDir
-  ExtensionsDir = $ExtensionsDir
+  UserDataDir = if ($LiveProfile) { "" } else { $UserDataDir }
+  ExtensionsDir = if ($LiveProfile) { "" } else { $ExtensionsDir }
+  InstallMode = if ($LiveProfile) { "live-profile" } else { "isolated-profile" }
 }
 

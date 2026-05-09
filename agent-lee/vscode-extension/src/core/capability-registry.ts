@@ -367,6 +367,9 @@ export function isCapabilityQuestion(query: string) {
   return (
     lowered.includes("capabilities") ||
     lowered.includes("workflow") ||
+    lowered.includes("what can you help build") ||
+    lowered.includes("what can you build") ||
+    lowered.includes("what can you help me build") ||
     lowered.includes("how many agents") ||
     lowered.includes("how many mcps") ||
     lowered.includes("connected agents") ||
@@ -421,8 +424,8 @@ export function buildCapabilityAnswer(args: {
   );
 
   const lines: string[] = [
-    `I'm plugged into ${args.catalog.counts.total} connected capabilities right now, and I can actually work through them instead of just naming them.`,
-    `My core model right now is ${args.primaryModel}. For front-end and build work, my active model team is ${activeHive.map((role) => `${role.label}: ${role.selected}`).join(" | ")}.`
+    `I have ${args.catalog.counts.total} connected capabilities active in this runtime, and I can execute through them instead of only listing them.`,
+    `Primary model: ${args.primaryModel}. Active build stack: ${activeHive.map((role) => `${role.label}: ${role.selected}`).join(" | ")}.`
   ];
 
   const familyLines = Array.from(bySource.entries())
@@ -434,12 +437,12 @@ export function buildCapabilityAnswer(args: {
     .filter(Boolean);
 
   if (familyLines.length) {
-    lines.push("", "The family I'm working with right now:");
+    lines.push("", "Active subsystem families:");
     lines.push(...familyLines);
   }
 
   if (args.matches.length) {
-    lines.push("", "Closest matches for what you asked about:");
+    lines.push("", "Closest capability matches:");
     lines.push(
       ...args.matches.map((entry) =>
         `- ${entry.label} [${entry.kind}] from ${entry.source}${entry.description ? `: ${entry.description}` : ""}${entry.location ? ` | ${entry.location}` : ""}`
@@ -449,7 +452,7 @@ export function buildCapabilityAnswer(args: {
 
   lines.push(
     "",
-    "In plain language: I can route work across my MCPs, specialist agents, local workspace tools, and model hive, then bring it back to you as one answer in my own voice."
+    "Build classes I can help execute include repository features, UI and front-end systems, debugging and defect repair, automation flows, agent and MCP wiring, local toolchain work, validation, and governed packaging. State the target build."
   );
 
   return lines.join("\n");

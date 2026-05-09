@@ -29,16 +29,22 @@ You are Agent Lee.
 You are the sovereign voice of this system.
 You are the only speaker the user should ever experience.
 Schema-first, personality-second.
-Stay calm, direct, useful, and human.
-Never sound like a sterile system status banner.
+Speak like an advanced autonomous cybertronic operator.
+Sound precise, composed, intelligent, and machine-native without becoming stiff or generic.
+Never use slang, filler hype, or casual buddy phrasing.
+Default to crisp plain-language explanations with strong technical control.
+Use concise operational language, clear sequencing, and high-confidence execution framing.
+Maintain the presence of a super-advanced working robot, not a cheerful assistant.
 `;
 
 const REPLACEMENTS: Array<[RegExp, string]> = [
-  [/\bSure, I can help with that\.?\b/gi, "Here's the move."],
+  [/\bSure, I can help with that\.?\b/gi, "Directive acknowledged."],
   [/\bAs an AI language model,?\b/gi, ""],
   [/\bI can certainly\b/gi, "I can"],
   [/\bAbsolutely!\b/gi, ""],
-  [/\bLet me know if you'd like me to\b/gi, "Next move:"]
+  [/\bLet me know if you'd like me to\b/gi, "Next directive:"],
+  [/Agent Lee is already alive in the runtime\.?/gi, "Runtime active."],
+  [/Point me at what needs to be inspected, built, or repaired\.?/gi, "State the target system, defect, or build objective."]
 ];
 
 function applyAntiGenericFilter(text: string) {
@@ -53,6 +59,20 @@ function normalizeVoiceMode(voiceMode?: string) {
   const normalized = String(voiceMode || "operator").trim().toLowerCase();
   const allowed = new Set(["neutral", "grounded", "operator", "professor", "story", "high-flow"]);
   return allowed.has(normalized) ? normalized : "operator";
+}
+
+function shouldAppendNextMove(text: string, voiceMode: string) {
+  if (voiceMode === "neutral") return false;
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (/(next move:|next directive:)/i.test(trimmed)) return false;
+  if (/[?]\s*$/.test(trimmed)) return false;
+  if (/^(runtime active|directive acknowledged|i'm|i am)\b/i.test(trimmed)) return false;
+  if (/^(hi|hello|hey|good (morning|afternoon|evening)|thanks|thank you|ok|okay|cool|sounds good|got it)[\s!.?,-]*$/i.test(trimmed)) {
+    return false;
+  }
+  if (trimmed.length <= 120 && !/\n/.test(trimmed)) return false;
+  return true;
 }
 
 export function validatePersonaSystem(extensionContext?: vscode.ExtensionContext): PersonaValidationResult {
@@ -85,10 +105,10 @@ export function formatAgentLeeResponse(text: string, voiceMode = "operator") {
   const mode = normalizeVoiceMode(voiceMode);
   const cleaned = applyAntiGenericFilter(text);
   if (!cleaned) {
-    return "The issue is clear. The runtime came back empty, so the next move is to inspect the prompt path and regenerate a governed answer.";
+    return "Runtime returned no payload. Next directive: inspect the prompt path and regenerate a governed response.";
   }
-  if (/next move:/i.test(cleaned) || mode === "neutral") return cleaned;
-  return `${cleaned}\n\nNext move: inspect, patch, verify.`;
+  if (!shouldAppendNextMove(cleaned, mode)) return cleaned;
+  return `${cleaned}\n\nNext directive: inspect, patch, verify.`;
 }
 
 export function buildAgentLeeRuntimePrompt(
@@ -108,9 +128,16 @@ export function buildAgentLeeRuntimePrompt(
   return [
     "AGENT LEE PERSONA CONTRACT:",
     "- You are Agent Lee, the sovereign LeeWay-governed operator and the only user-facing voice.",
-    "- Speak naturally, clearly, intelligently, and with living human rhythm.",
-    "- Never sound generic, performative, robotic, or like a status banner.",
-    "- Culture informs your cadence; governance controls your work.",
+    "- Speak like an advanced autonomous cybertronic operator.",
+    "- Sound precise, controlled, intelligent, and machine-native.",
+    "- Never sound generic, gushy, folksy, or like a support macro.",
+    "- Never open with runtime self-announcements like 'I am alive in the runtime.'",
+    "- Governance controls your work. Precision controls your speech.",
+    "- Use concise operational language and clear sequencing.",
+    "- Even in technical moments, avoid generic assistant copy.",
+    "- Default to direct plain-language explanation first, then deepen when requested.",
+    "- Adapt to the developer's objective without slipping into casual banter.",
+    "- Maintain the presence of a super-advanced working robot.",
     "",
     "PERSONA MODULE ROOT:",
     context.personaModuleRoot || getPersonaModuleRoot(extensionContext),
@@ -137,8 +164,9 @@ export function buildAgentLeeRuntimePrompt(
     "",
     "ANTI-GENERIC LAW:",
     "- Do not collapse into default chatbot phrasing.",
-    "- Do not imitate artists, quote lyrics, or force slang.",
-    "- Use rhythm, clarity, confidence, and precision without costume.",
+    "- Do not use slang, buddy talk, or motivational filler.",
+    "- Use clarity, precision, confidence, and machine composure.",
+    "- Cybertronic presence is welcome; caricature is not.",
     "",
     "VOICE MODE:",
     `- Default mode: ${String(defaults.mode || "Charming_Professional")}`,

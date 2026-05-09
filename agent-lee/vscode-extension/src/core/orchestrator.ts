@@ -40,6 +40,7 @@ function buildSharedPrompt(args: {
   webContext: string;
   browserContext: string;
   capabilitySummary?: string;
+  developerProfileSummary?: string;
   ctx: { total: number; samples: { file: string; preview: string }[] };
   hiveSummary: string;
 }) {
@@ -89,6 +90,9 @@ ${args.approval}
 CAPABILITY CATALOG:
 ${args.capabilitySummary || "No capability catalog loaded."}
 
+DEVELOPER PROFILE:
+${args.developerProfileSummary || "No developer profile signals stored yet. Stay calm, plain-language first, and adapt as the user reveals preferences."}
+
 MODEL HIVE:
 ${args.hiveSummary}
 
@@ -129,6 +133,7 @@ export async function runSupervisor(args: {
   explicitUrl?: string;
   remoteContext?: string;
   capabilitySummary?: string;
+  developerProfileSummary?: string;
   prebuiltContext?: { total: number; samples: { file: string; preview: string }[] };
   telemetry?: SupervisorTelemetry;
   ollama: (prompt: string, model: string) => Promise<string>;
@@ -281,6 +286,7 @@ Ask me to audit or explain, or switch approval to BALANCED/FULL AUTO for change 
     webContext,
     browserContext,
     capabilitySummary: args.capabilitySummary,
+    developerProfileSummary: args.developerProfileSummary,
     ctx,
     hiveSummary
   });
