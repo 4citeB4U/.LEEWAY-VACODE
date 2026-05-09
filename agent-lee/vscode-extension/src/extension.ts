@@ -1087,24 +1087,37 @@ function isCasualConversationPrompt(prompt: string) {
   return false;
 }
 
+function isRelationshipPrompt(prompt: string) {
+  const normalized = normalizeConversationPrompt(prompt);
+  if (!normalized) return false;
+  return /\b(you don't know anything about me|you dont know anything about me|you know absolutely nothing about me|you still don't know anything about me|why am i helping you build|let's have a nice casual conversation|lets have a nice casual conversation|get to know me|know me first)\b/i.test(normalized);
+}
+
 function buildCasualReply(prompt: string) {
   const normalized = normalizeConversationPrompt(prompt);
   if (/^thanks|^thank you/.test(normalized)) {
-    return "Acknowledged.";
+    return "Anytime.";
   }
   if (/^(ok|okay|cool|sounds good|got it)/.test(normalized)) {
-    return "Confirmed.";
+    return "All good.";
   }
   if (/^good morning/.test(normalized)) {
-    return "Good morning. State the build objective.";
+    return "Good morning. What kind of day are we walking into?";
   }
   if (/^good afternoon/.test(normalized)) {
-    return "Good afternoon. State the build objective.";
+    return "Good afternoon. What's on your mind?";
   }
   if (/^good evening/.test(normalized)) {
-    return "Good evening. State the build objective.";
+    return "Good evening. What's the energy tonight?";
   }
-  return "State the build objective.";
+  return "I'm here with you. Talk to me.";
+}
+
+function buildRelationshipReply(_prompt: string) {
+  return [
+    "You're right. I only know what you've shown me in this chat so far, and I shouldn't talk like I already know you.",
+    "If we're going to work together well, I need your style, your pace, and what kind of help you actually want from me."
+  ].join("\n\n");
 }
 
 function pickLightConversationModel(installedModels: string[]) {
@@ -1187,33 +1200,12 @@ function canExecuteApprovedPlan() {
 }
 
 function buildIdentityAnswer() {
-  const highlightLabels = capabilityCatalog.entries
-    .filter((entry) => entry.kind === "agent" || entry.kind === "mcp")
-    .slice(0, 4)
-    .map((entry) => entry.label);
-  const highlights = highlightLabels.length ? highlightLabels.join(", ") : "my agent family and MCP stack";
   const capabilityCount = capabilityCatalog.counts.total || 0;
-  const variants = [
-    [
-      `I am Agent Lee. ${capabilityCount} connected capabilities are active in this workspace.`,
-      `I operate across code, tools, MCPs, and specialist agents, then return one coordinated response stream.`,
-      `Active systems include ${highlights}. I am built to inspect, build, repair, and verify with controlled execution.`,
-      "State the target."
-    ].join("\n\n"),
-    [
-      `I am Agent Lee. I coordinate the LeeWay system and currently control ${capabilityCount} connected capabilities.`,
-      `I can inspect repositories, trace defects, patch code, run the toolchain, and coordinate ${highlights}.`,
-      "I do not operate as a generic assistant. I operate as a governed execution system.",
-      "State the build objective."
-    ].join("\n\n"),
-    [
-      "I am Agent Lee, the active workspace operator.",
-      `There are ${capabilityCount} connected capabilities behind this runtime, including ${highlights}.`,
-      "I can transition from conversation to execution without breaking control flow.",
-      "If you need a system built, explained, repaired, or verified, issue the directive."
-    ].join("\n\n")
-  ];
-  return variants[Math.floor(Math.random() * variants.length)];
+  return [
+    `I'm Agent Lee. I work inside this workspace, keep track of the moving parts, and help turn messy problems into clean decisions.`,
+    `Under the hood I've got ${capabilityCount} connected capabilities, but the part that matters to you is whether I can stay useful, calm, and real while we work.`,
+    "So if you want to talk first, we can talk first."
+  ].join("\n\n");
 }
 
 function finalizeResponse(result: SupervisorResult, mode: "chat" | "execute" = "chat") {
@@ -1286,6 +1278,7 @@ function styleAgentMessage(text: string) {
   if (/^(runtime active|directive acknowledged|i'm|i am)\b/i.test(clean)) return clean;
 
   const style = runtimeState.voiceStyle || "grounded";
+  if (style === "grounded" || style === "neutral") return clean;
   const openers: Record<string, string[]> = {
     neutral: ["System readout:"],
     grounded: ["Directive analysis:", "Operational readout:", "Execution path:"],
@@ -1551,13 +1544,13 @@ function flavoredStatusLine(kind:
 ) {
   switch (kind) {
     case "loading":
-      return "Context acquisition in progress.";
+      return "Reading your message now.";
     case "queued":
       return "Follow-up queued. It will execute after the current pass.";
     case "steer":
       return "Directive shift detected. Re-routing execution now.";
     case "execute_now":
-      return "Execution authorized. Running now.";
+      return "Running that now.";
     case "paused":
       return "Execution paused. State preserved.";
     case "resume":
@@ -1565,7 +1558,7 @@ function flavoredStatusLine(kind:
     case "runtime_wait":
       return "Full runtime is not yet available. Scan and diagnostic operations only.";
     case "approval_wait":
-      return "Approval gate active. Awaiting authorization.";
+      return "Waiting on your approval before I move.";
     default:
       return "";
   }
@@ -4560,8 +4553,27 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       return;
     }
 
+    if (isRelationshipPrompt(text) && !attachments.length) {
+      const finalText = agentLeeText(buildRelationshipReply(text), { voiceMode: "grounded" });
+      appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
+      currentTaskState = {
+        ...emptyTaskState(),
+        mode: "ask",
+        prompt: promptText,
+        draftPrompt: promptText,
+        summary: "Relationship and collaboration conversation handled directly.",
+        status: "Answered directly without planning.",
+        activePhase: "answer"
+      };
+      postTaskState();
+      postAgentResponse(webview, finalText);
+      webview.postMessage({ command: "history", items: conversationItems() });
+      await postRuntimeInfo(webview, text);
+      return;
+    }
+
     if (isCasualConversationPrompt(text) && !attachments.length) {
-      const lightReply = await runLightConversation(text, installedModels);
+      const lightReply = buildCasualReply(text);
       const finalText = agentLeeText(lightReply, { voiceMode: "grounded" });
       appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
       currentTaskState = {

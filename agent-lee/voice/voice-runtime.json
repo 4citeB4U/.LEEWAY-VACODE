@@ -12,12 +12,12 @@
   "personaSpeechMode": "Grounded_Operator",
   "interruptionPolicy": "kill-current-and-replace",
   "piperExecutable": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\piper_bin\\piper.exe",
-  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx",
-  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx.json",
+  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx",
+  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx.json",
   "sampleRate": 22050,
-  "selectedVoiceId": "en_US-arctic-medium",
-  "selectedVoiceLabel": "Agent Lee Female Voice - Arctic FEM",
-  "selectedSpeakerId": "fem",
+  "selectedVoiceId": "en_US-hfc_male-medium",
+  "selectedVoiceLabel": "Agent Lee Male Voice - HFC",
+  "selectedSpeakerId": "",
   "tuning": {
     "sampleTrimRatio": 0.95,
     "playbackRateRatio": 0.95
