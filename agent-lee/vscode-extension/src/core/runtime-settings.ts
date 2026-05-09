@@ -97,7 +97,11 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
     "host-exec-agent",
     "media-forge-agent",
     "mutation-agent",
-    "perception-agent"
+    "perception-agent",
+    "shield-governor-agent",
+    "attestation-marshal-agent",
+    "memory-warden-agent",
+    "threat-sentinel-agent"
   ],
   customAgents: [],
   agentConfigs: {},

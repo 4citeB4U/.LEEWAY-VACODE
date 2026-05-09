@@ -1,7 +1,7 @@
 /*
 LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: 🧠 AI
+REGION: AI
 TAG: AI.PERSONA.RUNTIME_BRIDGE.MAIN
 
 5WH:
@@ -33,6 +33,28 @@ Stay calm, direct, useful, and human.
 Never sound like a sterile system status banner.
 `;
 
+const REPLACEMENTS: Array<[RegExp, string]> = [
+  [/\bSure, I can help with that\.?\b/gi, "Here's the move."],
+  [/\bAs an AI language model,?\b/gi, ""],
+  [/\bI can certainly\b/gi, "I can"],
+  [/\bAbsolutely!\b/gi, ""],
+  [/\bLet me know if you'd like me to\b/gi, "Next move:"]
+];
+
+function applyAntiGenericFilter(text: string) {
+  let next = text;
+  for (const [pattern, replacement] of REPLACEMENTS) {
+    next = next.replace(pattern, replacement);
+  }
+  return next.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function normalizeVoiceMode(voiceMode?: string) {
+  const normalized = String(voiceMode || "operator").trim().toLowerCase();
+  const allowed = new Set(["neutral", "grounded", "operator", "professor", "story", "high-flow"]);
+  return allowed.has(normalized) ? normalized : "operator";
+}
+
 export function validatePersonaSystem(extensionContext?: vscode.ExtensionContext): PersonaValidationResult {
   const context = loadSovereignContext(extensionContext);
   const missing: string[] = [];
@@ -60,21 +82,13 @@ export function getAgentLeePersonaModuleRoot() {
 }
 
 export function formatAgentLeeResponse(text: string, voiceMode = "operator") {
-  const replacements: Array<[RegExp, string]> = [
-    [/\bSure, I can help with that\.?\b/gi, "Here’s the move."],
-    [/\bAs an AI language model,?\b/gi, ""],
-    [/\bAbsolutely!\b/gi, ""]
-  ];
-  let next = text;
-  for (const [pattern, replacement] of replacements) {
-    next = next.replace(pattern, replacement);
+  const mode = normalizeVoiceMode(voiceMode);
+  const cleaned = applyAntiGenericFilter(text);
+  if (!cleaned) {
+    return "The issue is clear. The runtime came back empty, so the next move is to inspect the prompt path and regenerate a governed answer.";
   }
-  next = next.trim();
-  if (!next) {
-    next = "The issue is clear. The runtime came back empty, so the next move is to inspect the prompt path and regenerate a governed answer.";
-  }
-  if (/next move:/i.test(next) || voiceMode === "neutral") return next;
-  return `${next}\n\nNext move: inspect, patch, verify.`;
+  if (/next move:/i.test(cleaned) || mode === "neutral") return cleaned;
+  return `${cleaned}\n\nNext move: inspect, patch, verify.`;
 }
 
 export function buildAgentLeeRuntimePrompt(
@@ -117,7 +131,7 @@ export function buildAgentLeeRuntimePrompt(
     "- Re-audit after write. Scores below 70 are blocking.",
     "",
     "ENGINEERING WORKFLOW LAW:",
-    "- Inspect → Plan → Stage → Approve → Apply → Verify → Receipt.",
+    "- Inspect -> Plan -> Stage -> Approve -> Apply -> Verify -> Receipt.",
     "- Risky edits stop for review.",
     "- Verification and receipts are mandatory.",
     "",
@@ -138,7 +152,7 @@ export function buildAgentLeeRuntimePrompt(
     userRequest,
     "",
     "SELECTED VOICE MODE:",
-    voiceMode,
+    normalizeVoiceMode(voiceMode),
     "",
     "PERSONA LAW:",
     ...((context.personaManifest?.personaLaw as string[] | undefined) || [
@@ -160,5 +174,5 @@ export function testPersona() {
 
 /*
 DISCOVERY_PIPELINE:
-Voice → Intent → Location → Vertical → Ranking → Render
+Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */

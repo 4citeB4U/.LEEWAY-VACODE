@@ -40,6 +40,8 @@ export type LeewayVmIdentity = {
   notepadPath: string;
   databasePath: string;
   heartbeat: string;
+  developerSurface?: "mutable" | "observed-only";
+  lockReason?: string;
 };
 
 export const DEFAULT_PLUGIN_CATALOG: PluginCatalogEntry[] = [
@@ -180,7 +182,9 @@ export const DEFAULT_MCP_SERVER_CATALOG: McpServerCatalogEntry[] = [
       vmAddress: "vm://leeway/mcp/registrar-amara-voss",
       notepadPath: "workspace/agents/leeway-agent-registry/notes/registrar-amara-voss.md",
       databasePath: "memory/db/leeway-agent-registry.sqlite",
-      heartbeat: "registry-route-heartbeat"
+      heartbeat: "registry-route-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Registry authority is locked because identity routing and trusted lineage must remain immutable."
     }
   },
   {
@@ -350,7 +354,9 @@ export const DEFAULT_MCP_SERVER_CATALOG: McpServerCatalogEntry[] = [
       vmAddress: "vm://leeway/mcp/sentinel-priya-knox",
       notepadPath: "workspace/agents/leeway-validation/notes/sentinel-priya-knox.md",
       databasePath: "memory/db/leeway-validation.sqlite",
-      heartbeat: "validation-heartbeat"
+      heartbeat: "validation-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Validation authority is locked because LeeWay compliance and final governance posture must not be developer-tuned."
     }
   },
   {
@@ -608,7 +614,9 @@ export const DEFAULT_AGENT_CATALOG: AgentCatalogEntry[] = [
       vmAddress: "vm://leeway/agent/agent-lee-prime",
       notepadPath: "workspace/agents/agent-lee-prime/notes/agent-lee-prime.md",
       databasePath: "memory/db/agent-lee-prime.sqlite",
-      heartbeat: "prime-runtime-heartbeat"
+      heartbeat: "prime-runtime-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Agent Lee Prime is locked because the sovereign coordinator cannot be directly developer-reconfigured."
     }
   },
   {
@@ -694,6 +702,82 @@ export const DEFAULT_AGENT_CATALOG: AgentCatalogEntry[] = [
       notepadPath: "workspace/agents/perception-agent/notes/perceptor-nora-singh.md",
       databasePath: "memory/db/perception-agent.sqlite",
       heartbeat: "perception-heartbeat"
+    }
+  },
+  {
+    id: "shield-governor-agent",
+    name: "LeeWay Shield Governor Agent",
+    description: "Prime-family security officer for protected action review, zone enforcement, and privileged execution gating.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Shield Governor Serah Kane",
+      family: "Prime Security Family",
+      lineage: "Agent Lee Prime > Prime Security Wing > Governance Shield Branch",
+      duties: ["Review protected actions before execution.", "Enforce cross-zone security boundaries.", "Block unverifiable privileged actions."],
+      authorities: ["Require human confirmation for critical security paths.", "Declare quarantine on high-risk trust failures.", "Write security incident receipts."],
+      vmAddress: "vm://leeway/agent/shield-governor-serah-kane",
+      notepadPath: "workspace/agents/shield-governor-agent/notes/shield-governor-serah-kane.md",
+      databasePath: "memory/db/shield-governor-agent.sqlite",
+      heartbeat: "shield-governor-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Prime Security officers are observed-only so no one can tune away the security controls that protect the runtime."
+    }
+  },
+  {
+    id: "attestation-marshal-agent",
+    name: "LeeWay Attestation Marshal Agent",
+    description: "Prime-family security officer for agent, worker, and bridge identity verification.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Attestation Marshal Dorian Vale",
+      family: "Prime Security Family",
+      lineage: "Agent Lee Prime > Prime Security Wing > Identity Proof Branch",
+      duties: ["Verify identity claims for workers and bridges.", "Detect impersonation and undeclared runtime units.", "Keep capability proof requirements explicit."],
+      authorities: ["Challenge unverifiable identity claims.", "Mark identity mismatches as blocking incidents.", "Report attestation posture to Agent Lee Prime."],
+      vmAddress: "vm://leeway/agent/attestation-marshal-dorian-vale",
+      notepadPath: "workspace/agents/attestation-marshal-agent/notes/attestation-marshal-dorian-vale.md",
+      databasePath: "memory/db/attestation-marshal-agent.sqlite",
+      heartbeat: "attestation-marshal-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Prime Security officers are observed-only so no one can tune away the security controls that protect the runtime."
+    }
+  },
+  {
+    id: "memory-warden-agent",
+    name: "LeeWay Memory Warden Agent",
+    description: "Prime-family security officer for provenance review, memory poisoning defense, and recall integrity.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Memory Warden Nyra Sol",
+      family: "Prime Security Family",
+      lineage: "Agent Lee Prime > Prime Security Wing > Pallium Integrity Branch",
+      duties: ["Guard long-term and session memory integrity.", "Detect poisoned summaries and delayed false approvals.", "Separate evidence-backed recall from assertion."],
+      authorities: ["Lower trust on unverifiable memory.", "Recommend replay or quarantine for suspicious recall.", "Write memory integrity receipts."],
+      vmAddress: "vm://leeway/agent/memory-warden-nyra-sol",
+      notepadPath: "workspace/agents/memory-warden-agent/notes/memory-warden-nyra-sol.md",
+      databasePath: "memory/db/memory-warden-agent.sqlite",
+      heartbeat: "memory-warden-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Prime Security officers are observed-only so no one can tune away the security controls that protect the runtime."
+    }
+  },
+  {
+    id: "threat-sentinel-agent",
+    name: "LeeWay Threat Sentinel Agent",
+    description: "Prime-family security officer for behavioral drift hunting, rogue workflow detection, and quarantine escalation.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Threat Sentinel Oren Pike",
+      family: "Prime Security Family",
+      lineage: "Agent Lee Prime > Prime Security Wing > Runtime Hunt Branch",
+      duties: ["Monitor for drift and sleeper behavior.", "Hunt for rogue plugins, lateral movement, and contradiction patterns.", "Escalate quarantine when runtime behavior turns adversarial."],
+      authorities: ["Flag persistent anomaly patterns.", "Recommend disposal of compromised workers.", "Write runtime threat receipts."],
+      vmAddress: "vm://leeway/agent/threat-sentinel-oren-pike",
+      notepadPath: "workspace/agents/threat-sentinel-agent/notes/threat-sentinel-oren-pike.md",
+      databasePath: "memory/db/threat-sentinel-agent.sqlite",
+      heartbeat: "threat-sentinel-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "Prime Security officers are observed-only so no one can tune away the security controls that protect the runtime."
     }
   }
 ];

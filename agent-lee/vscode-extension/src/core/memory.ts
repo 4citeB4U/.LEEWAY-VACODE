@@ -11,6 +11,7 @@ DISCOVERY_PIPELINE:
 import * as fs from "fs";
 import * as path from "path";
 import { appendFileWithRetries, describeFileError } from "./file-ops";
+import { buildMemoryProvenance } from "./zero-trust";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const MEMORY_ROOT = path.join(ROOT, "memory");
@@ -31,7 +32,8 @@ export function getAgentMemoryLedgerPath(agentId: string) {
 export function store(text: string) {
   try {
     fs.mkdirSync(path.dirname(FILE), { recursive: true });
-    appendFileWithRetries(FILE, JSON.stringify({ ts: Date.now(), text }) + "\n");
+    const provenance = buildMemoryProvenance("runtime", { sourceUnit: "agent-lee.runtime", provenance: "agent-lee-memory-store" });
+    appendFileWithRetries(FILE, JSON.stringify({ ts: Date.now(), text, ...provenance }) + "\n");
   } catch (error) {
     console.warn(`[Agent Lee] Memory persistence failed: ${describeFileError(error)}`);
   }
@@ -41,10 +43,16 @@ export function storeAgentMemory(agentId: string, event: string, payload: Record
   const file = getAgentMemoryLedgerPath(agentId);
   try {
     fs.mkdirSync(path.dirname(file), { recursive: true });
+    const provenance = buildMemoryProvenance("agent", payload, {
+      sourceUnit: safeMemoryId(agentId),
+      provenance: "agent-event-ledger",
+      securityZone: "Z1"
+    });
     appendFileWithRetries(file, JSON.stringify({
       ts: new Date().toISOString(),
       agentId: safeMemoryId(agentId),
       event,
+      ...provenance,
       ...payload
     }) + "\n");
   } catch (error) {

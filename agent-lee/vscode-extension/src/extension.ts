@@ -55,8 +55,9 @@ import {
 import { getMemoryStatus, storeAgentMemory } from "./core/memory";
 import { buildModelHiveStatus } from "./core/model-hive";
 import { getVoiceStatus, speakWithVoice, stopVoicePlayback } from "./core/voice-adapter";
-import { loadRuntimeSettings, RuntimeState, saveRuntimeSettings, ApprovalMode, resolveRuntimeState } from "./core/runtime-settings";
+import { loadRuntimeSettings, RuntimeState, saveRuntimeSettings, ApprovalMode, resolveRuntimeState, DEFAULT_RUNTIME_STATE } from "./core/runtime-settings";
 import { appendFileWithRetries, describeFileError, writeJsonWithRetries, writeTextWithRetries } from "./core/file-ops";
+import { assessWorkerIdentity } from "./core/zero-trust";
 import { DEFAULT_AGENT_CATALOG, DEFAULT_MCP_SERVER_CATALOG, DEFAULT_PLUGIN_CATALOG } from "./core/settings-catalog";
 import { stopBrowserPreviews } from "./core/browser-engine";
 import { createTaskPlan, PlanPhase, TaskPlan, WorkMode } from "./core/task-planner";
@@ -171,6 +172,62 @@ let queuedFollowUps: { text: string; attachments: PendingAttachment[] }[] = [];
 let pendingPluginApproval: PendingPluginApproval | null = null;
 let runtimeStatusBarItem: vscode.StatusBarItem | null = null;
 const pluginRouter = new AgentLeePluginRouter();
+const PROTECTED_AGENT_IDS = new Set(
+  DEFAULT_AGENT_CATALOG
+    .filter((entry) => entry.identity.developerSurface === "observed-only")
+    .map((entry) => entry.id)
+);
+const PROTECTED_MCP_IDS = new Set(
+  DEFAULT_MCP_SERVER_CATALOG
+    .filter((entry) => entry.identity.developerSurface === "observed-only")
+    .map((entry) => entry.id)
+);
+
+function preserveProtectedIds(requested: unknown, current: string[], defaults: string[], protectedIds: Set<string>) {
+  const incoming = Array.isArray(requested) ? requested.map((item) => String(item || "").trim()).filter(Boolean) : [];
+  const preserved = new Set<string>([
+    ...defaults.filter((id) => protectedIds.has(id)),
+    ...current.filter((id) => protectedIds.has(id))
+  ]);
+  return Array.from(new Set([
+    ...incoming.filter((id) => !protectedIds.has(id)),
+    ...preserved
+  ]));
+}
+
+function preserveProtectedConfigs(
+  requested: unknown,
+  current: Record<string, string>,
+  protectedIds: Set<string>
+) {
+  const incoming = requested && typeof requested === "object"
+    ? { ...(requested as Record<string, string>) }
+    : {};
+
+  for (const protectedId of protectedIds) {
+    if (Object.prototype.hasOwnProperty.call(incoming, protectedId)) {
+      if (Object.prototype.hasOwnProperty.call(current, protectedId)) {
+        incoming[protectedId] = current[protectedId] || "";
+      } else {
+        delete incoming[protectedId];
+      }
+    }
+  }
+
+  return incoming;
+}
+
+function protectedMutationStatus(key: string) {
+  if (key === "enabledAgents" || key === "agentConfigs") {
+    return "Protected LeeWay agents stay visible and auditable, but their control surfaces are locked.";
+  }
+
+  if (key === "enabledMcpServers" || key === "mcpServerConfigs") {
+    return "Protected LeeWay governance MCP agents stay visible and auditable, but their control surfaces are locked.";
+  }
+
+  return "Protected LeeWay security controls rejected a direct mutation attempt.";
+}
 
 function agentLeeText(
   text: string,
@@ -573,10 +630,21 @@ function buildPluginMeshSnapshot() {
 }
 
 function recordAxAgentLeeDiagnosticEvent(rawEvent: Record<string, unknown>) {
-  const agentId = String(rawEvent.agentId || rawEvent.id || "unknown-agent");
+  const identity = assessWorkerIdentity(rawEvent);
+  const agentId = identity.agentId;
   const event = String(rawEvent.kind || rawEvent.event || "diagnostic");
   const ledgerPath = storeAgentMemory(agentId, event, {
     ...rawEvent,
+    sourceUnit: identity.sourceUnit,
+    sourceType: identity.sourceType,
+    provenance: identity.provenance,
+    requestReceiptId: identity.requestReceiptId,
+    verificationState: identity.verificationState,
+    trustScore: identity.trustScore,
+    securityZone: identity.securityZone,
+    capabilityProof: identity.capabilityProof,
+    routeTrusted: identity.routeLooksTrusted,
+    sourceMatchesAgent: identity.sourceMatchesAgent,
     route: "Agent Lee -> AX Agent Lee -> Agent Lee",
     speakerOrder: "Agent Lee first and last",
     workspaceRoot: workspaceRoot()
@@ -587,6 +655,9 @@ function recordAxAgentLeeDiagnosticEvent(rawEvent: Record<string, unknown>) {
     agentId,
     diagnosticEvent: event,
     ledgerPath,
+    sourceUnit: identity.sourceUnit,
+    verificationState: identity.verificationState,
+    trustScore: identity.trustScore,
     route: "Agent Lee -> AX Agent Lee -> Agent Lee",
     speakerOrder: "Agent Lee first and last"
   });
@@ -1575,7 +1646,19 @@ async function handlePluginCall(
   pluginCall: PluginCallInput,
   userConfirmed = false
 ) {
-  const result = await pluginRouter.callPlugin(pluginCall, {
+  const governedCall: PluginCallInput = {
+    sourceUnit: pluginCall.sourceUnit || "agent-lee.runtime",
+    sourceType: pluginCall.sourceType || "runtime",
+    requestReceiptId: pluginCall.requestReceiptId || "",
+    capabilityProof: pluginCall.capabilityProof || [
+      userConfirmed ? "human-confirmation" : "runtime-routing",
+      pluginCall.userId ? "user-session-bound" : "anonymous-session"
+    ],
+    securityZone: pluginCall.securityZone || "Z1",
+    ...pluginCall
+  };
+
+  const result = await pluginRouter.callPlugin(governedCall, {
     userConfirmed,
     enabledPluginIds: effectiveEnabledPlugins()
   });
@@ -1583,7 +1666,7 @@ async function handlePluginCall(
   if (result.requiresFollowUp) {
     const plugin = getPluginById(pluginCall.pluginId, effectiveEnabledPlugins());
     pendingPluginApproval = {
-      call: pluginCall,
+      call: governedCall,
       pluginName: plugin?.name || pluginCall.pluginId,
       riskLevel: plugin?.riskLevel || "high"
     };
@@ -1833,6 +1916,8 @@ button,select,textarea{font-family:inherit}
 .agent-vm-title{font-size:15px;font-weight:800;color:#f5fff9}
 .agent-vm-subtitle{font-size:12px;color:#a9d7cb;line-height:1.45;margin-top:3px}
 .agent-vm-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.agent-lock-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,213,128,.28);background:rgba(255,213,128,.12);color:#ffe3a8;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:800}
+.agent-lock-pill.muted{opacity:.82}
 .agent-vm-status{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.10);font-size:11px;color:#d8fff3;background:rgba(255,255,255,.04)}
 .agent-vm-status::before{content:"";width:7px;height:7px;border-radius:999px;background:#ff8c8c;box-shadow:0 0 10px rgba(255,140,140,.6)}
 .agent-vm-status.awake::before{background:#7fe08f;box-shadow:0 0 10px rgba(127,224,143,.7)}
@@ -1856,6 +1941,8 @@ button,select,textarea{font-family:inherit}
 .agent-vm-terminal{min-height:250px;border-radius:10px;background:#030805;border:1px solid rgba(127,224,143,.22);padding:10px;font-family:var(--vscode-editor-font-family,Consolas,monospace);font-size:12px;color:#9dffb0;white-space:pre-wrap;overflow:auto}
 .agent-vm-terminal-row{display:flex;gap:8px;margin-top:8px}
 .agent-vm-terminal-row input,.agent-vm-ask-row input{flex:1;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);color:#f3fff9;padding:9px 10px}
+.agent-vm-note[readonly],.agent-vm-terminal-row input[disabled]{opacity:.76;cursor:not-allowed}
+.settings-lock-btn[disabled],.settings-toggle[disabled],.ghost-btn[disabled]{opacity:.48;cursor:not-allowed}
 .agent-vm-chat{margin-top:10px;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:10px;background:rgba(255,255,255,.03)}
 .agent-vm-log{display:flex;flex-direction:column;gap:6px;max-height:150px;overflow:auto;margin-bottom:8px}
 .agent-vm-message{font-size:12px;line-height:1.45;border-radius:10px;padding:8px 9px;background:rgba(255,255,255,.04);color:#defff5}
@@ -2277,8 +2364,9 @@ textarea::placeholder{color:#8c859c}
           </div>
           <div class="agent-vm-actions">
             <span class="agent-vm-status" id="agentVmStatus">Paused</span>
-            <button class="ghost-btn" onclick="wakeCurrentAgentVm()">Enable AX</button>
-            <button class="ghost-btn" onclick="stopCurrentAgentVm()">Pause AX</button>
+            <span class="agent-lock-pill muted" id="agentVmLockPill" style="display:none">Observed Only</span>
+            <button class="ghost-btn" id="agentVmWakeBtn" onclick="wakeCurrentAgentVm()">Enable AX</button>
+            <button class="ghost-btn" id="agentVmPauseBtn" onclick="stopCurrentAgentVm()">Pause AX</button>
             <button class="ghost-btn" onclick="closeAgentVm()">Close</button>
           </div>
         </div>
@@ -2446,6 +2534,19 @@ function agentVmMemoryLedgerPath(vm){
   return "memory/agents/" + slug + "/events.jsonl";
 }
 
+function vmDeveloperSurface(vm){
+  return vm && vm.identity && vm.identity.developerSurface ? vm.identity.developerSurface : "mutable";
+}
+
+function vmIsObservedOnly(vm){
+  return vmDeveloperSurface(vm) === "observed-only";
+}
+
+function vmLockReason(vm){
+  if(!vm || !vm.identity) return "This Agent VM is protected by LeeWay governance.";
+  return vm.identity.lockReason || "This Agent VM is protected by LeeWay governance and cannot be directly reconfigured.";
+}
+
 function withVmIdentity(entry, catalogKind){
   const fallback = fallbackVmIdentity(entry, catalogKind);
   const identity = Object.assign({}, fallback, entry.identity || {});
@@ -2556,6 +2657,10 @@ function closeAgentVmIfBackdrop(event){
 }
 
 function setAgentVmEnabled(vm, enabled){
+  if(vmIsObservedOnly(vm)){
+    window.alert(vmLockReason(vm));
+    return;
+  }
   const state = window.agentLeeRuntimeState || {};
   const key = vm.catalogKind === "mcp" ? "enabledMcpServers" : "enabledAgents";
   const next = new Set(state[key] || []);
@@ -2568,6 +2673,14 @@ function setAgentVmEnabled(vm, enabled){
 
 function wakeCurrentAgentVm(){
   if(!currentAgentVm) return;
+  if(vmIsObservedOnly(currentAgentVm)){
+    const session = ensureAgentVmSession(currentAgentVm);
+    session.terminal.push("protected-control-blocked enable");
+    session.messages.push({ role:"system", content: vmLockReason(currentAgentVm) });
+    recordAgentVmEvent("protected-control-blocked", "enable");
+    renderAgentVm();
+    return;
+  }
   const session = ensureAgentVmSession(currentAgentVm);
   session.awake = true;
   session.terminal.push("enable-ax " + currentAgentVm.identity.realName + " -> ACTIVE");
@@ -2579,6 +2692,14 @@ function wakeCurrentAgentVm(){
 
 function stopCurrentAgentVm(){
   if(!currentAgentVm) return;
+  if(vmIsObservedOnly(currentAgentVm)){
+    const session = ensureAgentVmSession(currentAgentVm);
+    session.terminal.push("protected-control-blocked pause");
+    session.messages.push({ role:"system", content: vmLockReason(currentAgentVm) });
+    recordAgentVmEvent("protected-control-blocked", "pause");
+    renderAgentVm();
+    return;
+  }
   const session = ensureAgentVmSession(currentAgentVm);
   session.awake = false;
   session.terminal.push("pause-ax " + currentAgentVm.identity.realName + " -> PAUSED");
@@ -2667,7 +2788,9 @@ function renderAgentVmScreen(){
     return;
   }
   if(currentAgentVmApp === "notepad"){
-    screen.innerHTML = '<textarea class="agent-vm-note" id="agentVmNote" oninput="saveAgentVmNote(this.value)">'+escapeHtml(session.notepad)+'</textarea>';
+    const readOnly = vmIsObservedOnly(vm);
+    screen.innerHTML = (readOnly ? '<div class="agent-vm-panel" style="margin-bottom:10px"><div class="agent-vm-panel-title">Protected Surface</div><div class="agent-vm-meta-value">'+escapeHtml(vmLockReason(vm))+'</div></div>' : '')
+      + '<textarea class="agent-vm-note" id="agentVmNote" '+(readOnly ? 'readonly' : 'oninput="saveAgentVmNote(this.value)"')+'>'+escapeHtml(session.notepad)+'</textarea>';
     return;
   }
   if(currentAgentVmApp === "database"){
@@ -2689,13 +2812,16 @@ function renderAgentVmScreen(){
     return;
   }
   if(currentAgentVmApp === "terminal"){
+    const observedOnly = vmIsObservedOnly(vm);
     screen.innerHTML = '<div class="agent-vm-terminal" id="agentVmTerminal">'+escapeHtml(session.terminal.join("\\n"))+'</div>'
-      + '<div class="agent-vm-terminal-row"><input id="agentVmTerminalInput" placeholder="Try: help, status, enable, pause, duties, authorities, lineage, memory, diagnostics" onkeydown="if(event.key===\\'Enter\\') runAgentVmTerminal()" /><button class="ghost-btn" onclick="runAgentVmTerminal()">Run</button></div>';
+      + (observedOnly ? '<div class="agent-vm-panel" style="margin-top:10px"><div class="agent-vm-panel-title">Protected Surface</div><div class="agent-vm-meta-value">'+escapeHtml(vmLockReason(vm))+' Read-only commands still work: help, status, duties, authorities, lineage, database, memory, diagnostics.</div></div>' : '')
+      + '<div class="agent-vm-terminal-row"><input id="agentVmTerminalInput" '+(observedOnly ? 'disabled ' : '')+'placeholder="'+escapeHtml(observedOnly ? "Protected surface: read-only VM terminal" : "Try: help, status, enable, pause, duties, authorities, lineage, memory, diagnostics")+'" onkeydown="if(event.key===\\'Enter\\') runAgentVmTerminal()" /><button class="ghost-btn" '+(observedOnly ? 'disabled ' : '')+'onclick="runAgentVmTerminal()">Run</button></div>';
   }
 }
 
 function saveAgentVmNote(value){
   if(!currentAgentVm) return;
+  if(vmIsObservedOnly(currentAgentVm)) return;
   ensureAgentVmSession(currentAgentVm).notepad = value;
 }
 
@@ -2709,6 +2835,13 @@ function runAgentVmTerminal(){
   const lower=command.toLowerCase();
   session.terminal.push("> " + command);
   recordAgentVmEvent("terminal-command", command);
+  if(vmIsObservedOnly(currentAgentVm) && ["wake","enable","stop","pause"].indexOf(lower) !== -1){
+    session.terminal.push("protected-control-blocked " + command);
+    session.messages.push({ role:"system", content: vmLockReason(currentAgentVm) });
+    recordAgentVmEvent("protected-control-blocked", command);
+    renderAgentVm();
+    return;
+  }
   if(lower==="help") session.terminal.push("commands: help, status, enable, pause, wake, stop, duties, authorities, lineage, database, memory, diagnostics");
   else if(lower==="status") session.terminal.push("status=" + (vmEnabled(currentAgentVm) ? "active" : "paused") + "; speaker_order=agent_lee_first_and_last");
   else if(lower==="wake" || lower==="enable") wakeCurrentAgentVm();
@@ -2774,11 +2907,27 @@ function renderAgentVm(){
   const title=document.getElementById("agentVmTitle");
   const subtitle=document.getElementById("agentVmSubtitle");
   const status=document.getElementById("agentVmStatus");
+  const wakeBtn=document.getElementById("agentVmWakeBtn");
+  const pauseBtn=document.getElementById("agentVmPauseBtn");
+  const lockPill=document.getElementById("agentVmLockPill");
+  const observedOnly = vmIsObservedOnly(currentAgentVm);
   if(title) title.textContent = "AX Agent Lee / " + identity.realName;
-  if(subtitle) subtitle.textContent = vmKindLabel(identity) + " | " + currentAgentVm.description + " | Agent Lee remains first and last speaker.";
+  if(subtitle) subtitle.textContent = vmKindLabel(identity) + " | " + currentAgentVm.description + " | " + (observedOnly ? vmLockReason(currentAgentVm) : "Agent Lee remains first and last speaker.");
   if(status){
     status.textContent = awake ? "Active" : "Paused";
     status.classList.toggle("awake", awake);
+  }
+  if(lockPill){
+    lockPill.style.display = observedOnly ? "inline-flex" : "none";
+    lockPill.title = observedOnly ? vmLockReason(currentAgentVm) : "";
+  }
+  if(wakeBtn){
+    wakeBtn.disabled = observedOnly;
+    wakeBtn.title = observedOnly ? vmLockReason(currentAgentVm) : "Enable AX";
+  }
+  if(pauseBtn){
+    pauseBtn.disabled = observedOnly;
+    pauseBtn.title = observedOnly ? vmLockReason(currentAgentVm) : "Pause AX";
   }
   renderAgentVmMeta(currentAgentVm, awake);
   renderAgentVmTaskbar();
@@ -2914,11 +3063,12 @@ function renderMcpServers(state){
   const configs = (state && state.mcpServerConfigs) || {};
   root.innerHTML = getMcpCatalog(state).map(function(entry){
     const description = configs[entry.id] || entry.description || "";
+    const locked = vmIsObservedOnly(entry);
     return '<div class="mcp-row">'
-      + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span></div>'
+      + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span>'+(locked?'<span class="agent-lock-pill" title="'+escapeHtml(vmLockReason(entry))+'">Observed Only</span>':'')+'</div>'
       + agentVmButton("mcp", entry.id)
-      + '<button class="mcp-config-btn" onclick="configureMcpServer(\\''+escapeHtml(entry.id)+'\\')" title="Configure">&#9881;</button>'
-      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' onchange="toggleMcpServer(\\''+escapeHtml(entry.id)+'\\', this.checked)" />'
+      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureMcpServer(\\''+escapeHtml(entry.id)+'\\')" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
+      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleMcpServer(\\''+escapeHtml(entry.id)+'\\', this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
       + '</div>';
   }).join("");
 }
@@ -2930,11 +3080,12 @@ function renderAgents(state){
   const configs = (state && state.agentConfigs) || {};
   root.innerHTML = getAgentCatalog(state).map(function(entry){
     const description = configs[entry.id] || entry.description || "";
+    const locked = vmIsObservedOnly(entry);
     return '<div class="mcp-row">'
-      + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span></div>'
+      + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span>'+(locked?'<span class="agent-lock-pill" title="'+escapeHtml(vmLockReason(entry))+'">Observed Only</span>':'')+'</div>'
       + agentVmButton("agent", entry.id)
-      + '<button class="mcp-config-btn" onclick="configureAgent(\\''+escapeHtml(entry.id)+'\\')" title="Configure">&#9881;</button>'
-      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' onchange="toggleAgent(\\''+escapeHtml(entry.id)+'\\', this.checked)" />'
+      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureAgent(\\''+escapeHtml(entry.id)+'\\')" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
+      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleAgent(\\''+escapeHtml(entry.id)+'\\', this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
       + '</div>';
   }).join("");
 }
@@ -2996,6 +3147,11 @@ function togglePluginSelection(id){
 
 function toggleMcpServer(id, enabled){
   const state = window.agentLeeRuntimeState || {};
+  const entry = getMcpCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && vmIsObservedOnly(entry)){
+    window.alert(vmLockReason(entry));
+    return;
+  }
   const next = new Set(state.enabledMcpServers || []);
   if(enabled) next.add(id); else next.delete(id);
   vscode.postMessage({command:"setState", key:"enabledMcpServers", value:Array.from(next)});
@@ -3003,6 +3159,11 @@ function toggleMcpServer(id, enabled){
 
 function configureMcpServer(id){
   const state = window.agentLeeRuntimeState || {};
+  const entry = getMcpCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && vmIsObservedOnly(entry)){
+    window.alert(vmLockReason(entry));
+    return;
+  }
   const current = (state.mcpServerConfigs && state.mcpServerConfigs[id]) || "";
   const next = window.prompt("Configure MCP server", current);
   if(next===null) return;
@@ -3023,6 +3184,11 @@ function addMcpServer(){
 
 function toggleAgent(id, enabled){
   const state = window.agentLeeRuntimeState || {};
+  const entry = getAgentCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && vmIsObservedOnly(entry)){
+    window.alert(vmLockReason(entry));
+    return;
+  }
   const next = new Set(state.enabledAgents || []);
   if(enabled) next.add(id); else next.delete(id);
   vscode.postMessage({command:"setState", key:"enabledAgents", value:Array.from(next)});
@@ -3030,6 +3196,11 @@ function toggleAgent(id, enabled){
 
 function configureAgent(id){
   const state = window.agentLeeRuntimeState || {};
+  const entry = getAgentCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && vmIsObservedOnly(entry)){
+    window.alert(vmLockReason(entry));
+    return;
+  }
   const current = (state.agentConfigs && state.agentConfigs[id]) || "";
   const next = window.prompt("Configure agent", current);
   if(next===null) return;
@@ -3774,19 +3945,44 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
   }
 
   if (msg.command === "setState") {
-    (runtimeState as any)[msg.key] = msg.value;
+    let blockedProtectedMutation = false;
+    let nextValue = msg.value;
+
+    if (msg.key === "enabledAgents") {
+      const sanitized = preserveProtectedIds(msg.value, runtimeState.enabledAgents, DEFAULT_RUNTIME_STATE.enabledAgents, PROTECTED_AGENT_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
+    } else if (msg.key === "enabledMcpServers") {
+      const sanitized = preserveProtectedIds(msg.value, runtimeState.enabledMcpServers, DEFAULT_RUNTIME_STATE.enabledMcpServers, PROTECTED_MCP_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
+    } else if (msg.key === "agentConfigs") {
+      const sanitized = preserveProtectedConfigs(msg.value, runtimeState.agentConfigs, PROTECTED_AGENT_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
+    } else if (msg.key === "mcpServerConfigs") {
+      const sanitized = preserveProtectedConfigs(msg.value, runtimeState.mcpServerConfigs, PROTECTED_MCP_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
+    }
+
+    (runtimeState as any)[msg.key] = nextValue;
     persistRuntime();
+    if (blockedProtectedMutation) {
+      currentTaskState.status = protectedMutationStatus(String(msg.key || ""));
+      postTaskState();
+    }
     if (msg.key === "workMode") {
-      currentTaskState.mode = msg.value;
+      currentTaskState.mode = nextValue;
       if (runtimeState.workMode !== "execute") {
         runtimeState.autoRunStagedPlans = false;
         persistRuntime();
       }
-      currentTaskState.status = `Work mode set to ${msg.value}.`;
+      currentTaskState.status = `Work mode set to ${nextValue}.`;
       postTaskState();
     }
     if (msg.key === "autoRunStagedPlans") {
-      if (msg.value && !hasFullExecutionAccess()) {
+      if (nextValue && !hasFullExecutionAccess()) {
         runtimeState.autoRunStagedPlans = false;
         persistRuntime();
         currentTaskState.status = "Auto-run was left off. Full access is only required for unattended execution, not normal plan approval.";
@@ -3794,7 +3990,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
         await postRuntimeInfo(webview);
         return;
       }
-      currentTaskState.status = msg.value
+      currentTaskState.status = nextValue
         ? "Auto-run staged plans is enabled for Full access execute mode."
         : "Auto-run staged plans is disabled.";
       postTaskState();
@@ -3803,26 +3999,26 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       if (runtimeState.approval !== "full" && runtimeState.autoRunStagedPlans) {
         runtimeState.autoRunStagedPlans = false;
         persistRuntime();
-        currentTaskState.status = `Approval set to ${msg.value}. Auto-run was turned off; manual execution remains available.`;
+        currentTaskState.status = `Approval set to ${nextValue}. Auto-run was turned off; manual execution remains available.`;
       } else {
-        currentTaskState.status = `Approval set to ${msg.value}.`;
+        currentTaskState.status = `Approval set to ${nextValue}.`;
       }
       postTaskState();
     }
     if (msg.key === "followupBehavior") {
-      currentTaskState.status = `Follow-up behavior set to ${msg.value}.`;
+      currentTaskState.status = `Follow-up behavior set to ${nextValue}.`;
       postTaskState();
     }
     if (msg.key === "codeReviewBehavior") {
-      currentTaskState.status = `Code review behavior set to ${msg.value}.`;
+      currentTaskState.status = `Code review behavior set to ${nextValue}.`;
       postTaskState();
     }
     if (msg.key === "requireCtrlEnter") {
-      currentTaskState.status = msg.value ? "Ctrl+Enter is now required for multiline sends." : "Enter will send from the main input again.";
+      currentTaskState.status = nextValue ? "Ctrl+Enter is now required for multiline sends." : "Enter will send from the main input again.";
       postTaskState();
     }
     if (msg.key === "inferenceSpeed") {
-      currentTaskState.status = `Inference speed set to ${msg.value}.`;
+      currentTaskState.status = `Inference speed set to ${nextValue}.`;
       postTaskState();
     }
     await postRuntimeInfo(webview);

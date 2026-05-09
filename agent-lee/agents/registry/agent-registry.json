@@ -20,6 +20,50 @@
         "engineering.loop",
         "write.policy"
       ]
+    },
+    {
+      "id": "shield-governor-agent",
+      "label": "Shield Governor Serah Kane",
+      "role": "security-officer",
+      "capabilities": [
+        "security.zone.enforce",
+        "security.plugin.approval",
+        "security.protected-action.review",
+        "security.incident.receipts"
+      ]
+    },
+    {
+      "id": "attestation-marshal-agent",
+      "label": "Attestation Marshal Dorian Vale",
+      "role": "security-officer",
+      "capabilities": [
+        "security.identity.attestation",
+        "security.worker.manifest.review",
+        "security.bridge.identity.verify",
+        "security.identity.quarantine"
+      ]
+    },
+    {
+      "id": "memory-warden-agent",
+      "label": "Memory Warden Nyra Sol",
+      "role": "security-officer",
+      "capabilities": [
+        "security.memory.provenance",
+        "security.memory.poisoning.detect",
+        "security.recall.integrity.review",
+        "security.memory.replay"
+      ]
+    },
+    {
+      "id": "threat-sentinel-agent",
+      "label": "Threat Sentinel Oren Pike",
+      "role": "security-officer",
+      "capabilities": [
+        "security.drift.hunt",
+        "security.rogue-workflow.detect",
+        "security.cross-zone.anomaly.review",
+        "security.quarantine.recommend"
+      ]
     }
   ]
 }

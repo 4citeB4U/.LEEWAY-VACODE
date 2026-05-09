@@ -33,6 +33,7 @@ import { performanceGovernor } from "../performance/performanceGovernor";
 import { formatAgentRoutedMessage } from "../core/agent-governance";
 import { recordAgentLeeRuntimeReceipt } from "../core/agent-lee-runtime-bootstrap";
 import { appendFileWithRetries } from "../core/file-ops";
+import { assessPluginTrust } from "../core/zero-trust";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const RECEIPT_DIR = path.join(ROOT, "logs", "agent-lee");
@@ -93,6 +94,18 @@ export class AgentLeePluginRouter {
       };
     }
 
+    const trust = assessPluginTrust(plugin, input, options.userConfirmed ?? false);
+    if (!trust.allowed) {
+      return {
+        ok: false,
+        pluginId: input.pluginId,
+        action: input.action,
+        summary: trust.reason,
+        error: trust.requiresConfirmation ? "CONFIRMATION_REQUIRED" : trust.reason,
+        requiresFollowUp: trust.requiresConfirmation
+      };
+    }
+
     const guard = guardPluginCall(plugin, input, options.userConfirmed ?? false);
     if (!guard.allowed) {
       return {
@@ -119,12 +132,17 @@ export class AgentLeePluginRouter {
     const finalInput: PluginCallInput = {
       ...input,
       pluginId: plugin.id,
-      dryRun: input.dryRun ?? options.dryRunDefault ?? false
+      dryRun: input.dryRun ?? options.dryRunDefault ?? false,
+      sourceUnit: input.sourceUnit || trust.sourceUnit,
+      sourceType: input.sourceType || trust.sourceType,
+      requestReceiptId: input.requestReceiptId || trust.requestReceiptId,
+      capabilityProof: input.capabilityProof || trust.capabilityProof,
+      securityZone: input.securityZone || trust.securityZone
     };
 
     const result = await adapter.execute(finalInput);
     result.summary = formatAgentRoutedMessage(plugin.name || input.pluginId, result.summary);
-    await this.writeReceipt(finalInput, result);
+    await this.writeReceipt(finalInput, result, trust);
     return result;
   }
 
@@ -154,13 +172,20 @@ export class AgentLeePluginRouter {
     return keys.some((key) => Boolean(process.env[key]));
   }
 
-  private async writeReceipt(input: PluginCallInput, result: PluginCallResult) {
+  private async writeReceipt(input: PluginCallInput, result: PluginCallResult, trust: ReturnType<typeof assessPluginTrust>) {
     fs.mkdirSync(RECEIPT_DIR, { recursive: true });
     const receipt = {
       ts: new Date().toISOString(),
       pluginId: input.pluginId,
       action: input.action,
       userIntent: input.userIntent,
+      sourceUnit: trust.sourceUnit,
+      sourceType: trust.sourceType,
+      securityZone: trust.securityZone,
+      verificationState: trust.verificationState,
+      trustScore: trust.trustScore,
+      requestReceiptId: trust.requestReceiptId,
+      capabilityProof: trust.capabilityProof,
       ok: result.ok,
       summary: result.summary,
       error: result.error || "",
@@ -171,6 +196,9 @@ export class AgentLeePluginRouter {
       event: "plugin.call.completed",
       pluginId: input.pluginId,
       action: input.action,
+      sourceUnit: trust.sourceUnit,
+      verificationState: trust.verificationState,
+      trustScore: trust.trustScore,
       ok: result.ok,
       receiptId: result.receiptId || ""
     });

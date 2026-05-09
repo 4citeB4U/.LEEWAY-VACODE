@@ -9,17 +9,18 @@
   "preferVoiceServer": false,
   "voiceWsUrl": "ws://localhost:8765/ws",
   "fallbackEngine": "windows-sapi",
-  "personaSpeechMode": "Producer_Protocol",
+  "personaSpeechMode": "Grounded_Operator",
   "interruptionPolicy": "kill-current-and-replace",
   "piperExecutable": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\piper_bin\\piper.exe",
-  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx",
-  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx.json",
+  "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx",
+  "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx.json",
   "sampleRate": 22050,
-  "selectedVoiceId": "en_US-norman-medium",
-  "selectedVoiceLabel": "Agent Lee Locked Voice - Norman",
+  "selectedVoiceId": "en_US-arctic-medium",
+  "selectedVoiceLabel": "Agent Lee Female Voice - Arctic FEM",
+  "selectedSpeakerId": "fem",
   "tuning": {
     "sampleTrimRatio": 0.95,
-    "playbackRateRatio": 0.9116
+    "playbackRateRatio": 0.95
   }
 }
 

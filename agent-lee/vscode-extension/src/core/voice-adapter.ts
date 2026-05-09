@@ -26,6 +26,9 @@ export type VoiceRuntimeConfig = {
   piperExecutable: string;
   piperModelPath: string;
   piperConfigPath?: string;
+  selectedVoiceId?: string;
+  selectedVoiceLabel?: string;
+  selectedSpeakerId?: string | number;
   sampleRate: number;
 };
 
@@ -64,7 +67,9 @@ export function getVoiceStatus(): VoiceStatus {
     engine: config?.engine || "windows-sapi",
     model: config?.preferVoiceServer
       ? `${config?.personaSpeechMode || "voice"} via ${config?.voiceWsUrl || "voice-server"}`
-      : config?.piperModelPath ? path.basename(config.piperModelPath) : "system",
+      : config?.piperModelPath
+        ? `${path.basename(config.piperModelPath)}${config?.selectedSpeakerId ? ` [speaker ${config.selectedSpeakerId}]` : ""}`
+        : "system",
     ready,
     fallback: config?.fallbackEngine || "windows-sapi",
     speaking: Boolean(currentSpeech)

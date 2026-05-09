@@ -1,0 +1,44 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "AI",
+    "TAG": "CORE.AGENT_LEE.VOICE.AUDITION_CATALOG",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
+  "defaultText": "Agent Lee voice audition. I stay clear, calm, useful, and present. If this one feels right, lock it in. If not, send me to the next voice.",
+  "candidates": [
+    {
+      "id": "arctic-fem",
+      "label": "Arctic FEM",
+      "modelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx",
+      "configPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx.json",
+      "speakerId": "fem",
+      "personaSpeechMode": "Grounded_Operator",
+      "sampleTrimRatio": 0.95,
+      "playbackRateRatio": 0.95,
+      "pitchRatio": 1.0
+    },
+    {
+      "id": "arctic-slt",
+      "label": "Arctic SLT",
+      "modelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx",
+      "configPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx.json",
+      "speakerId": "slt",
+      "personaSpeechMode": "Grounded_Operator",
+      "sampleTrimRatio": 0.95,
+      "playbackRateRatio": 0.95,
+      "pitchRatio": 1.0
+    },
+    {
+      "id": "arctic-clb",
+      "label": "Arctic CLB",
+      "modelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx",
+      "configPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-arctic-medium.onnx.json",
+      "speakerId": "clb",
+      "personaSpeechMode": "Grounded_Operator",
+      "sampleTrimRatio": 0.95,
+      "playbackRateRatio": 0.95,
+      "pitchRatio": 1.0
+    }
+  ]
+}

@@ -540,9 +540,25 @@ main.tsx
 
 ---
 
+## Prime Security Wing
+
+The modern LeeWay runtime includes a dedicated Prime Security Wing. These officers operate as declared Agent VM identities under Agent Lee Prime and exist to defend the fabric from impersonation, memory poisoning, rogue plugins, sleeper behavior, and trusted-looking internal compromise.
+
+| Officer | Agent ID | Function |
+|---------|----------|----------|
+| Shield Governor Serah Kane | `prime-shield-governor` | Protected-action review, zone enforcement, and privileged execution gating |
+| Attestation Marshal Dorian Vale | `prime-attestation-marshal` | Agent, worker, and bridge identity proof review |
+| Memory Warden Nyra Sol | `prime-memory-warden` | Provenance, recall integrity, and memory poisoning defense |
+| Threat Sentinel Oren Pike | `prime-threat-sentinel` | Drift hunting, rogue workflow detection, and quarantine escalation |
+
+These officers are part of the Prime Family security command structure and must leave receipts for identity review, approval review, memory-integrity review, and runtime incident escalation.
+
+---
+
 ## Change Log
 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-04-20 | Initial registry — all 11 system agents documented | Leonard Lee / Agent Lee |
 | 2026-04-20 | Added always-on Quality Assurance and Optimization agents (13 total) | Leonard Lee / Agent Lee |
+| 2026-05-09 | Added Prime Security Wing officers for zero-trust enforcement, attestation, memory integrity, and threat hunting | Leonard Lee / Agent Lee |

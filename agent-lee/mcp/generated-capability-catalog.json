@@ -5,7 +5,7 @@
     "TAG": "MCP.CATALOG.CAPABILITY.GENERATED",
     "DISCOVERY_PIPELINE": "Voice → Intent → Location → Vertical → Ranking → Render"
   },
-  "generatedAt": "2026-05-09T04:29:57.048Z",
+  "generatedAt": "2026-05-09T05:49:45.380Z",
   "sources": [
     "D:\\MCP-VS-code-Antigavity",
     "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\agents",
