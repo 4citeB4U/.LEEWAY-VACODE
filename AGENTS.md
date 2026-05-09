@@ -1,3 +1,12 @@
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+REGION: 🟢 CORE
+TAG: CORE.GOVERNANCE.AGENTS.MAIN
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+PURPOSE: Governing repository instructions for Agent Lee workflow and LeeWay compliance.
+-->
+
 # AGENTS.md - LeeWay Project Instructions
 
 ## Mission

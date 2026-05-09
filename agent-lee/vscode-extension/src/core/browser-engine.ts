@@ -951,3 +951,12 @@ export function stopBrowserPreviews() {
   }
   previewSessions.clear();
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.BROWSER.ENGINE
+REGION: 🟢 CORE
+PURPOSE: Browser automation and runtime page inspection support for Agent Lee verification.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

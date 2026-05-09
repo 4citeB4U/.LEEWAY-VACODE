@@ -8,12 +8,17 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 
 param(
   [string]$ExtensionDir,
-  [string]$OutputName = "agent-lee-1.1.1-sovereign-runtime.vsix"
+  [string]$OutputName
 )
 
 $ErrorActionPreference = "Stop"
 
 $resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
+$packageJsonPath = Join-Path $resolvedExtensionDir "package.json"
+$package = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+if (-not $OutputName) {
+  $OutputName = "$($package.name)-$($package.version).vsix"
+}
 $outputPath = Join-Path $resolvedExtensionDir $OutputName
 
 Write-Host "Compiling extension in $resolvedExtensionDir" -ForegroundColor Cyan

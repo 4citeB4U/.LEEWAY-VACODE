@@ -11,7 +11,7 @@
   "fallbackEngine": "windows-sapi",
   "personaSpeechMode": "Producer_Protocol",
   "interruptionPolicy": "kill-current-and-replace",
-  "piperExecutable": "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards\\src\\voice\\server\\piper_bin\\piper.exe",
+  "piperExecutable": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\piper_bin\\piper.exe",
   "piperModelPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx",
   "piperConfigPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-norman-medium.onnx.json",
   "sampleRate": 22050,

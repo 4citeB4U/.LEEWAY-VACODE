@@ -24,7 +24,8 @@ if (-not $SkipBuild) {
   & (Join-Path $PSScriptRoot "Build-AgentLeeVSIX.ps1") -ExtensionDir $resolvedExtensionDir | Out-Null
 }
 
-$vsixPath = Join-Path $resolvedExtensionDir "agent-lee-1.1.0-sovereign-runtime.vsix"
+$package = Get-Content (Join-Path $resolvedExtensionDir "package.json") -Raw | ConvertFrom-Json
+$vsixPath = Join-Path $resolvedExtensionDir "$($package.name)-$($package.version).vsix"
 
 & (Join-Path $PSScriptRoot "Install-AgentLeeVSIX.ps1") `
   -VsixPath $vsixPath `

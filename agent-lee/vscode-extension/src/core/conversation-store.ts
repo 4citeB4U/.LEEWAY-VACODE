@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { describeFileError, writeJsonWithRetries } from "./file-ops";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const CHAT_ROOT = path.join(ROOT, "memory", "chats");
@@ -30,8 +31,12 @@ type ConversationIndex = {
 };
 
 function ensureDirs() {
-  fs.mkdirSync(CHAT_ROOT, { recursive: true });
-  fs.mkdirSync(CONVERSATIONS_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(CHAT_ROOT, { recursive: true });
+    fs.mkdirSync(CONVERSATIONS_DIR, { recursive: true });
+  } catch (err) {
+    console.warn(`[Agent Lee] Failed to create directories:`, err);
+  }
 }
 
 function readJson<T>(file: string, fallback: T): T {
@@ -44,8 +49,11 @@ function readJson<T>(file: string, fallback: T): T {
 }
 
 function writeJson(file: string, value: unknown) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(value, null, 2), "utf8");
+  try {
+    writeJsonWithRetries(file, value);
+  } catch (error) {
+    console.warn(`[Agent Lee] Conversation persistence failed for ${path.basename(file)}: ${describeFileError(error)}`);
+  }
 }
 
 function slug(text: string) {
@@ -206,52 +214,67 @@ export function startNewConversation(workspaceRoot: string) {
 }
 
 export function migrateLegacyChats(workspaceRoot: string) {
-  ensureDirs();
-  const migration = readJson<{ mergedLegacy: boolean }>(MIGRATION_FILE, { mergedLegacy: false });
-  if (migration.mergedLegacy) return;
+  try {
+    ensureDirs();
+    const migration = readJson<{ mergedLegacy: boolean }>(MIGRATION_FILE, { mergedLegacy: false });
+    if (migration.mergedLegacy) return;
 
-  const legacyFiles = fs.readdirSync(CHAT_ROOT)
-    .filter((file) => file.endsWith(".json"))
-    .filter((file) => file !== path.basename(INDEX_FILE))
-    .map((file) => path.join(CHAT_ROOT, file))
-    .filter((file) => !file.startsWith(CONVERSATIONS_DIR));
+    if (!fs.existsSync(CHAT_ROOT)) return;
 
-  if (!legacyFiles.length) {
-    writeJson(MIGRATION_FILE, { mergedLegacy: true });
-    return;
+    const legacyFiles = fs.readdirSync(CHAT_ROOT)
+      .filter((file) => file.endsWith(".json"))
+      .filter((file) => file !== path.basename(INDEX_FILE))
+      .map((file) => path.join(CHAT_ROOT, file))
+      .filter((file) => !file.startsWith(CONVERSATIONS_DIR));
+
+    if (!legacyFiles.length) {
+      writeJson(MIGRATION_FILE, { mergedLegacy: true });
+      return;
+    }
+
+    const recoveredMessages = legacyFiles
+      .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs)
+      .flatMap((file) => readJson<ChatMessage[]>(file, []));
+
+    if (!recoveredMessages.length) {
+      writeJson(MIGRATION_FILE, { mergedLegacy: true });
+      return;
+    }
+
+    const firstTime = recoveredMessages[0]?.timestamp || new Date().toISOString();
+    const lastTime = recoveredMessages[recoveredMessages.length - 1]?.timestamp || firstTime;
+    const id = `recovered-legacy-${new Date(firstTime).toISOString().replace(/[:.]/g, "-")}`;
+    const meta: ConversationMeta = {
+      id,
+      title: "Recovered legacy conversation",
+      createdAt: firstTime,
+      updatedAt: lastTime,
+      workspaceRoot,
+      active: true,
+      recoveredFromLegacy: true,
+      source: "legacy-chat-files"
+    };
+
+    writeJson(conversationFile(id), recoveredMessages);
+    const index = loadIndex();
+    setActive(index, id);
+    upsertConversation(index, meta);
+    saveIndex(index);
+    writeJson(MIGRATION_FILE, {
+      mergedLegacy: true,
+      recoveredConversationId: id,
+      legacyFiles: legacyFiles.map((file) => path.basename(file))
+    });
+  } catch (err) {
+    console.warn("[Agent Lee] migrateLegacyChats failed:", err);
   }
-
-  const recoveredMessages = legacyFiles
-    .sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs)
-    .flatMap((file) => readJson<ChatMessage[]>(file, []));
-
-  if (!recoveredMessages.length) {
-    writeJson(MIGRATION_FILE, { mergedLegacy: true });
-    return;
-  }
-
-  const firstTime = recoveredMessages[0]?.timestamp || new Date().toISOString();
-  const lastTime = recoveredMessages[recoveredMessages.length - 1]?.timestamp || firstTime;
-  const id = `recovered-legacy-${new Date(firstTime).toISOString().replace(/[:.]/g, "-")}`;
-  const meta: ConversationMeta = {
-    id,
-    title: "Recovered legacy conversation",
-    createdAt: firstTime,
-    updatedAt: lastTime,
-    workspaceRoot,
-    active: true,
-    recoveredFromLegacy: true,
-    source: "legacy-chat-files"
-  };
-
-  writeJson(conversationFile(id), recoveredMessages);
-  const index = loadIndex();
-  setActive(index, id);
-  upsertConversation(index, meta);
-  saveIndex(index);
-  writeJson(MIGRATION_FILE, {
-    mergedLegacy: true,
-    recoveredConversationId: id,
-    legacyFiles: legacyFiles.map((file) => path.basename(file))
-  });
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: DATA.LOCAL.CONVERSATION.STORE
+REGION: 💾 DATA
+PURPOSE: Local conversation storage for Agent Lee memory and chat continuity.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

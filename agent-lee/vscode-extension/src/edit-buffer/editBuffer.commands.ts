@@ -1,12 +1,14 @@
 /*
-LEEWAY HEADER - DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.EDITBUFFER.COMMANDS.MAIN
+PURPOSE: Edit buffer command routing under Agent Lee sovereign runtime.
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
 import { collectRepairCandidates } from "../execution-brain/diagnosticRepair.loop";
 import { summarizeRepairCandidatesForSpeech } from "../execution-brain/repairNarration";
 import { synthesizeRepairCandidates, type RawVerificationIssue } from "../execution-brain/repairSynthesizer";
@@ -28,6 +30,29 @@ export function registerAgentLeeEditBufferCommands(
   context: vscode.ExtensionContext,
   codeLensProvider: AgentLeeEditBufferCodeLensProvider
 ) {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "edit-buffer.commands") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
+  const showAgentLeeRuntimeWarning = (message: string, routeLabel?: string) => {
+    void vscode.window.showWarningMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
+  const showAgentLeeRuntimeError = (message: string, routeLabel?: string) => {
+    void vscode.window.showErrorMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
+  const promptAgentLeeRuntimeInfo = (message: string, routeLabel: string, ...items: string[]) => {
+    return vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel), ...items);
+  };
+
   const setVoiceEditContext = (packageId: string, fileId: string | null, hunkId: string | null) => {
     voiceCommandContext.setActivePackage(packageId);
     voiceCommandContext.setActiveFileEdit(fileId);
@@ -70,7 +95,7 @@ export function registerAgentLeeEditBufferCommands(
         speak: true,
         data: { packageId, fileId, hunkId }
       });
-      void vscode.window.showInformationMessage("Agent Lee accepted this hunk.");
+      showAgentLeeRuntimeInfo("Agent Lee accepted this hunk.", "edit-buffer.accept-hunk");
     }
   ));
 
@@ -85,7 +110,7 @@ export function registerAgentLeeEditBufferCommands(
         speak: true,
         data: { packageId, fileId, hunkId }
       });
-      void vscode.window.showWarningMessage("Agent Lee rejected this hunk.");
+      showAgentLeeRuntimeWarning("Agent Lee rejected this hunk.", "edit-buffer.reject-hunk");
     }
   ));
 
@@ -102,7 +127,7 @@ export function registerAgentLeeEditBufferCommands(
     async () => {
       const target = resolveActiveEditTarget();
       if (!target) {
-        void vscode.window.showWarningMessage("No active Agent Lee diff is available right now.");
+        showAgentLeeRuntimeWarning("No active Agent Lee diff is available right now.", "edit-buffer.open-active-diff");
         return;
       }
 
@@ -116,7 +141,7 @@ export function registerAgentLeeEditBufferCommands(
     async () => {
       const target = resolveActiveEditTarget();
       if (!target?.hunkId) {
-        void vscode.window.showWarningMessage("No active Agent Lee hunk is available right now.");
+        showAgentLeeRuntimeWarning("No active Agent Lee hunk is available right now.", "edit-buffer.accept-active-hunk");
         return;
       }
 
@@ -134,7 +159,7 @@ export function registerAgentLeeEditBufferCommands(
     async () => {
       const target = resolveActiveEditTarget();
       if (!target?.hunkId) {
-        void vscode.window.showWarningMessage("No active Agent Lee hunk is available right now.");
+        showAgentLeeRuntimeWarning("No active Agent Lee hunk is available right now.", "edit-buffer.reject-active-hunk");
         return;
       }
 
@@ -155,12 +180,13 @@ export function registerAgentLeeEditBufferCommands(
       const hunk = editBufferStore.findHunk(packageId, fileId, hunkId);
 
       if (!pkg || !file || !hunk) {
-        void vscode.window.showErrorMessage("Agent Lee could not find this pending hunk.");
+        showAgentLeeRuntimeError("Agent Lee could not find this pending hunk.", "edit-buffer.explain-hunk");
         return;
       }
 
-      const choice = await vscode.window.showInformationMessage(
+      const choice = await promptAgentLeeRuntimeInfo(
         `Agent Lee: ${hunk.reason || "This hunk is part of the pending execution plan."}`,
+        "edit-buffer.explain-hunk",
         "Open Diff"
       );
       if (choice === "Open Diff") {
@@ -175,7 +201,7 @@ export function registerAgentLeeEditBufferCommands(
       editBufferStore.updateFileStatus(packageId, fileId, "accepted");
       setVoiceEditContext(packageId, fileId, null);
       refreshUi();
-      void vscode.window.showInformationMessage("Agent Lee accepted all pending hunks in this file.");
+      showAgentLeeRuntimeInfo("Agent Lee accepted all pending hunks in this file.", "edit-buffer.accept-file");
     }
   ));
 
@@ -185,7 +211,7 @@ export function registerAgentLeeEditBufferCommands(
       editBufferStore.updateFileStatus(packageId, fileId, "rejected");
       setVoiceEditContext(packageId, fileId, null);
       refreshUi();
-      void vscode.window.showWarningMessage("Agent Lee rejected all pending hunks in this file.");
+      showAgentLeeRuntimeWarning("Agent Lee rejected all pending hunks in this file.", "edit-buffer.reject-file");
     }
   ));
 
@@ -195,7 +221,7 @@ export function registerAgentLeeEditBufferCommands(
       editBufferStore.acceptAll(packageId);
       setVoiceEditContext(packageId, null, null);
       refreshUi();
-      void vscode.window.showInformationMessage("Agent Lee accepted all pending hunks in this package.");
+      showAgentLeeRuntimeInfo("Agent Lee accepted all pending hunks in this package.", "edit-buffer.accept-all");
     }
   ));
 
@@ -207,7 +233,7 @@ export function registerAgentLeeEditBufferCommands(
         : editBufferStore.getActivePackage();
 
       if (!activePackage) {
-        void vscode.window.showWarningMessage("No active Agent Lee pending-edit package found.");
+        showAgentLeeRuntimeWarning("No active Agent Lee pending-edit package found.", "edit-buffer.apply-accepted");
         return;
       }
 
@@ -230,8 +256,8 @@ export function registerAgentLeeEditBufferCommands(
         }
       );
 
-      if (result.ok) void vscode.window.showInformationMessage(result.summary);
-      else void vscode.window.showWarningMessage(result.summary);
+      if (result.ok) showAgentLeeRuntimeInfo(result.summary, "edit-buffer.apply-accepted");
+      else showAgentLeeRuntimeWarning(result.summary, "edit-buffer.apply-accepted");
     }
   ));
 
@@ -243,7 +269,7 @@ export function registerAgentLeeEditBufferCommands(
         : editBufferStore.getActivePackage();
 
       if (!activePackage) {
-        void vscode.window.showWarningMessage("No active Agent Lee pending-edit package found.");
+        showAgentLeeRuntimeWarning("No active Agent Lee pending-edit package found.", "edit-buffer.apply-accepted-and-verify");
         return;
       }
 
@@ -334,8 +360,9 @@ export function registerAgentLeeEditBufferCommands(
 
       let repairPackageId: string | undefined;
       if (repairCandidates.length > 0) {
-        const choice = await vscode.window.showInformationMessage(
+        const choice = await promptAgentLeeRuntimeInfo(
           `Agent Lee found ${repairCandidates.length} repair candidate(s). Create a pending repair package?`,
+          "edit-buffer.repair-package-prompt",
           "Create Repair Package",
           "Not Now"
         );
@@ -357,8 +384,9 @@ export function registerAgentLeeEditBufferCommands(
               });
             }
           } catch (error) {
-            void vscode.window.showWarningMessage(
-              `Verification found repair candidates, but creating a follow-up pending package failed: ${error instanceof Error ? error.message : String(error)}`
+            showAgentLeeRuntimeWarning(
+              `Verification found repair candidates, but creating a follow-up pending package failed: ${error instanceof Error ? error.message : String(error)}`,
+              "edit-buffer.repair-package-failed"
             );
           }
         }
@@ -409,8 +437,8 @@ export function registerAgentLeeEditBufferCommands(
         }
       });
 
-      if (verificationOk) void vscode.window.showInformationMessage(summary);
-      else void vscode.window.showWarningMessage(summary);
+      if (verificationOk) showAgentLeeRuntimeInfo(summary, "edit-buffer.apply-accepted-and-verify");
+      else showAgentLeeRuntimeWarning(summary, "edit-buffer.apply-accepted-and-verify");
     }
   ));
 }

@@ -1,6 +1,17 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.CAPABILITY_REGISTRY.MAIN
+REGION: 🟢 CORE
+PURPOSE: Builds the internal Agent Lee capability catalog from standalone runtime roots.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 import type { ModelHiveStatus } from "./model-hive";
+import { getInternalAgentsRoot, getInternalMcpRoot } from "./leeway-connectivity-loader";
 
 export type CapabilityEntry = {
   id: string;
@@ -13,6 +24,12 @@ export type CapabilityEntry = {
 };
 
 export type CapabilityCatalog = {
+  leeway?: {
+    LEEWAY_HEADER: string;
+    REGION: string;
+    TAG: string;
+    DISCOVERY_PIPELINE: string;
+  };
   generatedAt: string;
   sources: string[];
   entries: CapabilityEntry[];
@@ -42,11 +59,9 @@ function uniqueExisting(paths: string[]) {
   return Array.from(new Set(paths.filter(Boolean))).filter(exists);
 }
 
-function resolveLeeWayStandardsRoots() {
+function resolveInternalAgentRoots() {
   return uniqueExisting([
-    path.join(ROOT, "LeeWay-Standards"),
-    path.join(process.cwd(), "LeeWay-Standards"),
-    "D:\\LeeWay-Products-Files\\.Leeway-new-line-of-products\\LeeWay-Standards"
+    getInternalAgentsRoot()
   ]);
 }
 
@@ -127,10 +142,9 @@ function scanAntigravityMcps(root: string) {
   return entries;
 }
 
-function scanLeeWayAgents(root: string) {
+function scanInternalAgents(root: string) {
   const entries: CapabilityEntry[] = [];
-  const agentsRoot = path.join(root, "src", "agents");
-  const files = walkFiles(agentsRoot, /\.(ts|js)$/i);
+  const files = walkFiles(root, /\.(ts|js|json|md)$/i);
 
   for (const file of files) {
     const relative = path.relative(root, file).replace(/\\/g, "/");
@@ -148,7 +162,7 @@ function scanLeeWayAgents(root: string) {
       id: relative.replace(/\//g, ":"),
       kind: "agent",
       label: base,
-      source: "LeeWay-Standards",
+      source: "Agent Lee Internal",
       location: file,
       category: group
     });
@@ -157,10 +171,10 @@ function scanLeeWayAgents(root: string) {
   return entries;
 }
 
-function scanLeeWayMcpAgents(root: string) {
+function scanInternalMcp(root: string) {
   const entries: CapabilityEntry[] = [];
-  const mcpRoot = path.join(root, "src", "agents", "mcp");
-  const files = walkFiles(mcpRoot, /\.(ts|js)$/i);
+  const mcpRoot = path.join(root, "tools");
+  const files = walkFiles(mcpRoot, /\.(ts|js|json)$/i);
 
   for (const file of files) {
     const base = path.basename(file).replace(/\.(ts|js)$/i, "");
@@ -168,7 +182,7 @@ function scanLeeWayMcpAgents(root: string) {
       id: base,
       kind: "mcp",
       label: base,
-      source: "LeeWay-Standards",
+      source: "Agent Lee Internal",
       location: file,
       category: "MCP Agent"
     });
@@ -200,7 +214,7 @@ function scanWorkspaceAgents(root: string) {
 
 function scanVsCodeMcpServers(root: string) {
   const entries: CapabilityEntry[] = [];
-  const settingsFile = path.join(root, "adapters", "mcp", "vscode-mcp-tooling", "vscode-mcp-settings-snippet.json");
+  const settingsFile = path.join(root, "adapters", "vscode-mcp-settings-snippet.json");
   const settings = safeReadJson(settingsFile);
   const servers = settings?.mcpServers || {};
 
@@ -209,7 +223,7 @@ function scanVsCodeMcpServers(root: string) {
       id,
       kind: "server",
       label: id,
-      source: "LeeWay-Standards",
+      source: "Agent Lee Internal",
       description: Array.isArray(config?.args) ? config.args.join(" ") : "",
       location: settingsFile,
       category: "VS Code MCP Server"
@@ -244,24 +258,35 @@ function summarizeCounts(entries: CapabilityEntry[]) {
 
 export function buildCapabilityCatalog() {
   const antigravityRoots = resolveAntigravityRoots();
-  const leeWayStandardsRoots = resolveLeeWayStandardsRoots();
+  const internalAgentRoots = resolveInternalAgentRoots();
+  const internalMcpRoots = uniqueExisting([getInternalMcpRoot()]);
   const entries = dedupe([
     ...antigravityRoots.flatMap((root) => scanAntigravityMcps(root)),
-    ...leeWayStandardsRoots.flatMap((root) => scanLeeWayAgents(root)),
-    ...leeWayStandardsRoots.flatMap((root) => scanLeeWayMcpAgents(root)),
+    ...internalAgentRoots.flatMap((root) => scanInternalAgents(root)),
+    ...internalMcpRoots.flatMap((root) => scanInternalMcp(root)),
     ...scanWorkspaceAgents(WORKSPACE_AGENTS_ROOT),
-    ...leeWayStandardsRoots.flatMap((root) => scanVsCodeMcpServers(root))
+    ...internalMcpRoots.flatMap((root) => scanVsCodeMcpServers(root))
   ]);
 
   const catalog: CapabilityCatalog = {
+    leeway: {
+      LEEWAY_HEADER: "DO NOT REMOVE",
+      REGION: "🟣 MCP",
+      TAG: "MCP.CATALOG.CAPABILITY.GENERATED",
+      DISCOVERY_PIPELINE: "Voice → Intent → Location → Vertical → Ranking → Render"
+    },
     generatedAt: new Date().toISOString(),
-    sources: [...antigravityRoots, ...leeWayStandardsRoots, WORKSPACE_AGENTS_ROOT].filter(exists),
+    sources: [...antigravityRoots, ...internalAgentRoots, ...internalMcpRoots, WORKSPACE_AGENTS_ROOT].filter(exists),
     entries,
     counts: summarizeCounts(entries)
   };
 
-  fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
-  fs.writeFileSync(OUTPUT_FILE, JSON.stringify(catalog, null, 2), "utf8");
+  try {
+    fs.mkdirSync(path.dirname(OUTPUT_FILE), { recursive: true });
+    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(catalog, null, 2), "utf8");
+  } catch (err) {
+    console.warn("[Agent Lee] Failed to write capability catalog:", err);
+  }
   return catalog;
 }
 

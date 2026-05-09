@@ -1,3 +1,13 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.FILE.INTELLIGENCE.MAIN
+REGION: 🟢 CORE
+PURPOSE: File analysis and workspace intelligence for Agent Lee inspections.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 

@@ -18,7 +18,8 @@ $ErrorActionPreference = "Stop"
 
 if (-not $VsixPath) {
   $resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
-  $VsixPath = Join-Path $resolvedExtensionDir "agent-lee-1.1.0-sovereign-runtime.vsix"
+  $package = Get-Content (Join-Path $resolvedExtensionDir "package.json") -Raw | ConvertFrom-Json
+  $VsixPath = Join-Path $resolvedExtensionDir "$($package.name)-$($package.version).vsix"
 }
 
 if (-not (Test-Path $CodeCmdPath)) {

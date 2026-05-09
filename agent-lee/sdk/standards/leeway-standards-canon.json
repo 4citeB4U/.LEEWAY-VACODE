@@ -1,0 +1,21 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "TAG": "CORE.STANDARDS.CANON.MAIN",
+    "REGION": "🟢 CORE",
+    "PURPOSE": "Standalone LeeWay standards canon manifest for Agent Lee runtime loading.",
+    "DISCOVERY_PIPELINE": "Voice → Intent → Location → Vertical → Ranking → Render"
+  },
+  "name": "Agent Lee Standalone Standards Canon",
+  "sources": [
+    "agent-lee/standards/LEEWAY_STANDARDS.md",
+    "agent-lee/sdk/standards/AGENT_REGISTRY.md",
+    "agent-lee/governance/law/CollaborationContract.ts",
+    "agent-lee/governance/law/AllowedTransitions.ts"
+  ],
+  "laws": [
+    "Scores below 70 are blocking.",
+    "Governed files must include LeeWay metadata.",
+    "Agent Lee verifies before trust and writes receipts."
+  ]
+}

@@ -122,6 +122,14 @@ Runtime state is persisted at:
 %USERPROFILE%\.leeway-vscode\agent-lee\config\runtime-state.json
 ```
 
+## Scanner Governance
+
+Agent Lee uses a unified LeeWay compliance scanner to ensure all code adheres to established standards.
+
+- **Scanner Version**: `self-scan-unified-2026-05-07`
+- **Governance Mode**: Standalone runtime (Self) vs. Workspace.
+- **Reporting**: Live verification results are written to `%USERPROFILE%\.leeway-vscode\agent-lee\reports\compliance`.
+
 ## Browser Evidence
 
 For front-end, dashboard, layout, visual, website, and UI review prompts, Agent Lee can launch or target a browser session and produce evidence under:

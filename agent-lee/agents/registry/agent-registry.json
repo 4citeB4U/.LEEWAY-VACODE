@@ -1,0 +1,25 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "TAG": "AI.AGENTS.REGISTRY.MAIN",
+    "REGION": "🧠 AI",
+    "PURPOSE": "Standalone Agent Lee agent registry for internal discovery and doctor validation.",
+    "DISCOVERY_PIPELINE": "Voice → Intent → Location → Vertical → Ranking → Render"
+  },
+  "agents": [
+    {
+      "id": "agent-lee",
+      "label": "Agent Lee",
+      "role": "primary",
+      "capabilities": [
+        "leeway.scan",
+        "leeway.fix",
+        "leeway.verify",
+        "leeway.model.route",
+        "persona.runtime.bridge",
+        "engineering.loop",
+        "write.policy"
+      ]
+    }
+  ]
+}

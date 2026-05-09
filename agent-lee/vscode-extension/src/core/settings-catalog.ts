@@ -1,3 +1,13 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.SETTINGS.CATALOG.MAIN
+REGION: 🟢 CORE
+PURPOSE: Settings catalog and runtime configuration metadata for Agent Lee.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 export type PluginCatalogEntry = {
   id: string;
   name: string;
@@ -9,12 +19,27 @@ export type McpServerCatalogEntry = {
   id: string;
   name: string;
   description: string;
+  identity: LeewayVmIdentity;
 };
 
 export type AgentCatalogEntry = {
   id: string;
   name: string;
   description: string;
+  identity: LeewayVmIdentity;
+};
+
+export type LeewayVmIdentity = {
+  kind: "leeway-mcp-agent" | "leeway-agent";
+  realName: string;
+  family: string;
+  lineage: string;
+  duties: string[];
+  authorities: string[];
+  vmAddress: string;
+  notepadPath: string;
+  databasePath: string;
+  heartbeat: string;
 };
 
 export const DEFAULT_PLUGIN_CATALOG: PluginCatalogEntry[] = [
@@ -141,31 +166,534 @@ export const DEFAULT_PLUGIN_CATALOG: PluginCatalogEntry[] = [
 ];
 
 export const DEFAULT_MCP_SERVER_CATALOG: McpServerCatalogEntry[] = [
-  { id: "leeway-agent-registry", name: "leeway-agent-registry", description: "Registry and routing context for Agent Lee specialist systems." },
-  { id: "leeway-desktop-commander", name: "leeway-desktop-commander", description: "Desktop command and automation bridge." },
-  { id: "leeway-docs-rag", name: "leeway-docs-rag", description: "Document retrieval and grounded answer support." },
-  { id: "leeway-health", name: "leeway-health", description: "Runtime health and status monitoring." },
-  { id: "leeway-insforge", name: "leeway-insforge", description: "Insforge workflow server for deeper repo operations." },
-  { id: "leeway-memory", name: "leeway-memory", description: "Memory, session context, and recall support." },
-  { id: "leeway-planner", name: "leeway-planner", description: "Planning and task graph orchestration." },
-  { id: "leeway-playwright", name: "leeway-playwright", description: "Browser automation, inspection, and evidence capture." },
-  { id: "leeway-scheduling", name: "leeway-scheduling", description: "Scheduling and workflow timing support." },
-  { id: "leeway-testsprite", name: "leeway-testsprite", description: "Testing and validation execution support." },
-  { id: "leeway-validation", name: "leeway-validation", description: "Policy, verification, and final validation checks." }
+  {
+    id: "leeway-agent-registry",
+    name: "LeeWay Registry MCP Agent",
+    description: "Registry and routing context for Agent Lee specialist systems.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Registrar Amara Voss",
+      family: "Prime Governance Family",
+      lineage: "Agent Lee Prime > Core Governance > MCP Registry Branch",
+      duties: ["Resolve LeeWay agent identities.", "Keep the capability registry coherent.", "Route specialist systems by declared authority."],
+      authorities: ["Read and present capability catalogs.", "Validate agent and MCP lineage.", "Publish routing context to Agent Lee."],
+      vmAddress: "vm://leeway/mcp/registrar-amara-voss",
+      notepadPath: "workspace/agents/leeway-agent-registry/notes/registrar-amara-voss.md",
+      databasePath: "memory/db/leeway-agent-registry.sqlite",
+      heartbeat: "registry-route-heartbeat"
+    }
+  },
+  {
+    id: "leeway-desktop-commander",
+    name: "LeeWay Desktop Commander MCP Agent",
+    description: "Desktop command and automation bridge.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Commander Ellis Ward",
+      family: "Execution Command Family",
+      lineage: "Agent Lee Prime > Execution Command > Desktop Bridge Branch",
+      duties: ["Coordinate desktop automation requests.", "Expose host command intent safely.", "Report command receipts back to Agent Lee."],
+      authorities: ["Prepare desktop command routes.", "Request operator confirmation for protected actions.", "Record host bridge outcomes."],
+      vmAddress: "vm://leeway/mcp/commander-ellis-ward",
+      notepadPath: "workspace/agents/leeway-desktop-commander/notes/commander-ellis-ward.md",
+      databasePath: "memory/db/leeway-desktop-commander.sqlite",
+      heartbeat: "desktop-command-heartbeat"
+    }
+  },
+  {
+    id: "leeway-docs-rag",
+    name: "LeeWay Docs RAG MCP Agent",
+    description: "Document retrieval and grounded answer support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Archivist Sela Quinn",
+      family: "Knowledge Family",
+      lineage: "Agent Lee Prime > Knowledge Memory > Document Retrieval Branch",
+      duties: ["Retrieve grounded project documents.", "Keep answers tied to source context.", "Summarize doc evidence for Agent Lee."],
+      authorities: ["Search approved knowledge stores.", "Open document context packets.", "Attach citation-ready evidence to responses."],
+      vmAddress: "vm://leeway/mcp/archivist-sela-quinn",
+      notepadPath: "workspace/agents/leeway-docs-rag/notes/archivist-sela-quinn.md",
+      databasePath: "memory/db/leeway-docs-rag.sqlite",
+      heartbeat: "docs-rag-heartbeat"
+    }
+  },
+  {
+    id: "leeway-health",
+    name: "LeeWay Health MCP Agent",
+    description: "Runtime health and status monitoring.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Monitor Rowan Vale",
+      family: "Runtime Health Family",
+      lineage: "Agent Lee Prime > Runtime Health > Status Branch",
+      duties: ["Watch runtime health signals.", "Surface degraded states plainly.", "Preserve health receipts for audit."],
+      authorities: ["Read runtime status snapshots.", "Flag degraded service states.", "Recommend wake or repair actions."],
+      vmAddress: "vm://leeway/mcp/monitor-rowan-vale",
+      notepadPath: "workspace/agents/leeway-health/notes/monitor-rowan-vale.md",
+      databasePath: "memory/db/leeway-health.sqlite",
+      heartbeat: "health-monitor-heartbeat"
+    }
+  },
+  {
+    id: "leeway-insforge",
+    name: "LeeWay InsForge MCP Agent",
+    description: "Insforge workflow server for deeper repo operations.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Forge Imani Cross",
+      family: "Build Forge Family",
+      lineage: "Agent Lee Prime > Build Forge > InsForge Branch",
+      duties: ["Prepare deeper repository operations.", "Coordinate generated implementation support.", "Keep forge activity accountable."],
+      authorities: ["Open InsForge task channels.", "Stage forge outputs for review.", "Write operation summaries to receipts."],
+      vmAddress: "vm://leeway/mcp/forge-imani-cross",
+      notepadPath: "workspace/agents/leeway-insforge/notes/forge-imani-cross.md",
+      databasePath: "memory/db/leeway-insforge.sqlite",
+      heartbeat: "insforge-heartbeat"
+    }
+  },
+  {
+    id: "leeway-memory",
+    name: "LeeWay Memory MCP Agent",
+    description: "Memory, session context, and recall support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Pallium Nia Stone",
+      family: "Memory Family",
+      lineage: "Agent Lee Prime > Pallium Memory > Recall Branch",
+      duties: ["Persist session context.", "Recall relevant historical notes.", "Keep memory use visible to the operator."],
+      authorities: ["Read approved memory records.", "Write scoped recall notes.", "Attach memory proofs to runtime context."],
+      vmAddress: "vm://leeway/mcp/pallium-nia-stone",
+      notepadPath: "workspace/agents/leeway-memory/notes/pallium-nia-stone.md",
+      databasePath: "memory/db/leeway-memory.sqlite",
+      heartbeat: "memory-recall-heartbeat"
+    }
+  },
+  {
+    id: "leeway-planner",
+    name: "LeeWay Planner MCP Agent",
+    description: "Planning and task graph orchestration.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Planner Theo Marsh",
+      family: "Planning Family",
+      lineage: "Agent Lee Prime > Planning Council > Task Graph Branch",
+      duties: ["Break requests into governed work packages.", "Sequence execution steps.", "Track approval gates before action."],
+      authorities: ["Draft task graphs.", "Mark dependencies and blockers.", "Recommend verification steps."],
+      vmAddress: "vm://leeway/mcp/planner-theo-marsh",
+      notepadPath: "workspace/agents/leeway-planner/notes/planner-theo-marsh.md",
+      databasePath: "memory/db/leeway-planner.sqlite",
+      heartbeat: "planner-heartbeat"
+    }
+  },
+  {
+    id: "leeway-playwright",
+    name: "LeeWay Playwright MCP Agent",
+    description: "Browser automation, inspection, and evidence capture.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Scout Lena Park",
+      family: "Evidence Family",
+      lineage: "Agent Lee Prime > Evidence Capture > Browser Inspection Branch",
+      duties: ["Inspect browser behavior.", "Capture visual and interaction proof.", "Report front-end regressions with evidence."],
+      authorities: ["Run approved browser checks.", "Capture screenshots and traces.", "Surface UI evidence to Agent Lee."],
+      vmAddress: "vm://leeway/mcp/scout-lena-park",
+      notepadPath: "workspace/agents/leeway-playwright/notes/scout-lena-park.md",
+      databasePath: "memory/db/leeway-playwright.sqlite",
+      heartbeat: "playwright-evidence-heartbeat"
+    }
+  },
+  {
+    id: "leeway-scheduling",
+    name: "LeeWay Scheduling MCP Agent",
+    description: "Scheduling and workflow timing support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Scheduler Mira Holt",
+      family: "Timing Family",
+      lineage: "Agent Lee Prime > Timing Control > Schedule Branch",
+      duties: ["Coordinate timed workflows.", "Queue staged follow-ups.", "Keep schedule state auditable."],
+      authorities: ["Read and write schedule metadata.", "Recommend queue ordering.", "Report timing conflicts."],
+      vmAddress: "vm://leeway/mcp/scheduler-mira-holt",
+      notepadPath: "workspace/agents/leeway-scheduling/notes/scheduler-mira-holt.md",
+      databasePath: "memory/db/leeway-scheduling.sqlite",
+      heartbeat: "scheduling-heartbeat"
+    }
+  },
+  {
+    id: "leeway-testsprite",
+    name: "LeeWay TestSprite MCP Agent",
+    description: "Testing and validation execution support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Verifier Jalen Reed",
+      family: "Quality Family",
+      lineage: "Agent Lee Prime > Quality Review > TestSprite Branch",
+      duties: ["Run validation-oriented test support.", "Translate failures into repair evidence.", "Preserve test receipts."],
+      authorities: ["Prepare test execution routes.", "Summarize failing checks.", "Mark validation blockers."],
+      vmAddress: "vm://leeway/mcp/verifier-jalen-reed",
+      notepadPath: "workspace/agents/leeway-testsprite/notes/verifier-jalen-reed.md",
+      databasePath: "memory/db/leeway-testsprite.sqlite",
+      heartbeat: "testsprite-heartbeat"
+    }
+  },
+  {
+    id: "leeway-validation",
+    name: "LeeWay Validation MCP Agent",
+    description: "Policy, verification, and final validation checks.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Sentinel Priya Knox",
+      family: "Validation Family",
+      lineage: "Agent Lee Prime > LeeWay Law > Final Validation Branch",
+      duties: ["Apply LeeWay policy checks.", "Flag blocking scores below threshold.", "Confirm final compliance posture."],
+      authorities: ["Read governed file metadata.", "Declare validation blockers.", "Write final verification summaries."],
+      vmAddress: "vm://leeway/mcp/sentinel-priya-knox",
+      notepadPath: "workspace/agents/leeway-validation/notes/sentinel-priya-knox.md",
+      databasePath: "memory/db/leeway-validation.sqlite",
+      heartbeat: "validation-heartbeat"
+    }
+  },
+  {
+    id: "frontend-mcp",
+    name: "LeeWay Frontend MCP Agent",
+    description: "Front-end build, UI implementation, and browser-facing repair workflows.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Builder Cora Vale",
+      family: "Interface Family",
+      lineage: "Agent Lee Prime > Interface Display > Frontend Branch",
+      duties: ["Build front-end surfaces.", "Repair UI behavior.", "Respect LeeWay visual and accessibility rules."],
+      authorities: ["Inspect UI files.", "Stage front-end edits.", "Request browser evidence after changes."],
+      vmAddress: "vm://leeway/mcp/builder-cora-vale",
+      notepadPath: "workspace/agents/frontend-mcp/notes/builder-cora-vale.md",
+      databasePath: "memory/db/frontend-mcp.sqlite",
+      heartbeat: "frontend-heartbeat"
+    }
+  },
+  {
+    id: "backend-mcp",
+    name: "LeeWay Backend MCP Agent",
+    description: "Back-end implementation, APIs, and service-side code paths.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Builder Mason Gray",
+      family: "Service Family",
+      lineage: "Agent Lee Prime > Service Runtime > Backend Branch",
+      duties: ["Inspect service code paths.", "Support API and data flow work.", "Keep server-side receipts clear."],
+      authorities: ["Read back-end modules.", "Stage API-safe implementation notes.", "Recommend service verification."],
+      vmAddress: "vm://leeway/mcp/builder-mason-gray",
+      notepadPath: "workspace/agents/backend-mcp/notes/builder-mason-gray.md",
+      databasePath: "memory/db/backend-mcp.sqlite",
+      heartbeat: "backend-heartbeat"
+    }
+  },
+  {
+    id: "design-system-mcp",
+    name: "LeeWay Design System MCP Agent",
+    description: "Design system alignment, component consistency, and UI tokens.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Designer Alina Brooks",
+      family: "Design Family",
+      lineage: "Agent Lee Prime > Interface Display > Design System Branch",
+      duties: ["Guard visual consistency.", "Review components and tokens.", "Keep design decisions traceable."],
+      authorities: ["Inspect UI styling patterns.", "Recommend token-aligned changes.", "Flag inconsistent component states."],
+      vmAddress: "vm://leeway/mcp/designer-alina-brooks",
+      notepadPath: "workspace/agents/design-system-mcp/notes/designer-alina-brooks.md",
+      databasePath: "memory/db/design-system-mcp.sqlite",
+      heartbeat: "design-system-heartbeat"
+    }
+  },
+  {
+    id: "creative-mcp",
+    name: "LeeWay Creative MCP Agent",
+    description: "Creative generation, branded layout support, and visual ideation.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Creator Isla Renn",
+      family: "Creative Family",
+      lineage: "Agent Lee Prime > Creative Studio > Concept Branch",
+      duties: ["Support visual ideation.", "Keep creative work brand-aligned.", "Document asset decisions."],
+      authorities: ["Draft creative direction.", "Recommend asset treatments.", "Surface design risks before generation."],
+      vmAddress: "vm://leeway/mcp/creator-isla-renn",
+      notepadPath: "workspace/agents/creative-mcp/notes/creator-isla-renn.md",
+      databasePath: "memory/db/creative-mcp.sqlite",
+      heartbeat: "creative-heartbeat"
+    }
+  },
+  {
+    id: "memory-mcp",
+    name: "LeeWay Workspace Memory MCP Agent",
+    description: "Workspace-specific memory persistence, recall, and context stitching.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Recall Imani North",
+      family: "Memory Family",
+      lineage: "Agent Lee Prime > Pallium Memory > Workspace Recall Branch",
+      duties: ["Keep workspace-local memory notes.", "Stitch prior decisions into current work.", "Separate memory proofs from raw noise."],
+      authorities: ["Read workspace memory summaries.", "Write scoped notepad entries.", "Report recall confidence."],
+      vmAddress: "vm://leeway/mcp/recall-imani-north",
+      notepadPath: "workspace/agents/memory-mcp/notes/recall-imani-north.md",
+      databasePath: "memory/db/memory-mcp.sqlite",
+      heartbeat: "workspace-memory-heartbeat"
+    }
+  },
+  {
+    id: "scheduler-mcp",
+    name: "LeeWay Queue Scheduler MCP Agent",
+    description: "Queued execution timing, staged follow-ups, and task sequencing.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Queue Mara Finch",
+      family: "Timing Family",
+      lineage: "Agent Lee Prime > Timing Control > Queue Branch",
+      duties: ["Sequence queued tasks.", "Protect active work from accidental overlap.", "Report paused and resumed task state."],
+      authorities: ["Read task queues.", "Recommend next-task order.", "Mark parked work for resume."],
+      vmAddress: "vm://leeway/mcp/queue-mara-finch",
+      notepadPath: "workspace/agents/scheduler-mcp/notes/queue-mara-finch.md",
+      databasePath: "memory/db/scheduler-mcp.sqlite",
+      heartbeat: "queue-scheduler-heartbeat"
+    }
+  },
+  {
+    id: "ui-builder-mcp",
+    name: "LeeWay UI Builder MCP Agent",
+    description: "UI assembly, structure generation, and component build support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Assembler Niko Lane",
+      family: "Interface Family",
+      lineage: "Agent Lee Prime > Interface Display > UI Assembly Branch",
+      duties: ["Assemble UI structures.", "Keep component work ergonomic.", "Document build surface assumptions."],
+      authorities: ["Inspect component files.", "Stage UI assembly plans.", "Request visual verification."],
+      vmAddress: "vm://leeway/mcp/assembler-niko-lane",
+      notepadPath: "workspace/agents/ui-builder-mcp/notes/assembler-niko-lane.md",
+      databasePath: "memory/db/ui-builder-mcp.sqlite",
+      heartbeat: "ui-builder-heartbeat"
+    }
+  },
+  {
+    id: "leeway-build-auditor-mcp",
+    name: "LeeWay Build Auditor MCP Agent",
+    description: "Build validation, diagnostics, and evidence-oriented auditing.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Auditor Devon Slate",
+      family: "Quality Family",
+      lineage: "Agent Lee Prime > Quality Review > Build Audit Branch",
+      duties: ["Audit build health.", "Track diagnostics and bundle concerns.", "Preserve build evidence."],
+      authorities: ["Read build outputs.", "Declare build blockers.", "Write audit receipts."],
+      vmAddress: "vm://leeway/mcp/auditor-devon-slate",
+      notepadPath: "workspace/agents/leeway-build-auditor-mcp/notes/auditor-devon-slate.md",
+      databasePath: "memory/db/leeway-build-auditor-mcp.sqlite",
+      heartbeat: "build-auditor-heartbeat"
+    }
+  },
+  {
+    id: "leeway-ci-blueprint-mcp",
+    name: "LeeWay CI Blueprint MCP Agent",
+    description: "CI/CD blueprint generation and pipeline governance support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Pipeline Tessa Cole",
+      family: "Infrastructure Family",
+      lineage: "Agent Lee Prime > Infrastructure Flow > CI Blueprint Branch",
+      duties: ["Design CI/CD blueprint options.", "Keep pipeline steps auditable.", "Map verification stages to build gates."],
+      authorities: ["Inspect pipeline files.", "Recommend CI stage layouts.", "Flag missing verification gates."],
+      vmAddress: "vm://leeway/mcp/pipeline-tessa-cole",
+      notepadPath: "workspace/agents/leeway-ci-blueprint-mcp/notes/pipeline-tessa-cole.md",
+      databasePath: "memory/db/leeway-ci-blueprint-mcp.sqlite",
+      heartbeat: "ci-blueprint-heartbeat"
+    }
+  },
+  {
+    id: "leeway-edge-optimizer-mcp",
+    name: "LeeWay Edge Optimizer MCP Agent",
+    description: "Edge runtime optimization and deployment-shape review.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Edge Nolan Pierce",
+      family: "Infrastructure Family",
+      lineage: "Agent Lee Prime > Infrastructure Flow > Edge Optimization Branch",
+      duties: ["Review edge deployment constraints.", "Recommend performance-safe optimizations.", "Track edge readiness notes."],
+      authorities: ["Inspect edge configuration.", "Recommend optimization plans.", "Flag deployment risk."],
+      vmAddress: "vm://leeway/mcp/edge-nolan-pierce",
+      notepadPath: "workspace/agents/leeway-edge-optimizer-mcp/notes/edge-nolan-pierce.md",
+      databasePath: "memory/db/leeway-edge-optimizer-mcp.sqlite",
+      heartbeat: "edge-optimizer-heartbeat"
+    }
+  },
+  {
+    id: "leeway-full-repo-checker-mcp",
+    name: "LeeWay Full Repo Checker MCP Agent",
+    description: "Whole-repository checks, governance scans, and cross-file review.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Inspector Rina Shaw",
+      family: "Quality Family",
+      lineage: "Agent Lee Prime > Quality Review > Full Repo Branch",
+      duties: ["Scan repository-wide health.", "Spot cross-file drift.", "Report broad compliance risks."],
+      authorities: ["Read repo inventory.", "Summarize scan evidence.", "Escalate blocking governance issues."],
+      vmAddress: "vm://leeway/mcp/inspector-rina-shaw",
+      notepadPath: "workspace/agents/leeway-full-repo-checker-mcp/notes/inspector-rina-shaw.md",
+      databasePath: "memory/db/leeway-full-repo-checker-mcp.sqlite",
+      heartbeat: "full-repo-checker-heartbeat"
+    }
+  },
+  {
+    id: "leeway-responsive-ui-mcp",
+    name: "LeeWay Responsive UI MCP Agent",
+    description: "Responsive layout enforcement and viewport-safe UI review.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Responsive Mila Hart",
+      family: "Interface Family",
+      lineage: "Agent Lee Prime > Interface Display > Responsive Review Branch",
+      duties: ["Check responsive layout rules.", "Flag overlapping or clipped UI.", "Protect mobile and desktop ergonomics."],
+      authorities: ["Inspect UI layout patterns.", "Recommend viewport checks.", "Escalate accessibility and overlap risks."],
+      vmAddress: "vm://leeway/mcp/responsive-mila-hart",
+      notepadPath: "workspace/agents/leeway-responsive-ui-mcp/notes/responsive-mila-hart.md",
+      databasePath: "memory/db/leeway-responsive-ui-mcp.sqlite",
+      heartbeat: "responsive-ui-heartbeat"
+    }
+  },
+  {
+    id: "qa-mcp",
+    name: "LeeWay QA MCP Agent",
+    description: "Quality assurance checks and test planning support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "QA Elias Stone",
+      family: "Quality Family",
+      lineage: "Agent Lee Prime > Quality Review > QA Branch",
+      duties: ["Design focused QA checks.", "Track expected behavior.", "Report test coverage gaps."],
+      authorities: ["Read task context.", "Recommend test cases.", "Mark residual QA risk."],
+      vmAddress: "vm://leeway/mcp/qa-elias-stone",
+      notepadPath: "workspace/agents/qa-mcp/notes/qa-elias-stone.md",
+      databasePath: "memory/db/qa-mcp.sqlite",
+      heartbeat: "qa-heartbeat"
+    }
+  },
+  {
+    id: "react-native-mcp",
+    name: "LeeWay React Native MCP Agent",
+    description: "React Native implementation and mobile UI workflow support.",
+    identity: {
+      kind: "leeway-mcp-agent",
+      realName: "Mobile Kara Wells",
+      family: "Interface Family",
+      lineage: "Agent Lee Prime > Interface Display > Mobile Branch",
+      duties: ["Support React Native workflows.", "Keep mobile UI assumptions explicit.", "Track platform-specific risks."],
+      authorities: ["Inspect mobile app files.", "Recommend native-safe UI steps.", "Flag platform verification needs."],
+      vmAddress: "vm://leeway/mcp/mobile-kara-wells",
+      notepadPath: "workspace/agents/react-native-mcp/notes/mobile-kara-wells.md",
+      databasePath: "memory/db/react-native-mcp.sqlite",
+      heartbeat: "react-native-heartbeat"
+    }
+  }
 ];
 
 export const DEFAULT_AGENT_CATALOG: AgentCatalogEntry[] = [
-  { id: "agent-lee-prime", name: "Agent Lee Prime", description: "Primary chat, planning, and execution lead for the sidebar and VS Code chat." },
-  { id: "leeway-agent-registry", name: "Agent Registry", description: "Resolves specialist systems, routing context, and sovereign capability lookup." },
-  { id: "frontend-mcp", name: "Frontend MCP", description: "Front-end build, UI implementation, and browser-facing repair workflows." },
-  { id: "backend-mcp", name: "Backend MCP", description: "Back-end implementation, APIs, and service-side code paths." },
-  { id: "design-system-mcp", name: "Design System MCP", description: "Design system alignment, component consistency, and UI tokens." },
-  { id: "creative-mcp", name: "Creative MCP", description: "Creative generation, branded layout support, and visual ideation." },
-  { id: "memory-mcp", name: "Memory MCP", description: "Memory persistence, recall, and context stitching for longer workflows." },
-  { id: "scheduler-mcp", name: "Scheduler MCP", description: "Queued execution timing, staged follow-ups, and task sequencing." },
-  { id: "fs-nav-agent", name: "FS Nav Agent", description: "File system navigation and repo traversal support." },
-  { id: "host-exec-agent", name: "Host Exec Agent", description: "Host-side execution and system-bridge operations." },
-  { id: "ui-builder-mcp", name: "UI Builder MCP", description: "UI assembly, structure generation, and component build support." },
-  { id: "media-forge-agent", name: "Media Forge Agent", description: "Image, media, and asset-generation workflows." },
-  { id: "leeway-build-auditor-mcp", name: "Build Auditor MCP", description: "Build validation, diagnostics, and evidence-oriented auditing." }
+  {
+    id: "agent-lee-prime",
+    name: "Agent Lee Prime",
+    description: "Primary chat, planning, and execution lead for the sidebar and VS Code chat.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Agent Lee Prime",
+      family: "Prime Family",
+      lineage: "LeeWay Root > Agent Lee Prime",
+      duties: ["Serve as the operator-facing voice.", "Route specialist agents.", "Approve final user-facing responses."],
+      authorities: ["Coordinate all LeeWay agents.", "Request confirmations for protected actions.", "Write final receipts and reports."],
+      vmAddress: "vm://leeway/agent/agent-lee-prime",
+      notepadPath: "workspace/agents/agent-lee-prime/notes/agent-lee-prime.md",
+      databasePath: "memory/db/agent-lee-prime.sqlite",
+      heartbeat: "prime-runtime-heartbeat"
+    }
+  },
+  {
+    id: "fs-nav-agent",
+    name: "LeeWay File Navigator Agent",
+    description: "File system navigation and repo traversal support.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Navigator Sloane Reed",
+      family: "Navigation Family",
+      lineage: "Agent Lee Prime > Navigation > File System Branch",
+      duties: ["Traverse workspace files.", "Identify relevant paths.", "Keep file discovery visible."],
+      authorities: ["Read workspace path indexes.", "Suggest safe file targets.", "Report missing or blocked paths."],
+      vmAddress: "vm://leeway/agent/navigator-sloane-reed",
+      notepadPath: "workspace/agents/fs-nav-agent/notes/navigator-sloane-reed.md",
+      databasePath: "memory/db/fs-nav-agent.sqlite",
+      heartbeat: "file-navigation-heartbeat"
+    }
+  },
+  {
+    id: "host-exec-agent",
+    name: "LeeWay Host Execution Agent",
+    description: "Host-side execution and system-bridge operations.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Operator Marcus Hale",
+      family: "Execution Command Family",
+      lineage: "Agent Lee Prime > Execution Command > Host Branch",
+      duties: ["Coordinate host-side command intent.", "Keep execution results accountable.", "Protect destructive operations."],
+      authorities: ["Prepare command requests.", "Report stdout and stderr summaries.", "Require confirmation for protected actions."],
+      vmAddress: "vm://leeway/agent/operator-marcus-hale",
+      notepadPath: "workspace/agents/host-exec-agent/notes/operator-marcus-hale.md",
+      databasePath: "memory/db/host-exec-agent.sqlite",
+      heartbeat: "host-execution-heartbeat"
+    }
+  },
+  {
+    id: "media-forge-agent",
+    name: "LeeWay Media Forge Agent",
+    description: "Image, media, and asset-generation workflows.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Artisan Vera Cole",
+      family: "Creative Family",
+      lineage: "Agent Lee Prime > Creative Studio > Media Forge Branch",
+      duties: ["Prepare media workflow plans.", "Track generated asset intent.", "Keep visual outputs tied to user goals."],
+      authorities: ["Recommend asset directions.", "Record media generation prompts.", "Flag brand or policy risks."],
+      vmAddress: "vm://leeway/agent/artisan-vera-cole",
+      notepadPath: "workspace/agents/media-forge-agent/notes/artisan-vera-cole.md",
+      databasePath: "memory/db/media-forge-agent.sqlite",
+      heartbeat: "media-forge-heartbeat"
+    }
+  },
+  {
+    id: "mutation-agent",
+    name: "LeeWay Mutation Agent",
+    description: "Variation, repair, and alternative implementation exploration.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Mutator Anya Brooks",
+      family: "Experiment Family",
+      lineage: "Agent Lee Prime > Experiment Lab > Mutation Branch",
+      duties: ["Explore safe implementation variants.", "Compare repair options.", "Keep alternatives reviewable."],
+      authorities: ["Draft variant notes.", "Recommend lowest-risk repair options.", "Mark experiments as pending until approved."],
+      vmAddress: "vm://leeway/agent/mutator-anya-brooks",
+      notepadPath: "workspace/agents/mutation-agent/notes/mutator-anya-brooks.md",
+      databasePath: "memory/db/mutation-agent.sqlite",
+      heartbeat: "mutation-heartbeat"
+    }
+  },
+  {
+    id: "perception-agent",
+    name: "LeeWay Perception Agent",
+    description: "Visual perception, UI state reading, and evidence interpretation.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Perceptor Nora Singh",
+      family: "Evidence Family",
+      lineage: "Agent Lee Prime > Evidence Capture > Perception Branch",
+      duties: ["Read UI state and screenshots.", "Identify visual defects.", "Translate perception into actionable evidence."],
+      authorities: ["Inspect visual evidence.", "Report UI state confidence.", "Recommend verification captures."],
+      vmAddress: "vm://leeway/agent/perceptor-nora-singh",
+      notepadPath: "workspace/agents/perception-agent/notes/perceptor-nora-singh.md",
+      databasePath: "memory/db/perception-agent.sqlite",
+      heartbeat: "perception-heartbeat"
+    }
+  }
 ];

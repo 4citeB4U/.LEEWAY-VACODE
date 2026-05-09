@@ -3,16 +3,19 @@ LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.AGENT_LEE.VSCODE_EXTENSION.README
+PURPOSE: Runtime documentation for Agent Lee sovereign identity, capabilities, and local extension workflow.
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 -->
 
 # Agent Lee LeeWay Coding System
 
-![LeeWay Standards logo](media/LeeWayStandardslogo.png)
+![LeeWay Standards logo](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/LeeWayStandardslogo.png)
 
 **Agent Lee** is a governance-first VS Code engineering assistant for front-end builds, application repair, codebase inspection, browser validation, local model routing, voice I/O, and proof-first delivery.
 
-![Agent Lee LeeWay autonomous engineering system in VS Code](media/readme-header.png)
+Agent Lee persona is always-on runtime identity in this extension. The persona does not activate from a button or test command. All models, agents, tools, MCPs, command responses, and governed file writes operate under Agent Lee by default. `Agent Lee: Test Persona` is only a diagnostic probe that verifies the always-on runtime is already active.
+
+![Agent Lee LeeWay autonomous engineering system in VS Code](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/readme-header.png)
 
 It is not just a chat box. The extension reads the real workspace, gates external access, routes work through a local model hive, validates visual output in a browser when relevant, and leaves evidence behind in reports.
 
@@ -44,7 +47,7 @@ It is not just a chat box. The extension reads the real workspace, gates externa
 | Flow testing | Can execute planned browser actions and assertions for interactive UI review. |
 | PyCharm tooling | Installs Agent Lee helper wiring into detected PyCharm configuration folders. |
 
-![Agent Lee system flow with VS Code, model hive, law engine, browser validator, voice, memory, reports, and LeeWay standards](media/readme-system-flow.png)
+![Agent Lee system flow with VS Code, model hive, law engine, browser validator, voice, memory, reports, and LeeWay standards](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/readme-system-flow.png)
 
 ## Interface
 
@@ -65,7 +68,7 @@ The main sidebar exposes the controls that matter during a real engineering sess
 | History | Opens previous conversations. |
 | README | Opens this README from the installed extension. |
 
-![Agent Lee status bar launcher and LeeWay standards button](media/leeway-standards-button.png)
+![Agent Lee status bar launcher and LeeWay standards button](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/leeway-standards-button.png)
 
 ## Commands
 
@@ -74,6 +77,8 @@ The main sidebar exposes the controls that matter during a real engineering sess
 | `Agent Lee: Open Chat` | Opens Agent Lee in a panel. |
 | `Agent Lee: Open Sidebar` | Focuses the Activity Bar sidebar view. |
 | `Agent Lee: Open README` | Opens the packaged README. |
+| `Agent Lee: Scan Agent Lee Self` | Runs a compliance scan on the standalone runtime root. |
+| `Agent Lee: Verify Agent Lee Self` | Verifies the standalone runtime root (score-gated). |
 | `Agent Lee: Install PyCharm Tools` | Installs PyCharm helper tooling. |
 | `Agent Lee: New Chat` | Starts a fresh conversation. |
 | `Agent Lee: Stop Voice` | Stops current voice playback. |
@@ -123,6 +128,20 @@ Evidence can include:
 - Broken link and missing image checks.
 - Browser flow reports with executed steps and assertions.
 
+## Autonomous Engineering
+
+Agent Lee can execute autonomous engineering tasks using a formal governed loop:
+
+1.  **Inspect**: Reads the target file and surrounding context.
+2.  **Plan**: Drafts an execution plan and classifies risk.
+3.  **Stage**: Generates a pending patch in the VS Code edit buffer.
+4.  **Approve**: Requires operator approval for high-risk or external changes.
+5.  **Apply**: Applies approved hunks to the local filesystem.
+6.  **Verify**: Runs bundling, compilation, tests, and the LeeWay Doctor.
+7.  **Receipt**: Writes a persistent engineering run result to `.leeway-vscode/logs`.
+
+Trigger this loop via the `Agent Lee: Engineer Task` command or the **Engineer Task** button in the sidebar.
+
 ## Access And Safety
 
 Agent Lee reads the open workspace by default. If you mention another local folder, VS Code asks for approval before that folder is inspected.
@@ -143,10 +162,12 @@ From this extension directory:
 
 ```powershell
 npm install
-npm run compile
-npx @vscode/vsce package -o agent-lee-1.1.1-sovereign-runtime.vsix
-code --install-extension .\agent-lee-1.1.1-sovereign-runtime.vsix --force
+npm run bundle
+npx vsce package -o agent-lee-leeway-coding-system.verify.vsix
+code --install-extension .\agent-lee-leeway-coding-system.verify.vsix --force
 ```
+
+Production builds use `esbuild` to bundle the extension into a single `dist/extension.js` file, reducing the VSIX footprint to ~540 files (previously >13,000).
 
 From the repo root:
 

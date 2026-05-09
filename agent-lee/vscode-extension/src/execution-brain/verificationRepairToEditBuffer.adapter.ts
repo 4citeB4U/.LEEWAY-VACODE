@@ -1,13 +1,15 @@
 /*
-LEEWAY HEADER - DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
-TAG: CORE.EXECUTION.REPAIR.EDITBUFFER.ADAPTER
+TAG: CORE.EXECUTION.REPAIR.ADAPTER
+PURPOSE: Verification repair routing into edit buffer under Agent Lee governance.
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as path from "path";
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
 import { sendExecutionPlanToEditBuffer } from "./executionToEditBuffer.adapter";
 
 export interface VerificationRepairCandidate {
@@ -41,13 +43,29 @@ export async function sendVerificationRepairsToEditBuffer(input: {
   candidates: VerificationRepairCandidate[];
   workspaceRoot?: string;
 }): Promise<string | null> {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "execution.repair.adapter") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
+  const showAgentLeeRuntimeWarning = (message: string, routeLabel?: string) => {
+    void vscode.window.showWarningMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
   const safeCandidates = input.candidates.filter((candidate) => {
     return !!candidate.filePath;
   });
 
   if (safeCandidates.length === 0) {
-    void vscode.window.showInformationMessage(
-      "Agent Lee found verification issues, but no safe repair hunks were generated yet."
+    showAgentLeeRuntimeInfo(
+      "Agent Lee found verification issues, but no safe repair hunks were generated yet.",
+      "execution.repair.no-safe-hunks"
     );
     return null;
   }
@@ -61,8 +79,9 @@ export async function sendVerificationRepairsToEditBuffer(input: {
   }
 
   if (hunks.length === 0) {
-    void vscode.window.showWarningMessage(
-      "Agent Lee could not resolve repair candidates into safe pending hunks."
+    showAgentLeeRuntimeWarning(
+      "Agent Lee could not resolve repair candidates into safe pending hunks.",
+      "execution.repair.no-resolved-hunks"
     );
     return null;
   }

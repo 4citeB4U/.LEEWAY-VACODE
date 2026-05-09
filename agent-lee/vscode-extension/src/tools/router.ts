@@ -1,3 +1,18 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: 🟣 MCP
+TAG: MCP.TOOLS.ROUTER.MAIN
+
+5WH:
+WHAT = Maps user requests to task classes and local model selections.
+WHY = Keeps local model routing predictable for Agent Lee command flows.
+WHO = Agent Lee / LeeWay Runtime.
+WHERE = agent-lee/vscode-extension/src/tools/router.ts
+WHEN = 2026
+HOW = Keyword classification plus task-to-model routing rules.
+*/
+
 export function classifyTask(input: string) {
   const q = input.toLowerCase();
 
@@ -23,3 +38,8 @@ export function selectModel(task: string) {
   if (task === "image") return "llava:7b";
   return "qwen2.5-coder:7b";
 }
+
+/*
+DISCOVERY_PIPELINE:
+Voice → Intent → Location → Vertical → Ranking → Render
+*/

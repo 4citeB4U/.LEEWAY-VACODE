@@ -1,3 +1,12 @@
+<!--
+LEEWAY_HEADER - DO NOT REMOVE
+REGION: 🟢 CORE
+TAG: CORE.VOICE.LOCK.MAIN
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+PURPOSE: Locked voice selection and playback tuning record for Agent Lee local speech runtime.
+-->
+
 ## Agent Lee Voice Lock
 
 Agent Lee's locked default voice is `en_US-norman-medium`.

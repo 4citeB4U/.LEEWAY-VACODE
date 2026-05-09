@@ -1,5 +1,21 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: 💾 DATA
+TAG: DATA.LOCAL.REPORTING.MAIN
+
+5WH:
+WHAT = Writes Agent Lee front-end evidence reports.
+WHY = Captures governed verification evidence for generated or inspected front-end work.
+WHO = Agent Lee / LeeWay Runtime.
+WHERE = agent-lee/vscode-extension/src/core/reporting.ts
+WHEN = 2026
+HOW = Infers project context and persists JSON evidence through governed file writes.
+*/
+
 import * as fs from "fs";
 import * as path from "path";
+import { writeJsonWithRetries } from "./file-ops";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const REPORT_DIR = path.join(ROOT, "agent-lee", "reports", "frontend-runtime");
@@ -121,9 +137,14 @@ export function inferPreviewInstructions(workspaceRoot: string) {
 export function writeFrontendEvidenceReport(input: FrontendEvidenceInput) {
   ensureDir();
   const file = path.join(REPORT_DIR, `agent-lee-frontend-report-${new Date().toISOString().replace(/[:.]/g, "-")}.json`);
-  fs.writeFileSync(file, JSON.stringify({
+  writeJsonWithRetries(file, {
     createdAt: new Date().toISOString(),
     ...input
-  }, null, 2), "utf8");
+  }, "Agent Lee front-end evidence report.");
   return file;
 }
+
+/*
+DISCOVERY_PIPELINE:
+Voice → Intent → Location → Vertical → Ranking → Render
+*/

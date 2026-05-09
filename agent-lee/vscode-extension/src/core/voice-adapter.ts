@@ -1,3 +1,13 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.VOICE.ADAPTER.MAIN
+REGION: 🟢 CORE
+PURPOSE: Voice adapter bridge for Agent Lee runtime speech and command interaction.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 import { execFile, execSync, ChildProcess } from "child_process";

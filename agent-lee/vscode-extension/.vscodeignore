@@ -1,10 +1,42 @@
+# Source and Configuration
+src/**
+out/**
+tsconfig.json
+package-lock.json
+.env.example
+.gitattributes
+scripts/**
+*.ps1
+*.sh
+*.py
+
+# Archives and Packages
+*.vsix
+*.zip
+.vsix-inspect/**
+.vsix-check/**
+agent-lee-*.vsix
+packaging_cleanup_plan.md
+
+# Tooling and Metadata
+.git/**
+.vscode/**
+.gitignore
+.vscodeignore
 node_modules/**
 !node_modules/axe-core/**
 !node_modules/pixelmatch/**
 !node_modules/pngjs/**
 !node_modules/playwright-core/**
-src
-*.map
-*.vsix
-.git
-.gitignore
+
+# Build Artifacts
+dist/*.map
+out/*.map
+
+# Local archive/test artifacts
+reports/**
+logs/**
+memory/**
+backups/**
+patches/**
+sandbox/**

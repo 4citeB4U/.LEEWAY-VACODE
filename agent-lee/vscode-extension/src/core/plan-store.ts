@@ -1,5 +1,21 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: 💾 DATA
+TAG: DATA.LOCAL.PLAN_STORE.MAIN
+
+5WH:
+WHAT = Persists Agent Lee execution plans to disk.
+WHY = Leaves a recoverable planning trail before governed edits are applied.
+WHO = Agent Lee / LeeWay Runtime.
+WHERE = agent-lee/vscode-extension/src/core/plan-store.ts
+WHEN = 2026
+HOW = Saves markdown plans through the governed file-ops layer.
+*/
+
 import * as fs from "fs";
 import * as path from "path";
+import { writeTextWithRetries } from "./file-ops";
 import { TaskPlan } from "./task-planner";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
@@ -47,6 +63,11 @@ export function saveTaskPlan(plan: TaskPlan) {
     ...plan.steps.map((step, index) => `${index + 1}. [ ] ${step.title} (${step.phase})\n   - ${step.detail}`)
   ];
 
-  fs.writeFileSync(file, lines.join("\n"), "utf8");
+  writeTextWithRetries(file, lines.join("\n"), "Agent Lee execution plan receipt.");
   return file;
 }
+
+/*
+DISCOVERY_PIPELINE:
+Voice → Intent → Location → Vertical → Ranking → Render
+*/

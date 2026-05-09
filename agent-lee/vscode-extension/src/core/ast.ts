@@ -32,3 +32,12 @@ export function readCodebaseContext(root: string, maxFiles = 35, maxChars = 2200
     .map(file => `FILE: ${file}\n${fs.readFileSync(file, "utf8").slice(0, maxChars)}`)
     .join("\n\n");
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.CODE.AST.MAIN
+REGION: 🟢 CORE
+PURPOSE: AST parsing and code structure support for Agent Lee file intelligence.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

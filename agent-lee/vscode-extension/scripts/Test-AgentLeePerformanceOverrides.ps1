@@ -1,3 +1,12 @@
+<#
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: 🟠 UTIL
+TAG: UTIL.SCRIPT.PERFORMANCE.TEST
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+#>
+
 param(
   [string]$BaseUrl = "http://127.0.0.1:7671",
   [switch]$RunCompile

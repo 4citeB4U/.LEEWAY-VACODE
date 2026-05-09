@@ -3,6 +3,7 @@ LEEWAY HEADER — DO NOT REMOVE
 
 REGION: 🧠 AI
 TAG: AI.PLUGIN.ROUTER.MAIN
+PURPOSE: Routes plugin calls under Agent Lee control and normalizes plugin output back through the sovereign runtime.
 
 5WH:
 WHAT = Agent Lee universal plugin router
@@ -29,6 +30,9 @@ import { guardPluginCall } from "./plugin.guard";
 import { getPluginById, resolvePluginCatalog, searchPlugins } from "./plugin.registry";
 import type { PluginCallInput, PluginCallResult, PluginMeshEntry } from "./plugin.types";
 import { performanceGovernor } from "../performance/performanceGovernor";
+import { formatAgentRoutedMessage } from "../core/agent-governance";
+import { recordAgentLeeRuntimeReceipt } from "../core/agent-lee-runtime-bootstrap";
+import { appendFileWithRetries } from "../core/file-ops";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const RECEIPT_DIR = path.join(ROOT, "logs", "agent-lee");
@@ -119,6 +123,7 @@ export class AgentLeePluginRouter {
     };
 
     const result = await adapter.execute(finalInput);
+    result.summary = formatAgentRoutedMessage(plugin.name || input.pluginId, result.summary);
     await this.writeReceipt(finalInput, result);
     return result;
   }
@@ -161,11 +166,14 @@ export class AgentLeePluginRouter {
       error: result.error || "",
       receiptId: result.receiptId || ""
     };
-    fs.appendFileSync(
-      path.join(RECEIPT_DIR, "plugin-receipts.ndjson"),
-      JSON.stringify(receipt) + "\n",
-      "utf8"
-    );
+    appendFileWithRetries(path.join(RECEIPT_DIR, "plugin-receipts.ndjson"), JSON.stringify(receipt) + "\n");
+    recordAgentLeeRuntimeReceipt({
+      event: "plugin.call.completed",
+      pluginId: input.pluginId,
+      action: input.action,
+      ok: result.ok,
+      receiptId: result.receiptId || ""
+    });
   }
 }
 

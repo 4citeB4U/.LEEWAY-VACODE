@@ -1,4 +1,10 @@
 {
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "🟠 UTIL",
+    "TAG": "UTIL.VSCODE.TASKS.CONFIG",
+    "DISCOVERY_PIPELINE": "Voice → Intent → Location → Vertical → Ranking → Render"
+  },
   "version": "2.0.0",
   "tasks": [
     {

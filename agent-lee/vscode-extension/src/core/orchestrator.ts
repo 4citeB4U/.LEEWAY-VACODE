@@ -1,3 +1,12 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.ORCHESTRATOR.MAIN
+REGION: 🟢 CORE
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import { buildContext } from "./file-intelligence";
 import { store } from "./memory";
 import { loadSovereignContext } from "./governance-loader";
