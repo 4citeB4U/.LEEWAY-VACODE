@@ -27,6 +27,8 @@ export type RuntimeState = {
   onboardingComplete: boolean;
   agentEnvironment: AgentEnvironment;
   appLanguage: AppLanguage;
+  autoUpdateEnabled: boolean;
+  lastAppliedVsixSignature: string;
   requireCtrlEnter: boolean;
   inferenceSpeed: InferenceSpeed;
   followupBehavior: FollowupBehavior;
@@ -38,6 +40,9 @@ export type RuntimeState = {
   enabledAgents: string[];
   customAgents: string[];
   agentConfigs: Record<string, string>;
+  enabledWorkers: string[];
+  customWorkers: string[];
+  workerConfigs: Record<string, string>;
   approval: ApprovalMode;
   autoRunStagedPlans: boolean;
   workMode: WorkMode;
@@ -57,6 +62,8 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
   onboardingComplete: false,
   agentEnvironment: "windows-native",
   appLanguage: "auto",
+  autoUpdateEnabled: true,
+  lastAppliedVsixSignature: "",
   requireCtrlEnter: false,
   inferenceSpeed: "standard",
   followupBehavior: "steer",
@@ -105,6 +112,20 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
   ],
   customAgents: [],
   agentConfigs: {},
+  enabledWorkers: [
+    "leeway-visual-orchestrator-agent",
+    "leeway-vector-reconstruction-worker",
+    "leeway-voxel-reconstruction-worker",
+    "leeway-scene-reconstruction-worker",
+    "leeway-depth-synthesis-worker",
+    "leeway-structural-fidelity-worker",
+    "leeway-asset-repair-worker",
+    "leeway-manifest-export-worker",
+    "leeway-project-integration-worker",
+    "leeway-visual-memory-worker"
+  ],
+  customWorkers: [],
+  workerConfigs: {},
   approval: "balanced",
   autoRunStagedPlans: false,
   workMode: "execute",
@@ -153,6 +174,9 @@ export function resolveRuntimeState(current: Partial<RuntimeState> | null | unde
   const persistedAgents = Array.isArray(current?.enabledAgents)
     ? state.enabledAgents
     : DEFAULT_RUNTIME_STATE.enabledAgents;
+  const persistedWorkers = Array.isArray((current as Partial<RuntimeState>)?.enabledWorkers)
+    ? state.enabledWorkers
+    : DEFAULT_RUNTIME_STATE.enabledWorkers;
   const enabledMcpServers = Array.from(
     new Set([
       ...persistedMcpServers,
@@ -164,12 +188,14 @@ export function resolveRuntimeState(current: Partial<RuntimeState> | null | unde
       ...persistedAgents.filter((id) => !isMcpAgentId(id))
     ])
   );
+  const enabledWorkers = Array.from(new Set(persistedWorkers));
 
   return {
     ...state,
     autoRunStagedPlans,
     enabledMcpServers,
     enabledAgents,
+    enabledWorkers,
     primaryModel: pickFirstInstalled(
       installedModels,
       [state.primaryModel, state.builderModel, "qwen2.5-coder:14b", "llama3.1:8b"],

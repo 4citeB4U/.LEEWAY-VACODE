@@ -29,7 +29,7 @@ param(
   [string]$CodeCmdPath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd",
   [string]$UserDataDir = (Join-Path $env:TEMP "agent-lee-vscode-profile"),
   [string]$ExtensionsDir = (Join-Path $env:TEMP "agent-lee-vscode-extensions"),
-  [string]$OutputDir = (Join-Path (Join-Path $PSScriptRoot "..\..\reports") ("doctor-" + (Get-Date -Format "yyyyMMdd-HHmmss"))),
+  [string]$OutputDir = (Join-Path (Join-Path (Join-Path $PSScriptRoot "..\..\reports") "Doctor") ("doctor-" + (Get-Date -Format "yyyyMMdd-HHmmss"))),
   [switch]$SkipBuild,
   [switch]$SkipPackage,
   [switch]$Install,

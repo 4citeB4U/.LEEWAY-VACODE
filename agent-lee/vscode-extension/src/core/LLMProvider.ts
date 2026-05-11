@@ -33,6 +33,11 @@ MIT
 
 import { buildModelPromptThroughAgentLee, getAgentLeeRuntimeState } from "./agent-lee-runtime-bootstrap";
 
+function formatUnknownError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 // Simple LLMProvider interface for optional LLM assistance
 export const LLMProvider = {
   async generate(prompt: string, model: string = 'qwen2.5-coder:14b'): Promise<string> {
@@ -57,7 +62,7 @@ export const LLMProvider = {
       const data = await response.json();
       return data.response || 'No response from model';
     } catch (error) {
-      return `Error: ${error.message}`;
+      return `Error: ${formatUnknownError(error)}`;
     }
   },
   async getModels(): Promise<string[]> {

@@ -37,6 +37,8 @@ This repository packages a full Agent Lee standalone system:
 - voice, browser, verification, and evidence tooling
 - a standards body that defines how the entire system is allowed to behave
 
+Local migration snapshots under `_archive/` are treated as machine-local backup material and are not part of the published source of truth for this repository.
+
 ## The Vision
 
 Most AI developer tools optimize for speed first and governance later.
@@ -488,6 +490,37 @@ That is why this application is structured the way it is.
 It is not just a tool.
 
 It is a demonstration of what a **governed AI engineering civilization** can look like when architecture, law, interface, security, and developer experience are designed as one system.
+
+## LeeWay Standards Bridge
+
+The full constitutional and teaching layer lives in [agent-lee/standards/LEEWAY_STANDARDS.md](agent-lee/standards/LEEWAY_STANDARDS.md).
+
+This README is the product-facing narrative for the current application, while the standards document explains the governing rules, protected identities, model hive, voice lock, evidence flow, and image assets that the app must continue to reflect.
+
+<p align="center">
+   <img src="./LeeWayStandardslogo.png" alt="LeeWay Standards logo" width="220" />
+</p>
+
+<p align="center">
+   <img src="./readme.md-image-header.png" alt="Workspace README header art" width="100%" />
+</p>
+
+<p align="center">
+   <img src="./readms.md-image-1.png" alt="Workspace secondary README art" width="100%" />
+</p>
+
+<p align="center">
+   <img src="./leeway-standards-button.png" alt="LeeWay standards button" width="72%" />
+</p>
+
+<p align="center">
+   <img src="./all%20buttons.png" alt="Workspace control surface overview" width="100%" />
+</p>
+
+<p align="center">
+   <img src="./top%20right%20button%20.png" alt="Top-right button reference" width="48%" />
+   <img src="./bottom%20button%20for%20agent%20lee%20.png" alt="Bottom button reference" width="48%" />
+</p>
 
 ## Author
 

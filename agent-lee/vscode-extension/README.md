@@ -9,13 +9,13 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 
 # Agent Lee LeeWay Coding System
 
-![LeeWay Standards logo](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/LeeWayStandardslogo.png)
+![Agent Lee mark](./media/leeway-standards-button.png)
 
 **Agent Lee** is a governance-first VS Code engineering assistant for front-end builds, application repair, codebase inspection, browser validation, local model routing, voice I/O, and proof-first delivery.
 
 Agent Lee persona is always-on runtime identity in this extension. The persona does not activate from a button or test command. All models, agents, tools, MCPs, command responses, and governed file writes operate under Agent Lee by default. `Agent Lee: Test Persona` is only a diagnostic probe that verifies the always-on runtime is already active.
 
-![Agent Lee LeeWay autonomous engineering system in VS Code](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/readme-header.png)
+![Agent Lee LeeWay autonomous engineering system in VS Code](./media/readme-header.png)
 
 It is not just a chat box. The extension reads the real workspace, gates external access, routes work through a local model hive, validates visual output in a browser when relevant, and leaves evidence behind in reports.
 
@@ -47,7 +47,7 @@ It is not just a chat box. The extension reads the real workspace, gates externa
 | Flow testing | Can execute planned browser actions and assertions for interactive UI review. |
 | PyCharm tooling | Installs Agent Lee helper wiring into detected PyCharm configuration folders. |
 
-![Agent Lee system flow with VS Code, model hive, law engine, browser validator, voice, memory, reports, and LeeWay standards](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/readme-system-flow.png)
+![Agent Lee system flow with VS Code, model hive, law engine, browser validator, voice, memory, reports, and LeeWay standards](./media/readme-system-flow.png)
 
 ## Interface
 
@@ -68,7 +68,7 @@ The main sidebar exposes the controls that matter during a real engineering sess
 | History | Opens previous conversations. |
 | README | Opens this README from the installed extension. |
 
-![Agent Lee status bar launcher and LeeWay standards button](https://raw.githubusercontent.com/4citeB4U/.LEEWAY-VACODE/HEAD/agent-lee/vscode-extension/media/leeway-standards-button.png)
+![Agent Lee runtime mark](./media/leeway-standards-button.png)
 
 ## Commands
 
@@ -76,6 +76,8 @@ The main sidebar exposes the controls that matter during a real engineering sess
 | :--- | :--- |
 | `Agent Lee: Open Chat` | Opens Agent Lee in a panel. |
 | `Agent Lee: Open Sidebar` | Focuses the Activity Bar sidebar view. |
+| `Agent Lee: Recover UI Surface` | Force-opens the sidebar, panel, and output together. |
+| `Agent Lee: Repair Installation` | Reinstalls the newest managed local VSIX and restores the UI surface. |
 | `Agent Lee: Open README` | Opens the packaged README. |
 | `Agent Lee: Scan Agent Lee Self` | Runs a compliance scan on the standalone runtime root. |
 | `Agent Lee: Verify Agent Lee Self` | Verifies the standalone runtime root (score-gated). |
@@ -168,6 +170,10 @@ code --install-extension .\agent-lee-leeway-coding-system.verify.vsix --force
 ```
 
 Production builds use `esbuild` to bundle the extension into a single `dist/extension.js` file, reducing the VSIX footprint to ~540 files (previously >13,000).
+
+## Marketplace Status
+
+This build is currently designed to be installed from a local `.vsix` package. If `Agent Lee LeeWay Coding System` does not appear in the public VS Code Marketplace search, that means it has not been published there yet under the `leeway` publisher account. Marketplace publication is separate from local VSIX packaging and requires publisher credentials plus an explicit `vsce publish` release step.
 
 From the repo root:
 

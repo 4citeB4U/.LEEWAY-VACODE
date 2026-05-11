@@ -1,7 +1,7 @@
 /*
 LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: 🟢 CORE
+REGION: ðŸŸ¢ CORE
 TAG: CORE.RUNTIME.EXTENSION.MAIN
 PURPOSE: VS Code extension activation and sovereign Agent Lee runtime orchestration.
 
@@ -26,6 +26,7 @@ MIT
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import { execFile } from "child_process";
 import { runSupervisor, SupervisorResult } from "./core/orchestrator";
 import { enforceLaw, enforceStageLaw } from "./core/law-engine";
 import { requestExecution, releaseExecution } from "./core/scheduler";
@@ -55,11 +56,11 @@ import {
 import { buildDeveloperProfileSummary, loadDeveloperProfile, rememberDeveloperSignal } from "./core/developer-profile";
 import { getMemoryStatus, storeAgentMemory } from "./core/memory";
 import { buildModelHiveStatus } from "./core/model-hive";
-import { getVoiceStatus, speakWithVoice, stopVoicePlayback } from "./core/voice-adapter";
+import { getVoiceStatus, loadVoiceRuntime, saveVoiceRuntime, speakWithClonedVoice, speakWithVoice, stopVoicePlayback, type VoiceRuntimeConfig } from "./core/voice-adapter";
 import { loadRuntimeSettings, RuntimeState, saveRuntimeSettings, ApprovalMode, resolveRuntimeState, DEFAULT_RUNTIME_STATE } from "./core/runtime-settings";
 import { appendFileWithRetries, describeFileError, writeJsonWithRetries, writeTextWithRetries } from "./core/file-ops";
 import { assessWorkerIdentity } from "./core/zero-trust";
-import { DEFAULT_AGENT_CATALOG, DEFAULT_MCP_SERVER_CATALOG, DEFAULT_PLUGIN_CATALOG } from "./core/settings-catalog";
+import { DEFAULT_AGENT_CATALOG, DEFAULT_MCP_SERVER_CATALOG, DEFAULT_PLUGIN_CATALOG, DEFAULT_WORKER_CATALOG } from "./core/settings-catalog";
 import { stopBrowserPreviews } from "./core/browser-engine";
 import { createTaskPlan, PlanPhase, TaskPlan, WorkMode } from "./core/task-planner";
 import { saveTaskPlan } from "./core/plan-store";
@@ -86,19 +87,114 @@ import { registerAgentLeeBackgroundIndexerCommands } from "./indexing/background
 import { scanLeeWayCompliance, LEEWAY_SCANNER_VERSION, makeHeader, AuditResult } from "./tools/leeway-scanner";
 import { classifyTask, selectModel } from "./tools/router";
 import { logEvent } from "./tools/logger";
+import { openLvisPanel } from "./visual-intelligence/visualPanel";
+import { getLvisSystemStatus } from "./visual-intelligence/visualRuntime";
+import { writeLvisReceipt } from "./visual-intelligence/visualReceipts";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
+const MANAGED_EXTENSION_DIR = path.join(ROOT, "agent-lee", "vscode-extension");
 const LOG_DIR = path.join(ROOT, "logs", "agent-lee");
 const PENDING_EDIT_DIR = path.join(ROOT, "agent-lee", "pending-edits");
 const COMPLIANCE_REPORT_DIR = path.join(ROOT, "agent-lee", "reports", "compliance");
+const DEFAULT_VSCODE_CLI = path.join(process.env.LOCALAPPDATA || "", "Programs", "Microsoft VS Code", "bin", "code.cmd");
+const DEFAULT_CLONE_SERVER_URL = "http://127.0.0.1:8766";
+const DEFAULT_DEVELOPER_REFERENCE_AUDIO = path.join(ROOT, "agent-lee", "voice", "default-agent-lee-voice.wav");
+const DEFAULT_DEVELOPER_REFERENCE_TEXT = "OK let's go ahead and create this. I'll speak into the mic for a certain amount of time. And the words that I'm actually going to say are the words I want the clone voice to be able to say.";
+const VOICE_CATALOG_PATH = path.join(ROOT, "agent-lee", "voice", "voice-catalog.json");
+const MAX_VOICE_CATALOG_ENTRIES = 10;
 const AGENT_LEE_VIEW_CONTAINER_ID = "agentLee";
 const AGENT_LEE_SIDEBAR_VIEW_ID = "agentLee.sidebar";
 const AGENT_LEE_OPEN_PANEL_COMMAND = "agentLee.openPanel";
-const AGENT_LEE_UI_VERSION = "chat-ui-restored-2026-05-07";
+const AGENT_LEE_UI_VERSION = "chat-ui-restored-voice-sync-2026-05-11-v1.2.1";
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 fs.mkdirSync(PENDING_EDIT_DIR, { recursive: true });
 fs.mkdirSync(COMPLIANCE_REPORT_DIR, { recursive: true });
+
+function resolveDefaultFfmpegPath() {
+  const candidates = [
+    "C:\\Program Files\\Lenovo\\LegionSpace\\1.9.11.6\\gamingai\\services\\editor\\ffmpeg.exe"
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || "";
+}
+
+function buildBundledCloneVoiceConfig(current?: VoiceRuntimeConfig | null): VoiceRuntimeConfig {
+  return {
+    ...(current || {}),
+    engine: "f5-clone-local",
+    fallbackEngine: current?.fallbackEngine || "piper-local",
+    personaSpeechMode: current?.personaSpeechMode || "Grounded_Operator",
+    interruptionPolicy: current?.interruptionPolicy || "kill-current-and-replace",
+    voiceWsUrl: current?.voiceWsUrl || "ws://localhost:8765/ws",
+    preferVoiceServer: current?.preferVoiceServer || false,
+    piperExecutable: current?.piperExecutable || path.join(ROOT, "agent-lee", "voice", "piper_bin", "piper.exe"),
+    piperModelPath: current?.piperModelPath || path.join(ROOT, "agent-lee", "voice", "models", "en_US-hfc_male-medium.onnx"),
+    piperConfigPath: current?.piperConfigPath || path.join(ROOT, "agent-lee", "voice", "models", "en_US-hfc_male-medium.onnx.json"),
+    sampleRate: current?.sampleRate || 22050,
+    selectedVoiceId: "developer-reference-voice",
+    selectedVoiceLabel: "Developer Cloned Voice",
+    selectedSpeakerId: "",
+    clonePythonPath: current?.clonePythonPath || path.join(ROOT, "agent-lee", "voice", "voice-cloning-env", "Scripts", "python.exe"),
+    cloneScriptPath: current?.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"),
+    cloneServerScriptPath: current?.cloneServerScriptPath || path.join(ROOT, "agent-lee", "voice", "voice_clone_server.py"),
+    cloneServerUrl: current?.cloneServerUrl || DEFAULT_CLONE_SERVER_URL,
+    cloneDevice: current?.cloneDevice || "cpu",
+    cloneReferenceAudioPath: current?.cloneReferenceAudioPath || DEFAULT_DEVELOPER_REFERENCE_AUDIO,
+    cloneReferenceText: current?.cloneReferenceText || DEFAULT_DEVELOPER_REFERENCE_TEXT,
+    cloneOutputPath: current?.cloneOutputPath || path.join(ROOT, "agent-lee", "voice", "agent-lee-live-clone.wav"),
+    ffmpegPath: current?.ffmpegPath || resolveDefaultFfmpegPath()
+  };
+}
+
+function getVoiceRuntimeConfig() {
+  return buildBundledCloneVoiceConfig(loadVoiceRuntime());
+}
+
+function persistVoiceRuntimeConfig(config: VoiceRuntimeConfig) {
+  const ok = saveVoiceRuntime(config);
+  if (!ok) throw new Error("Agent Lee could not persist the voice runtime config.");
+}
+
+function loadVoiceCatalog(): any {
+  try {
+    if (fs.existsSync(VOICE_CATALOG_PATH)) {
+      return JSON.parse(fs.readFileSync(VOICE_CATALOG_PATH, "utf8"));
+    }
+  } catch {}
+  return { defaultVoiceId: "agent-lee-default", voices: [] };
+}
+
+function saveVoiceCatalog(catalog: any) {
+  fs.writeFileSync(VOICE_CATALOG_PATH, JSON.stringify(catalog, null, 2), "utf8");
+}
+
+function isWindowsBatchScript(command: string) {
+  return process.platform === "win32" && /\.(cmd|bat)$/i.test(String(command || ""));
+}
+
+function runCommandCapture(command: string, args: string[], options?: { cwd?: string; env?: NodeJS.ProcessEnv; timeoutMs?: number }) {
+  return new Promise<string>((resolve, reject) => {
+    const resolvedCommand = isWindowsBatchScript(command)
+      ? (process.env.comspec || "cmd.exe")
+      : command;
+    const resolvedArgs = isWindowsBatchScript(command)
+      ? ["/d", "/s", "/c", "call", command, ...args]
+      : args;
+
+    execFile(resolvedCommand, resolvedArgs, {
+      cwd: options?.cwd,
+      env: options?.env,
+      timeout: options?.timeoutMs ?? 600000,
+      maxBuffer: 1024 * 1024 * 10
+    }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error([error.message, stderr, stdout].filter(Boolean).join("\n").trim()));
+        return;
+      }
+      resolve(String(stdout || "").trim());
+    });
+  });
+}
 
 let runtimeState: RuntimeState = loadRuntimeSettings();
 const approvedExternalRoots = new Set<string>();
@@ -183,6 +279,11 @@ const PROTECTED_MCP_IDS = new Set(
     .filter((entry) => entry.identity.developerSurface === "observed-only")
     .map((entry) => entry.id)
 );
+const PROTECTED_WORKER_IDS = new Set(
+  DEFAULT_WORKER_CATALOG
+    .filter((entry) => entry.developerSurface === "observed-only")
+    .map((entry) => entry.id)
+);
 
 function preserveProtectedIds(requested: unknown, current: string[], defaults: string[], protectedIds: Set<string>) {
   const incoming = Array.isArray(requested) ? requested.map((item) => String(item || "").trim()).filter(Boolean) : [];
@@ -225,6 +326,10 @@ function protectedMutationStatus(key: string) {
 
   if (key === "enabledMcpServers" || key === "mcpServerConfigs") {
     return "Protected LeeWay governance MCP agents stay visible and auditable, but their control surfaces are locked.";
+  }
+
+  if (key === "enabledWorkers" || key === "workerConfigs") {
+    return "Protected LeeWay workers stay visible and auditable, but their diagnostic control surfaces are locked.";
   }
 
   return "Protected LeeWay security controls rejected a direct mutation attempt.";
@@ -306,11 +411,11 @@ function emptyTaskState(): ActiveTaskState {
 function buildLeeWayHeader(filePath: string) {
   const generated = makeHeader(filePath);
   return generated
-    .replace("REGION: ?? UTIL", "REGION: 🟢 CORE")
+    .replace("REGION: ?? UTIL", "REGION: ðŸŸ¢ CORE")
     .replace("TAG: UTIL.LOCAL.", "TAG: CORE.RUNTIME.")
     .replace(
       /DISCOVERY_PIPELINE:\s*\n\s*Voice -> Intent -> Location -> Vertical -> Ranking -> Render/,
-      "DISCOVERY_PIPELINE:\nVoice → Intent → Location → Vertical → Ranking → Render"
+      "DISCOVERY_PIPELINE:\nVoice â†’ Intent â†’ Location â†’ Vertical â†’ Ranking â†’ Render"
     );
 }
 
@@ -542,7 +647,7 @@ function buildRuntimeDegradedMessage(state = getAgentLeeRuntimeState()) {
 function updateRuntimeStatusBar(_state = getAgentLeeRuntimeState()) {
   if (!runtimeStatusBarItem) return;
   const degraded = isUiRuntimeDegraded(_state);
-  runtimeStatusBarItem.text = degraded ? "$(warning) Agent Lee: Degraded" : "$(hubot) Agent Lee: Ready";
+  runtimeStatusBarItem.text = degraded ? "Agent Lee: Degraded" : "Agent Lee: Ready";
   runtimeStatusBarItem.tooltip = degraded
     ? "Agent Lee sovereign runtime is active but degraded. Click to open the right-side panel; run Agent Lee: Runtime Status for proof."
     : "Agent Lee sovereign runtime is active. Click to open the right-side panel; run Agent Lee: Runtime Status for proof.";
@@ -1584,6 +1689,126 @@ function persistRuntime() {
   saveRuntimeSettings(runtimeState);
 }
 
+type ManagedVsixCandidate = {
+  packageName: string;
+  packageVersion: string;
+  vsixPath: string;
+  signature: string;
+};
+
+function resolveManagedVsixCandidate(): ManagedVsixCandidate | null {
+  const packageJsonPath = path.join(MANAGED_EXTENSION_DIR, "package.json");
+  if (!fs.existsSync(packageJsonPath) || !fs.existsSync(MANAGED_EXTENSION_DIR)) return null;
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as { name?: string; version?: string };
+    const packageName = String(packageJson.name || "").trim();
+    const packageVersion = String(packageJson.version || "").trim();
+    if (!packageName) return null;
+
+    const exactVsixPath = packageVersion
+      ? path.join(MANAGED_EXTENSION_DIR, `${packageName}-${packageVersion}.vsix`)
+      : "";
+    const exactStats = exactVsixPath && fs.existsSync(exactVsixPath) ? fs.statSync(exactVsixPath) : null;
+
+    let resolvedPath = exactVsixPath;
+    let resolvedStats = exactStats;
+
+    if (!resolvedStats) {
+      const fallback = fs.readdirSync(MANAGED_EXTENSION_DIR)
+        .filter((name) => name.startsWith(`${packageName}-`) && name.endsWith(".vsix"))
+        .map((name) => {
+          const candidatePath = path.join(MANAGED_EXTENSION_DIR, name);
+          return {
+            candidatePath,
+            stats: fs.statSync(candidatePath)
+          };
+        })
+        .sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs)[0];
+
+      if (!fallback) return null;
+      resolvedPath = fallback.candidatePath;
+      resolvedStats = fallback.stats;
+    }
+
+    if (!resolvedStats || !resolvedPath) return null;
+    return {
+      packageName,
+      packageVersion,
+      vsixPath: resolvedPath,
+      signature: `${path.basename(resolvedPath)}:${resolvedStats.size}:${resolvedStats.mtimeMs}`
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function installManagedVsix(context: vscode.ExtensionContext, reason: "startup" | "manual"): Promise<boolean> {
+  const candidate = resolveManagedVsixCandidate();
+  if (!candidate) {
+    if (reason === "manual") {
+      showAgentLeeWarning("Agent Lee could not find a local VSIX to install.");
+    }
+    return false;
+  }
+
+  const currentVersion = String(context.extension.packageJSON.version || "");
+  const alreadyApplied = runtimeState.lastAppliedVsixSignature === candidate.signature;
+  const looksCurrent = alreadyApplied && currentVersion === candidate.packageVersion;
+  if (looksCurrent) {
+    if (reason === "manual") {
+      showAgentLeeInfo(`Agent Lee is already on the latest local build (${candidate.packageVersion || "unknown version"}).`);
+    }
+    return false;
+  }
+
+  if (!fs.existsSync(DEFAULT_VSCODE_CLI)) {
+    const message = `VS Code CLI was not found at ${DEFAULT_VSCODE_CLI}.`;
+    if (reason === "manual") {
+      showAgentLeeError(message);
+    } else {
+      console.warn(`[Agent Lee] ${message}`);
+    }
+    return false;
+  }
+
+  try {
+    await runCommandCapture(DEFAULT_VSCODE_CLI, ["--install-extension", candidate.vsixPath, "--force"], {
+      cwd: MANAGED_EXTENSION_DIR
+    });
+    runtimeState.lastAppliedVsixSignature = candidate.signature;
+    persistRuntime();
+
+    const message = `Installed Agent Lee ${candidate.packageVersion || "local"} from ${path.basename(candidate.vsixPath)}. Reloading VS Code now.`;
+    if (agentLeeOutputChannel) {
+      appendAgentLeeLine(agentLeeOutputChannel, message, { routeLabel: `extension.update.${reason}` });
+      agentLeeOutputChannel.show(true);
+    }
+
+    await vscode.window.showInformationMessage(agentLeeText(message, { routeLabel: `extension.update.${reason}` }));
+    await vscode.commands.executeCommand("workbench.action.reloadWindow");
+    return true;
+  } catch (error) {
+    const detail = describeFileError(error);
+    const message = `Agent Lee update failed: ${detail}`;
+    if (agentLeeOutputChannel) {
+      agentLeeOutputChannel.appendLine(message);
+      agentLeeOutputChannel.show(true);
+    }
+    if (reason === "manual") {
+      showAgentLeeError(message);
+    } else {
+      console.warn(`[Agent Lee] ${message}`);
+    }
+    return false;
+  }
+}
+
+async function maybeInstallManagedVsixOnStartup(context: vscode.ExtensionContext) {
+  if (!runtimeState.autoUpdateEnabled) return;
+  await installManagedVsix(context, "startup");
+}
+
 function refreshRuntimeFromInstalled(installedModels: string[]) {
   runtimeState = resolveRuntimeState(runtimeState, installedModels);
   persistRuntime();
@@ -1732,7 +1957,7 @@ async function executeCurrentPlan(webview: vscode.Webview, installedModels: stri
     if (proposals.length) {
       setProposedEdits(proposals);
       pushTaskActivity({ kind: "status", label: "Proposed edits ready", detail: `${proposals.length} file diff(s) are ready for review.` });
-      // Auto-apply edits immediately when in full execute mode — no manual approval required
+      // Auto-apply edits immediately when in full execute mode â€” no manual approval required
       if (hasFullExecutionAccess()) {
         currentTaskState.status = "Applying file edits...";
         postTaskState();
@@ -1899,7 +2124,7 @@ async function guardedAsk(
   if (!law.allowed) return { text: law.reason };
 
   const slot = requestExecution("agent-lee");
-  if (!slot.allowed) return { text: slot.reason };
+  if (!slot.allowed) return { text: slot.reason || "SYSTEM LOAD PROTECTION ACTIVE: agent-lee queued." };
 
   try {
     isExecutionRunning = true;
@@ -1999,8 +2224,17 @@ function formatConversationTitle(item: { title: string; updatedAt: string; recov
 }
 
 function getHtml(webview: vscode.Webview, context: vscode.ExtensionContext) {
-  const logoUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, "media", "LeeWayStandardslogo.png")
+  const brandingIconUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "top-right-button-new.png")
+  );
+  const standardsBtnUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "leeway-standards-button.png")
+  );
+  const bottomBtnUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "bottom-button-for-agent-lee.png")
+  );
+  const testExtensionUri = webview.asWebviewUri(
+    vscode.Uri.joinPath(context.extensionUri, "media", "test-extension.ps1")
   );
   return `
 <!DOCTYPE html>
@@ -2270,13 +2504,15 @@ textarea::placeholder{color:#8c859c}
 .history-item-meta{font-size:10px;color:#9a92ac;text-transform:uppercase;letter-spacing:.08em}
 .history-empty{padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.12);color:#b8b1c8;font-size:12px}
 @media (max-width:700px){.meta-row{flex-direction:column;align-items:flex-start}.composer-bottom,.footer,.settings-row,.topbar,.settings-head,.hero-strip{flex-wrap:wrap}.composer-right{width:100%;justify-content:space-between}.model-compact,.access-compact{max-width:none}.conversation-title{max-width:220px}.workflow-grid{grid-template-columns:1fr}.workflow-preview{max-width:42%}.settings-layout{grid-template-columns:1fr}.settings-nav{overflow:auto}.hero-image{max-width:100%;width:100%}}
+.img-btn{background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.img-btn:hover{opacity:0.8}
 </style>
 </head>
 <body>
 <div class="app-shell">
   <div class="topbar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true"><img src="${logoUri}" alt="" /></div>
+      <div class="brand-mark" aria-hidden="true"><img src="${standardsBtnUri}" alt="" /></div>
       <div class="brand-copy">
         <div class="brand-title">Agent Lee Chat</div>
         <div class="conversation-title" id="conversationTitle">Current conversation</div>
@@ -2286,6 +2522,8 @@ textarea::placeholder{color:#8c859c}
       <button class="icon-btn" id="historyBtn" aria-label="Open chat history" title="Open chat history">History</button>
       <button class="icon-btn" id="newChatBtn" aria-label="Start a new chat" title="Start a new chat">New Chat</button>
       <button class="icon-btn" id="settingsBtn" aria-label="Open Agent Lee settings" title="Open Agent Lee settings">Settings</button>
+      <button class="img-btn" id="topStandardsBtn" title="LeeWay Standards"><img src="${standardsBtnUri}" alt="Standards" style="height:24px" /></button>
+      <button class="img-btn" id="topTestBtn" title="Test Extension (PS1)"><img src="${testExtensionUri}" alt="Test" style="height:24px" /></button>
     </div>
   </div>
   <div class="history-drawer" id="historyDrawer">
@@ -2317,8 +2555,10 @@ textarea::placeholder{color:#8c859c}
             <button type="button" class="active" onclick="switchSettingsSection('general')"><span class="settings-nav-icon">&#9881;</span><span>General</span></button>
             <button type="button" onclick="switchSettingsSection('configuration')"><span class="settings-nav-icon">&#9968;</span><span>Configuration</span></button>
             <button type="button" onclick="switchSettingsSection('personalization')"><span class="settings-nav-icon">&#9684;</span><span>Personalization</span></button>
+            <button type="button" onclick="switchSettingsSection('voice-of-agent-lee')"><span class="settings-nav-icon">&#127908;</span><span>Voice of Agent Lee</span></button>
             <button type="button" onclick="switchSettingsSection('mcp')"><span class="settings-nav-icon">&#8984;</span><span>MCP servers</span></button>
             <button type="button" onclick="switchSettingsSection('agents')"><span class="settings-nav-icon">&#129302;</span><span>Agents</span></button>
+            <button type="button" onclick="switchSettingsSection('workers')"><span class="settings-nav-icon">&#9874;</span><span>Workers</span></button>
             <button type="button" onclick="switchSettingsSection('usage')"><span class="settings-nav-icon">&#9719;</span><span>Usage</span></button>
             <button type="button" onclick="switchSettingsSection('plugins')"><span class="settings-nav-icon">&#9673;</span><span>Plugins</span></button>
           </div>
@@ -2431,12 +2671,23 @@ textarea::placeholder{color:#8c859c}
                 <div class="model-label">Primary Model</div>
                 <select id="primaryModelSettings" onchange="setPrimaryModel(this.value)"></select>
               </div>
+              <div class="model-card">
+                <div class="model-label">Agent Lee updates</div>
+                <label class="settings-row" style="gap:8px;align-items:center">
+                  <input type="checkbox" class="settings-toggle" id="autoUpdateEnabledToggle" onchange="setAutoUpdateEnabled(this.checked)" />
+                  <span class="muted">Install the newest local VSIX on startup</span>
+                </label>
+                <div class="settings-row" style="margin-top:10px">
+                  <button class="ghost-btn" type="button" onclick="updateAgentLeeNow()">Update Now</button>
+                </div>
+                <div class="model-status" id="autoUpdateHint">Agent Lee will keep this local VS Code install in sync with the newest packaged VSIX.</div>
+              </div>
             </div>
           </div>
-          <div class="settings-card">
-            <div class="settings-title">Agent Tools</div>
-            <div class="settings-copy">These are the real Agent Lee runtime controls, models, and diagnostics that power the sidebar.</div>
-            <div class="settings-tools-grid">
+            <div class="settings-card">
+              <div class="settings-title">Agent Tools</div>
+              <div class="settings-copy">These are the real Agent Lee runtime controls, models, and diagnostics that power the sidebar.</div>
+              <div class="settings-tools-grid">
               <div class="model-card">
                 <div class="model-label">Builder Model</div>
                 <select id="builderModel" onchange="setRoleModel('builderModel', this.value)"></select>
@@ -2451,12 +2702,17 @@ textarea::placeholder{color:#8c859c}
                 <div class="model-label">Verifier Model</div>
                 <select id="verifierModel" onchange="setRoleModel('verifierModel', this.value)"></select>
                 <div class="model-status" id="verifierStatus">Waiting for Ollama...</div>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="settings-card" style="margin-top:14px">
-            <div class="settings-title">Runtime Controls</div>
-            <div class="settings-copy">Keep the deeper runtime switches here so Agent Lee can change behavior immediately when you flip them.</div>
+            <div class="settings-card" style="margin-top:14px">
+              <div class="settings-title">System Model Inventory</div>
+              <div class="settings-copy">Full local model inventory for role routing, helpers, LVIS, and embeddings.</div>
+              <div class="mcp-server-list" id="modelInventoryList"></div>
+            </div>
+            <div class="settings-card" style="margin-top:14px">
+              <div class="settings-title">Runtime Controls</div>
+              <div class="settings-copy">Keep the deeper runtime switches here so Agent Lee can change behavior immediately when you flip them.</div>
             <div class="settings-row" style="margin-bottom:10px">
               <button class="ghost-btn" id="webBtn" onclick="toggleWeb()">Web Off</button>
               <button class="ghost-btn" id="browserVisualBtn" onclick="toggleBrowserVisual()">Visual Browser On</button>
@@ -2504,6 +2760,38 @@ textarea::placeholder{color:#8c859c}
                 <div class="settings-copy">Match your prompt sending style to how you like to compose.</div>
                 <input type="checkbox" class="settings-toggle" id="requireCtrlEnterToggleSecondary" onchange="setRequireCtrlEnter(this.checked)" />
               </div>
+              <div class="model-card" style="grid-column:1 / -1">
+                <div class="model-label">Developer Voice Cloning</div>
+                <div class="settings-copy">Clone a developer voice inside the LeeWay app, make it Agent Lee's default voice, and keep the full system reusable for downstream applications.</div>
+                <div class="settings-row">
+                  <span class="runtime-pill" id="voiceCloneEngine">Clone engine: checking...</span>
+                  <span class="runtime-pill" id="voiceCloneReference">Reference: checking...</span>
+                </div>
+                <div class="settings-row" style="margin-top:10px">
+                  <label class="muted" for="voiceReferenceAudioPath">Reference audio</label>
+                  <input id="voiceReferenceAudioPath" class="workflow-input" style="min-height:44px" placeholder="C:\Users\...\reference_voice.wav" />
+                </div>
+                <div class="settings-row">
+                  <button class="ghost-btn" onclick="pickVoiceReference()">Pick Audio</button>
+                  <button class="ghost-btn" onclick="useBundledReferenceVoice()">Use Current Default</button>
+                  <button class="ghost-btn" onclick="transcribeVoiceReference()">Transcribe Reference</button>
+                </div>
+                <div class="settings-row" style="margin-top:10px">
+                  <label class="muted" for="voiceReferenceText">Reference transcript</label>
+                  <textarea id="voiceReferenceText" class="workflow-input" placeholder="Transcript of the recorded reference voice goes here."></textarea>
+                </div>
+                <div class="settings-row" style="margin-top:10px">
+                  <label class="muted" for="voiceCloneTestText">Clone test phrase</label>
+                  <input id="voiceCloneTestText" class="workflow-input" style="min-height:44px" value="This is Agent Lee using the developer cloned voice path inside LeeWay." />
+                </div>
+                <div class="settings-row">
+                  <button class="ghost-btn" onclick="saveVoiceCloneSettings()">Save Clone Setup</button>
+                  <button class="ghost-btn" onclick="testClonedVoice()">Test Cloned Voice</button>
+                  <button class="ghost-btn" onclick="activateClonedVoice()">Use Clone As Default</button>
+                  <button class="ghost-btn" onclick="activatePiperVoice()">Use Piper Fallback</button>
+                </div>
+                <div class="settings-copy" id="voiceCloneStatus" style="margin-top:10px">Voice cloning status will appear here.</div>
+              </div>
             </div>
           </div>
           </div>
@@ -2536,6 +2824,18 @@ textarea::placeholder{color:#8c859c}
             <div class="mcp-server-list" id="agentList"></div>
           </div>
           </div>
+          <div class="settings-section" id="settingsSection-workers">
+          <div class="settings-card">
+            <div class="mcp-toolbar">
+              <div>
+                <div class="mcp-toolbar-title">Workers</div>
+                <div class="mcp-toolbar-copy">Workers do not run as VMs. This list shows ownership, diagnostics, routing, and lock state.</div>
+              </div>
+              <button class="mcp-add-btn" onclick="addWorker()">+ Add worker</button>
+            </div>
+            <div class="mcp-server-list" id="workerList"></div>
+          </div>
+          </div>
           <div class="settings-section" id="settingsSection-usage">
           <div class="settings-card">
             <div class="settings-title">Usage</div>
@@ -2544,6 +2844,60 @@ textarea::placeholder{color:#8c859c}
               <button class="ghost-btn" onclick="openReadme()">Open Help</button>
             </div>
             <div class="settings-copy" id="evidenceStatus" style="margin-top:10px">Repair report path will appear here after front-end analysis or creation.</div>
+          </div>
+          </div>
+          <div class="settings-section" id="settingsSection-voice-of-agent-lee">
+          <div class="settings-card" style="margin-bottom:14px">
+            <div class="settings-title" style="display:flex;align-items:center;gap:10px">&#127908; Voice of Agent Lee</div>
+            <div class="settings-copy">Manage, clone, test and set Agent Lee's voice. The locked default voice is always preserved as the absolute baseline. You can add up to 10 custom voices.</div>
+            <div class="settings-row" style="margin-top:12px;flex-wrap:wrap;gap:8px">
+              <span class="runtime-pill" id="voiceAlActiveLabel">Active: checking...</span>
+              <span class="runtime-pill" id="voiceAlEngineLabel">Engine: checking...</span>
+              <span class="runtime-pill" id="voiceAlCountLabel">Voices: 0 / 10</span>
+            </div>
+          </div>
+          <div class="settings-card" style="margin-bottom:14px">
+            <div class="settings-title">&#128274; Default Voice (Locked)</div>
+            <div class="settings-copy">This is Agent Lee's absolute baseline voice. It cannot be deleted. You can always restore it as the active voice.</div>
+            <div class="settings-row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+              <button class="ghost-btn" onclick="voiceAlTestDefault()">&#9654; Play Default</button>
+              <button class="ghost-btn" onclick="voiceAlActivateDefault()">Set as Active Voice</button>
+            </div>
+            <div class="settings-copy" id="voiceAlDefaultStatus" style="margin-top:8px"></div>
+          </div>
+          <div class="settings-card" style="margin-bottom:14px">
+            <div class="settings-title">&#127381; Clone a New Voice</div>
+            <div class="settings-copy">Record or pick a reference audio clip (3â€“30s, clear speech, no background noise). Give it a name and transcript, then clone it. Clones are saved to your catalog.</div>
+            <div class="settings-row" style="margin-top:10px">
+              <label class="muted" for="voiceAlNewLabel">Voice name</label>
+              <input id="voiceAlNewLabel" class="workflow-input" style="min-height:40px" placeholder="e.g. My Voice v2" />
+            </div>
+            <div class="settings-row" style="margin-top:8px">
+              <label class="muted" for="voiceAlRefAudio">Reference audio path</label>
+              <input id="voiceAlRefAudio" class="workflow-input" style="min-height:40px" placeholder="C:\Users\...\my_voice.wav" />
+            </div>
+            <div class="settings-row" style="margin-top:4px;gap:8px;flex-wrap:wrap">
+              <button class="ghost-btn" onclick="voiceAlPickAudio()">&#128190; Browse Audio</button>
+              <button class="ghost-btn" onclick="voiceAlRecordMic()">&#127897; Record Mic Now</button>
+            </div>
+            <div class="settings-row" style="margin-top:8px">
+              <label class="muted" for="voiceAlRefText">Reference transcript</label>
+              <textarea id="voiceAlRefText" class="workflow-input" style="min-height:72px" placeholder="Exactly what is said in the reference audio clip."></textarea>
+            </div>
+            <div class="settings-row" style="margin-top:8px">
+              <label class="muted" for="voiceAlTestPhrase">Test phrase (what Agent Lee will say)</label>
+              <input id="voiceAlTestPhrase" class="workflow-input" style="min-height:40px" value="Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done." />
+            </div>
+            <div class="settings-row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+              <button class="ghost-btn" onclick="voiceAlCloneAndPreview()">&#9889; Clone &amp; Preview</button>
+              <button class="ghost-btn" onclick="voiceAlSaveClone()">&#10003; Save to Catalog</button>
+            </div>
+            <div class="settings-copy" id="voiceAlCloneStatus" style="margin-top:8px"></div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-title">&#127911; Voice Catalog</div>
+            <div class="settings-copy">All saved voices. Click Play to preview, Set Active to use it, or Delete to remove it. The locked default voice is always shown first.</div>
+            <div id="voiceAlCatalogList" style="margin-top:12px;display:flex;flex-direction:column;gap:10px"></div>
           </div>
           </div>
           <div class="settings-section" id="settingsSection-plugins">
@@ -2687,8 +3041,14 @@ textarea::placeholder{color:#8c859c}
         </div>
       </div>
       <div class="footer">
-        <div>Agent Lee enforces LeeWay Standards in every response.</div>
-        <div class="footer-right">Local private runtime</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="img-btn" id="bottomLeftStandardsBtn" title="LeeWay Standards"><img src="${standardsBtnUri}" alt="LeeWay Standards" style="height:20px;border-radius:4px" /></button>
+          <span>Agent Lee enforces LeeWay Standards in every response.</span>
+        </div>
+        <div class="footer-right" style="display:flex;align-items:center;gap:8px">
+          <span>Local private runtime</span>
+          <button class="img-btn" id="bottomRightBtn" aria-label="Bottom Button" title="Bottom Button"><img src="${bottomBtnUri}" alt="Bottom Button" style="height:20px" /></button>
+        </div>
       </div>
     </div>
   </div>
@@ -2704,6 +3064,7 @@ const roleIds = {
 const pluginCatalog = ${JSON.stringify(DEFAULT_PLUGIN_CATALOG)};
 const defaultMcpServerCatalog = ${JSON.stringify(DEFAULT_MCP_SERVER_CATALOG)};
 const defaultAgentCatalog = ${JSON.stringify(DEFAULT_AGENT_CATALOG)};
+const defaultWorkerCatalog = ${JSON.stringify(DEFAULT_WORKER_CATALOG)};
 let attachmentMetaTimer = null;
 let workflowCollapsed = true;
 let latestTaskState = null;
@@ -2768,7 +3129,7 @@ function openAgentVmFromEncoded(catalogKind, encodedId){
 }
 
 function agentVmButton(catalogKind, id){
-  return '<button class="agent-vm-btn" onclick="openAgentVmFromEncoded(\\''+catalogKind+'\\',\\''+encodeURIComponent(id)+'\\')" title="Open AX Agent Lee diagnostics" aria-label="Open AX Agent Lee diagnostics">&#128421;</button>';
+  return '<button class="agent-vm-btn" onclick="openAgentVmFromEncoded(&apos;'+catalogKind+'&apos;,&apos;'+encodeURIComponent(id)+'&apos;)" title="Open AX Agent Lee diagnostics" aria-label="Open AX Agent Lee diagnostics">&#128421;</button>';
 }
 
 function agentVmKey(vm){
@@ -2950,8 +3311,8 @@ function renderAgentVmTaskbar(){
     ["diagnostics","Diagnostics"],
     ["terminal","Terminal"]
   ];
-  bar.innerHTML = '<button class="agent-vm-start" onclick="openAgentVmApp(\\'desktop\\')">AX</button>' + apps.map(function(app){
-    return '<button class="agent-vm-tab '+(currentAgentVmApp===app[0]?'active':'')+'" onclick="openAgentVmApp(\\''+app[0]+'\\')">'+escapeHtml(app[1])+'</button>';
+  bar.innerHTML = '<button class="agent-vm-start" onclick="openAgentVmApp(&apos;desktop&apos;)">AX</button>' + apps.map(function(app){
+    return '<button class="agent-vm-tab '+(currentAgentVmApp===app[0]?'active':'')+'" onclick="openAgentVmApp(&apos;'+app[0]+'&apos;)">'+escapeHtml(app[1])+'</button>';
   }).join("");
 }
 
@@ -2975,7 +3336,7 @@ function renderAgentVmScreen(){
       + '</div><div class="agent-vm-desktop" style="margin-top:12px">'
       + ["workspace","browser","notepad","database","diagnostics","terminal"].map(function(app){
         const label = app === "workspace" ? "Workspace" : app.charAt(0).toUpperCase()+app.slice(1);
-        return '<button class="agent-vm-app-icon" onclick="openAgentVmApp(\\''+app+'\\')"><span style="font-size:24px">&#9635;</span><span>'+escapeHtml(label)+'</span></button>';
+        return '<button class="agent-vm-app-icon" onclick="openAgentVmApp(&apos;'+app+'&apos;)"><span style="font-size:24px">&#9635;</span><span>'+escapeHtml(label)+'</span></button>';
       }).join("")
       + '</div>';
     return;
@@ -3019,7 +3380,7 @@ function renderAgentVmScreen(){
     const observedOnly = vmIsObservedOnly(vm);
     screen.innerHTML = '<div class="agent-vm-terminal" id="agentVmTerminal">'+escapeHtml(session.terminal.join("\\n"))+'</div>'
       + (observedOnly ? '<div class="agent-vm-panel" style="margin-top:10px"><div class="agent-vm-panel-title">Protected Surface</div><div class="agent-vm-meta-value">'+escapeHtml(vmLockReason(vm))+' Read-only commands still work: help, status, duties, authorities, lineage, database, memory, diagnostics.</div></div>' : '')
-      + '<div class="agent-vm-terminal-row"><input id="agentVmTerminalInput" '+(observedOnly ? 'disabled ' : '')+'placeholder="'+escapeHtml(observedOnly ? "Protected surface: read-only VM terminal" : "Try: help, status, enable, pause, duties, authorities, lineage, memory, diagnostics")+'" onkeydown="if(event.key===\\'Enter\\') runAgentVmTerminal()" /><button class="ghost-btn" '+(observedOnly ? 'disabled ' : '')+'onclick="runAgentVmTerminal()">Run</button></div>';
+      + '<div class="agent-vm-terminal-row"><input id="agentVmTerminalInput" '+(observedOnly ? 'disabled ' : '')+'placeholder="'+escapeHtml(observedOnly ? "Protected surface: read-only VM terminal" : "Try: help, status, enable, pause, duties, authorities, lineage, memory, diagnostics")+'" onkeydown="if(event.key===&apos;Enter&apos;) runAgentVmTerminal()" /><button class="ghost-btn" '+(observedOnly ? 'disabled ' : '')+'onclick="runAgentVmTerminal()">Run</button></div>';
   }
 }
 
@@ -3233,7 +3594,7 @@ function renderPluginCatalog(state){
       return '<div class="plugin-row">'
         + '<div class="plugin-avatar">'+escapeHtml(pluginInitials(entry.name))+'</div>'
         + '<div class="plugin-main"><div class="plugin-name">'+escapeHtml(entry.name)+'</div><div class="plugin-desc">'+escapeHtml(entry.description)+'</div></div>'
-        + '<button class="plugin-action'+(active?' active':'')+'" onclick="togglePluginSelection(\\''+escapeHtml(entry.id)+'\\')" title="'+(active?'Connected':'Connect')+'">'+(active?'&#10003;':'+')+'</button>'
+        + '<button class="plugin-action'+(active?' active':'')+'" onclick="togglePluginSelection(&apos;'+escapeHtml(entry.id)+'&apos;)" title="'+(active?'Connected':'Connect')+'">'+(active?'&#10003;':'+')+'</button>'
         + '</div>';
     }).join("");
     return '<div class="plugin-category-group"><div class="plugin-category-title">'+escapeHtml(category)+'</div><div class="plugin-list">'+rows+'</div></div>';
@@ -3251,11 +3612,41 @@ function getMcpCatalog(state){
 }
 
 function getAgentCatalog(state){
-  const defaults = defaultAgentCatalog.map(function(entry){ return withVmIdentity(entry, "agent"); });
+  const workerIds = new Set(defaultWorkerCatalog.map(function(entry){ return entry.id; }));
+  const defaults = defaultAgentCatalog
+    .filter(function(entry){ return !workerIds.has(entry.id); })
+    .map(function(entry){ return withVmIdentity(entry, "agent"); });
   const custom = ((state && state.customAgents) || []).filter(function(id){
     return !defaults.some(function(entry){ return entry.id === id; });
   }).map(function(id){
     return withVmIdentity({ id:id, name:id, description: (state.agentConfigs && state.agentConfigs[id]) || "Custom agent" }, "agent");
+  });
+  return defaults.concat(custom);
+}
+
+function workerIsObservedOnly(entry){
+  return entry && entry.developerSurface === "observed-only";
+}
+
+function workerLockReason(entry){
+  return (entry && entry.lockReason) || "This worker is protected by LeeWay governance and cannot be directly reconfigured.";
+}
+
+function getWorkerCatalog(state){
+  const defaults = defaultWorkerCatalog.map(function(entry){ return Object.assign({}, entry); });
+  const custom = ((state && state.customWorkers) || []).filter(function(id){
+    return !defaults.some(function(entry){ return entry.id === id; });
+  }).map(function(id){
+    return {
+      id:id,
+      name:id,
+      description:(state.workerConfigs && state.workerConfigs[id]) || "Custom worker",
+      owner:"agent-lee-prime",
+      diagnosticLabel:"Custom Worker",
+      route:"unassigned",
+      responsibilities:["Custom LeeWay worker"],
+      developerSurface:"mutable"
+    };
   });
   return defaults.concat(custom);
 }
@@ -3271,8 +3662,8 @@ function renderMcpServers(state){
     return '<div class="mcp-row">'
       + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span>'+(locked?'<span class="agent-lock-pill" title="'+escapeHtml(vmLockReason(entry))+'">Observed Only</span>':'')+'</div>'
       + agentVmButton("mcp", entry.id)
-      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureMcpServer(\\''+escapeHtml(entry.id)+'\\')" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
-      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleMcpServer(\\''+escapeHtml(entry.id)+'\\', this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
+      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureMcpServer(&apos;'+escapeHtml(entry.id)+'&apos;)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
+      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleMcpServer(&apos;'+escapeHtml(entry.id)+'&apos;, this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
       + '</div>';
   }).join("");
 }
@@ -3288,8 +3679,43 @@ function renderAgents(state){
     return '<div class="mcp-row">'
       + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">'+escapeHtml(vmKindLabel(entry.identity))+'</span>'+(locked?'<span class="agent-lock-pill" title="'+escapeHtml(vmLockReason(entry))+'">Observed Only</span>':'')+'</div>'
       + agentVmButton("agent", entry.id)
-      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureAgent(\\''+escapeHtml(entry.id)+'\\')" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
-      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleAgent(\\''+escapeHtml(entry.id)+'\\', this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
+      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureAgent(&apos;'+escapeHtml(entry.id)+'&apos;)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Configure")+'">&#9881;</button>'
+      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleAgent(&apos;'+escapeHtml(entry.id)+'&apos;, this.checked)" title="'+escapeHtml(locked ? vmLockReason(entry) : "Toggle")+'" />'
+      + '</div>';
+  }).join("");
+}
+
+function renderWorkers(state){
+  const root=document.getElementById("workerList");
+  if(!root) return;
+  const enabled = new Set((state && state.enabledWorkers) || []);
+  const configs = (state && state.workerConfigs) || {};
+  root.innerHTML = getWorkerCatalog(state).map(function(entry){
+    const description = configs[entry.id] || entry.description || "";
+    const locked = workerIsObservedOnly(entry);
+    const responsibilities = (entry.responsibilities || []).slice(0,3).join(" Â· ");
+    return '<div class="mcp-row">'
+      + '<div><div class="mcp-name">'+escapeHtml(entry.name)+'</div><div class="mcp-desc">'+escapeHtml(description)+'</div><span class="agent-kind-pill">Leeway Worker</span><span class="agent-kind-pill">'+escapeHtml(entry.diagnosticLabel || "Worker")+'</span>'+(locked?'<span class="agent-lock-pill" title="'+escapeHtml(workerLockReason(entry))+'">Observed Only</span>':'')+'<div class="mcp-desc" style="margin-top:6px">Owner: '+escapeHtml(entry.owner || "agent-lee-prime")+' Â· Route: '+escapeHtml(entry.route || "unassigned")+'</div><div class="mcp-desc">'+escapeHtml(responsibilities)+'</div></div>'
+      + '<button class="mcp-config-btn settings-lock-btn" '+(locked?'disabled ':'')+'onclick="configureWorker(&apos;'+escapeHtml(entry.id)+'&apos;)" title="'+escapeHtml(locked ? workerLockReason(entry) : "Configure diagnostics")+'">&#9881;</button>'
+      + '<input type="checkbox" class="settings-toggle" '+(enabled.has(entry.id)?'checked':'')+' '+(locked?'disabled ':'')+'onchange="toggleWorker(&apos;'+escapeHtml(entry.id)+'&apos;, this.checked)" title="'+escapeHtml(locked ? workerLockReason(entry) : "Toggle")+'" />'
+      + '</div>';
+  }).join("");
+}
+
+function renderModelInventory(models, state){
+  const root=document.getElementById("modelInventoryList");
+  if(!root) return;
+  const activeSelections = [
+    { label:"Primary", value: state.primaryModel },
+    { label:"Builder", value: state.builderModel },
+    { label:"Designer", value: state.designerModel },
+    { label:"Verifier", value: state.verifierModel }
+  ];
+  root.innerHTML = (models || []).map(function(entry){
+    const selectedBy = activeSelections.filter(function(item){ return item.value === entry.id; }).map(function(item){ return item.label; });
+    return '<div class="mcp-row">'
+      + '<div><div class="mcp-name">'+escapeHtml(entry.id)+'</div><div class="mcp-desc">'+escapeHtml(entry.role || "System model")+'</div>'+(selectedBy.length?'<div class="mcp-desc">Selected by: '+escapeHtml(selectedBy.join(", "))+'</div>':'')+'</div>'
+      + '<span class="runtime-pill">'+escapeHtml(entry.available ? "Available" : "Configured")+'</span>'
       + '</div>';
   }).join("");
 }
@@ -3310,7 +3736,7 @@ function renderPluginMesh(entries){
     return '<div class="plugin-mesh-card">'
       + '<div class="plugin-mesh-name">'+escapeHtml(entry.name)+'</div>'
       + '<div class="plugin-mesh-meta"><span>'+escapeHtml(entry.category)+'</span><span>'+escapeHtml(entry.riskLevel)+'</span></div>'
-      + '<div class="plugin-mesh-status '+statusClass+'">'+escapeHtml(statusText)+' · '+escapeHtml(entry.adapter)+'</div>'
+      + '<div class="plugin-mesh-status '+statusClass+'">'+escapeHtml(statusText)+' Â· '+escapeHtml(entry.adapter)+'</div>'
       + '</div>';
   }).join("");
 }
@@ -3322,7 +3748,7 @@ function showPluginApproval(payload){
   document.getElementById("pluginApprovalCopy").textContent =
     "Agent Lee wants to use " + (payload.pluginName || payload.pluginId) + " for action \\\"" + payload.action + "\\\".";
   document.getElementById("pluginApprovalMeta").textContent =
-    "Plugin: " + (payload.pluginName || payload.pluginId) + " · Risk: " + (payload.riskLevel || "high");
+    "Plugin: " + (payload.pluginName || payload.pluginId) + " Â· Risk: " + (payload.riskLevel || "high");
   root.classList.remove("hidden");
 }
 
@@ -3423,6 +3849,43 @@ function addAgent(){
   vscode.postMessage({command:"setState", key:"enabledAgents", value:enabled});
 }
 
+function toggleWorker(id, enabled){
+  const state = window.agentLeeRuntimeState || {};
+  const entry = getWorkerCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && workerIsObservedOnly(entry)){
+    window.alert(workerLockReason(entry));
+    return;
+  }
+  const next = new Set(state.enabledWorkers || []);
+  if(enabled) next.add(id); else next.delete(id);
+  vscode.postMessage({command:"setState", key:"enabledWorkers", value:Array.from(next)});
+}
+
+function configureWorker(id){
+  const state = window.agentLeeRuntimeState || {};
+  const entry = getWorkerCatalog(state).find(function(item){ return item.id === id; });
+  if(entry && workerIsObservedOnly(entry)){
+    window.alert(workerLockReason(entry));
+    return;
+  }
+  const current = (state.workerConfigs && state.workerConfigs[id]) || "";
+  const next = window.prompt("Configure worker diagnostics", current);
+  if(next===null) return;
+  const configs = Object.assign({}, state.workerConfigs || {});
+  configs[id] = next;
+  vscode.postMessage({command:"setState", key:"workerConfigs", value:configs});
+}
+
+function addWorker(){
+  const name = window.prompt("Add worker id");
+  if(!name) return;
+  const state = window.agentLeeRuntimeState || {};
+  const custom = Array.from(new Set([].concat(state.customWorkers || [], [name.trim()])));
+  const enabled = Array.from(new Set([].concat(state.enabledWorkers || [], [name.trim()])));
+  vscode.postMessage({command:"setState", key:"customWorkers", value:custom});
+  vscode.postMessage({command:"setState", key:"enabledWorkers", value:enabled});
+}
+
 function renderTaskState(task){
   latestTaskState = task;
   const hasTodos = !!(task && Array.isArray(task.todos) && task.todos.length);
@@ -3480,7 +3943,7 @@ function renderTaskState(task){
       let action = "";
       if(activity.path){
         const encodedPath = encodeURIComponent(activity.path);
-        action = '<button class="ghost-btn activity-open-btn" onclick="openTaskFileFromEncoded(\\''+encodedPath+'\\')">Open</button>';
+        action = '<button class="ghost-btn activity-open-btn" onclick="openTaskFileFromEncoded(&apos;'+encodedPath+'&apos;)">Open</button>';
       }
       row.innerHTML='<div class="activity-row"><div class="activity-label">'+escapeHtml(activity.label || "Live activity")+'</div>'+action+'</div>'
         + (activity.file ? '<div class="activity-file">'+escapeHtml(activity.file)+'</div>' : '')
@@ -3497,9 +3960,9 @@ function renderTaskState(task){
       const row=document.createElement("div");
       row.className="proposal-item " + (edit.status || "pending");
       const createdAt = edit.createdAt ? new Date(edit.createdAt).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "";
-      const reviewBtn = '<button class="ghost-btn" onclick="reviewProposedEdit(\\''+escapeHtml(edit.id)+'\\')">Review Diff</button>';
-      const approveBtn = edit.status==="pending" ? '<button class="ghost-btn" onclick="approveProposedEdit(\\''+escapeHtml(edit.id)+'\\')">Accept</button>' : "";
-      const rejectBtn = edit.status==="pending" ? '<button class="ghost-btn" onclick="rejectProposedEdit(\\''+escapeHtml(edit.id)+'\\')">Reject</button>' : "";
+      const reviewBtn = '<button class="ghost-btn" onclick="reviewProposedEdit(&apos;'+escapeHtml(edit.id)+'&apos;)">Review Diff</button>';
+      const approveBtn = edit.status==="pending" ? '<button class="ghost-btn" onclick="approveProposedEdit(&apos;'+escapeHtml(edit.id)+'&apos;)">Accept</button>' : "";
+      const rejectBtn = edit.status==="pending" ? '<button class="ghost-btn" onclick="rejectProposedEdit(&apos;'+escapeHtml(edit.id)+'&apos;)">Reject</button>' : "";
       row.innerHTML='<div class="proposal-file">'+escapeHtml(edit.displayPath || "")+'</div>'
         + '<div class="proposal-summary">'+escapeHtml(edit.summary || "")+'</div>'
         + '<div class="proposal-meta"><span class="proposal-chip">'+escapeHtml(edit.status || "pending")+'</span><span>'+escapeHtml(createdAt)+'</span></div>'
@@ -3511,21 +3974,21 @@ function renderTaskState(task){
   }
 
   if(task && task.awaitingApproval && task.mode==="execute"){
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'approvePlan\\')">Approve & Execute</button>';
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'rejectPlan\\')">Reject Plan</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;approvePlan&apos;)">Approve & Execute</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;rejectPlan&apos;)">Reject Plan</button>';
   } else if(task && task.plan && task.mode==="plan"){
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'savePlan\\')">Save Plan</button>';
-    if(task.canExecute) actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'executePlan\\')">Execute Plan</button>';
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'rejectPlan\\')">Clear Plan</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;savePlan&apos;)">Save Plan</button>';
+    if(task.canExecute) actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;executePlan&apos;)">Execute Plan</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;rejectPlan&apos;)">Clear Plan</button>';
   }
   if(task && task.prompt){
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'updateTaskPrompt\\')">Update Task</button>';
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'stopTask\\')">Stop Task</button>';
-    if(task.running) actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'interruptTask\\')">Interrupt</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;updateTaskPrompt&apos;)">Update Task</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;stopTask&apos;)">Stop Task</button>';
+    if(task.running) actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;interruptTask&apos;)">Interrupt</button>';
   }
-  actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\''+(window.agentLeeVoiceEnabled ? "muteVoice" : "talkOn")+'\\')">'+(window.agentLeeVoiceEnabled ? "Mute" : "Talk")+'</button>';
+  actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;'+(window.agentLeeVoiceEnabled ? "muteVoice" : "talkOn")+'&apos;)">'+(window.agentLeeVoiceEnabled ? "Mute" : "Talk")+'</button>';
   if(task && task.parkedTask){
-    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(\\'resumeParkedTask\\')">Resume Paused Task</button>';
+    actions.innerHTML += '<button class="ghost-btn" onclick="taskAction(&apos;resumeParkedTask&apos;)">Resume Paused Task</button>';
     parked.textContent = "Paused task: " + task.parkedTask.summary + " | Next: " + task.parkedTask.nextTodo;
   } else {
     parked.textContent = "No paused task parked right now.";
@@ -3675,6 +4138,7 @@ function render(role,text,activity,variant){
 
 function setApproval(v){ vscode.postMessage({command:"setState", key:"approval", value:v}); }
 function setAutoRunStagedPlans(value){ vscode.postMessage({command:"setState", key:"autoRunStagedPlans", value:!!value}); }
+function setAutoUpdateEnabled(value){ vscode.postMessage({command:"setState", key:"autoUpdateEnabled", value:!!value}); }
 function setAgentEnvironment(value){ vscode.postMessage({command:"setState", key:"agentEnvironment", value:value}); }
 function setAppLanguage(value){ vscode.postMessage({command:"setState", key:"appLanguage", value:value}); }
 function setInferenceSpeed(value){ vscode.postMessage({command:"setState", key:"inferenceSpeed", value:value}); }
@@ -3682,6 +4146,79 @@ function setFollowupBehavior(value){ setSegmentChoice("followupBehavior", value)
 function setCodeReviewBehavior(value){ setSegmentChoice("codeReviewBehavior", value); vscode.postMessage({command:"setState", key:"codeReviewBehavior", value:value}); }
 function setWorkMode(value){ vscode.postMessage({command:"setState", key:"workMode", value:value}); }
 function setVoiceStyle(value){ vscode.postMessage({command:"setState", key:"voiceStyle", value:value}); }
+function pickVoiceReference(){ vscode.postMessage({command:"pickVoiceReference"}); }
+function voiceClonePayload(){
+  return {
+    audioPath: (document.getElementById("voiceReferenceAudioPath").value || "").trim(),
+    transcript: (document.getElementById("voiceReferenceText").value || "").trim(),
+    testText: (document.getElementById("voiceCloneTestText").value || "").trim()
+  };
+}
+function saveVoiceCloneSettings(){ vscode.postMessage({command:"saveVoiceCloneSettings", payload:voiceClonePayload()}); }
+function transcribeVoiceReference(){ vscode.postMessage({command:"transcribeVoiceReference", payload:voiceClonePayload()}); }
+function testClonedVoice(){ vscode.postMessage({command:"testClonedVoice", payload:voiceClonePayload()}); }
+function activateClonedVoice(){ vscode.postMessage({command:"activateClonedVoice", payload:voiceClonePayload()}); }
+function activatePiperVoice(){ vscode.postMessage({command:"activatePiperVoice"}); }
+function useBundledReferenceVoice(){ vscode.postMessage({command:"useBundledReferenceVoice"}); }
+
+// â”€â”€â”€ Voice of Agent Lee tab functions â”€â”€â”€
+function voiceAlTestDefault(){ vscode.postMessage({command:"voiceAlTestDefault"}); }
+function voiceAlActivateDefault(){ vscode.postMessage({command:"voiceAlActivateDefault"}); }
+function voiceAlPickAudio(){
+  vscode.postMessage({command:"voiceAlPickAudio"});
+}
+function voiceAlRecordMic(){
+  vscode.postMessage({command:"voiceAlRecordMic"});
+}
+function voiceAlCloneAndPreview(){
+  vscode.postMessage({command:"voiceAlCloneAndPreview", payload:{
+    label: (document.getElementById("voiceAlNewLabel").value || "").trim(),
+    audioPath: (document.getElementById("voiceAlRefAudio").value || "").trim(),
+    transcript: (document.getElementById("voiceAlRefText").value || "").trim(),
+    testText: (document.getElementById("voiceAlTestPhrase").value || "").trim()
+  }});
+}
+function voiceAlSaveClone(){
+  vscode.postMessage({command:"voiceAlSaveClone", payload:{
+    label: (document.getElementById("voiceAlNewLabel").value || "").trim(),
+    audioPath: (document.getElementById("voiceAlRefAudio").value || "").trim(),
+    transcript: (document.getElementById("voiceAlRefText").value || "").trim()
+  }});
+}
+function voiceAlTestVoice(id){ vscode.postMessage({command:"voiceAlTestVoice", id:id}); }
+function voiceAlSetActive(id){ vscode.postMessage({command:"voiceAlSetActive", id:id}); }
+function voiceAlDeleteVoice(id){ vscode.postMessage({command:"voiceAlDeleteVoice", id:id}); }
+function renderVoiceAlCatalog(catalog, activeVoiceId){
+  var container=document.getElementById("voiceAlCatalogList");
+  if(!container || !catalog) return;
+  var voices = catalog.voices || [];
+  var html = "";
+  var activeLabel = document.getElementById("voiceAlActiveLabel");
+  var engineLabel = document.getElementById("voiceAlEngineLabel");
+  var countLabel = document.getElementById("voiceAlCountLabel");
+  if(activeLabel) activeLabel.textContent = "Active: " + (activeVoiceId || "unknown");
+  if(engineLabel) engineLabel.textContent = "Engine: f5-clone-local";
+  if(countLabel) countLabel.textContent = "Voices: " + voices.length + " / 10";
+  voices.forEach(function(v){
+    var isActive = v.id === activeVoiceId;
+    var lockIcon = v.isLocked ? "\uD83D\uDD12 " : "";
+    var activeTag = isActive ? ' <span style="color:#39d267;font-weight:700;margin-left:6px">[ACTIVE]</span>' : '';
+    html += '<div class="model-card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="model-label">' + lockIcon + (v.label || v.id) + activeTag + '</div>';
+    html += '<div class="settings-copy" style="margin-top:2px">' + (v.description || '') + '</div>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+    html += '<button class="ghost-btn" onclick="voiceAlTestVoice(\'' + v.id + '\')">&#9654; Play</button>';
+    if(!isActive) html += '<button class="ghost-btn" onclick="voiceAlSetActive(\'' + v.id + '\')">Set Active</button>';
+    if(!v.isLocked) html += '<button class="ghost-btn" style="color:#ff8c8c" onclick="voiceAlDeleteVoice(\'' + v.id + '\')">Delete</button>';
+    html += '</div></div>';
+  });
+  if(!voices.length) html = '<div class="settings-copy">No voices in the catalog yet.</div>';
+  container.innerHTML = html;
+}
+
+function updateAgentLeeNow(){ vscode.postMessage({command:"updateAgentLeeNow"}); }
 function setPrimaryModel(value){ vscode.postMessage({command:"setState", key:"primaryModel", value:value}); vscode.postMessage({command:"refreshRuntime"}); }
 function setRoleModel(key,value){ vscode.postMessage({command:"setState", key:key, value:value}); vscode.postMessage({command:"refreshRuntime"}); }
 function setPerformanceProfile(value){ vscode.postMessage({command:"setPerformanceProfile", profile:value}); }
@@ -3781,6 +4318,30 @@ function syncAutoRunStagedPlansUI(state){
     ? "Auto-run is armed. New plans execute immediately in this mode."
     : "Auto-run is off. You can still approve or execute plans manually.";
 }
+function syncAutoUpdateUI(state){
+  const toggle=document.getElementById("autoUpdateEnabledToggle");
+  const hint=document.getElementById("autoUpdateHint");
+  if(toggle) toggle.checked = !!(state && state.autoUpdateEnabled);
+  if(hint){
+    hint.textContent = state && state.autoUpdateEnabled
+      ? "Auto-update is on. Agent Lee will install the newest local VSIX on startup and reload the window."
+      : "Auto-update is off. Use Update Now whenever you want to apply the newest local VSIX.";
+  }
+}
+
+function renderVoiceCloneConfig(config){
+  if(!config) return;
+  const audioPath=document.getElementById("voiceReferenceAudioPath");
+  const transcript=document.getElementById("voiceReferenceText");
+  const engine=document.getElementById("voiceCloneEngine");
+  const reference=document.getElementById("voiceCloneReference");
+  const status=document.getElementById("voiceCloneStatus");
+  if(audioPath) audioPath.value = config.cloneReferenceAudioPath || "";
+  if(transcript) transcript.value = config.cloneReferenceText || "";
+  if(engine) engine.textContent = "Clone engine: " + (config.engine || "unknown");
+  if(reference) reference.textContent = "Reference: " + (config.selectedVoiceLabel || config.cloneReferenceAudioPath || "not set");
+  if(status && !status.textContent.trim()) status.textContent = "Voice cloning status will appear here.";
+}
 
 window.addEventListener("message",function(e){
   const msg=e.data;
@@ -3799,6 +4360,7 @@ window.addEventListener("message",function(e){
     document.getElementById("workMode").value = msg.state.workMode || "execute";
     document.getElementById("workModeSettings").value = msg.state.workMode || "execute";
     syncAutoRunStagedPlansUI(msg.state || {});
+    syncAutoUpdateUI(msg.state || {});
     document.getElementById("voiceStyle").value = msg.state.voiceStyle || "grounded";
     document.getElementById("webBtn").textContent = msg.state.web ? "Web On" : "Web Off";
     document.getElementById("voiceBtn").textContent = msg.state.voice ? "Voice On" : "Voice Off";
@@ -3821,6 +4383,9 @@ window.addEventListener("message",function(e){
     renderPluginCatalog(msg.state);
     renderMcpServers(msg.state);
     renderAgents(msg.state);
+    renderWorkers(msg.state);
+    renderModelInventory(msg.inventory || [], msg.state || {});
+    renderVoiceCloneConfig(msg.voiceRuntime || {});
     if(!msg.state.onboardingComplete){ toggleSettings(true); }
   }
   if(msg.command==="history"){
@@ -3836,7 +4401,7 @@ window.addEventListener("message",function(e){
   if(msg.command==="response" || msg.command==="progress"){
     const chat=document.getElementById("chat");
     const last=chat.lastElementChild;
-    if(last && last.textContent && (last.textContent.indexOf("Hold up, I'm building the plan and tracking the workflow now.") !== -1 || last.textContent.indexOf("I’m on it. Reading the real files and lining up the live tracker now.") !== -1 || last.textContent.indexOf("I'm on it. Reading the real files and lining up the live tracker now.") !== -1)) last.remove();
+    if(last && last.textContent && (last.textContent.indexOf("Hold up, I'm building the plan and tracking the workflow now.") !== -1 || last.textContent.indexOf("Iâ€™m on it. Reading the real files and lining up the live tracker now.") !== -1 || last.textContent.indexOf("I'm on it. Reading the real files and lining up the live tracker now.") !== -1)) last.remove();
     render("agent",msg.text,msg.activity||null,msg.command==="progress" ? "progress" : "response");
     if(msg.reportPath){ document.getElementById("evidenceStatus").textContent = "Repair report path: " + msg.reportPath; }
   }
@@ -3866,6 +4431,33 @@ window.addEventListener("message",function(e){
       label.className = "model-status " + (role.available && !role.degraded ? "ok" : "warn");
     });
     if(msg.lastReportPath){ document.getElementById("evidenceStatus").textContent = "Repair report path: " + msg.lastReportPath; }
+    renderVoiceCloneConfig(msg.voiceRuntime || {});
+  }
+  if(msg.command==="voiceReferencePicked"){
+    const input=document.getElementById("voiceReferenceAudioPath");
+    if(input) input.value = msg.path || "";
+    const status=document.getElementById("voiceCloneStatus");
+    if(status) status.textContent = msg.path ? "Reference audio selected." : "No reference audio selected.";
+    const alInput=document.getElementById("voiceAlRefAudio");
+    if(alInput) alInput.value = msg.path || "";
+  }
+  if(msg.command==="voiceReferenceTranscribed"){
+    const transcript=document.getElementById("voiceReferenceText");
+    if(transcript) transcript.value = msg.text || "";
+    const status=document.getElementById("voiceCloneStatus");
+    if(status) status.textContent = msg.text ? "Reference audio transcribed." : "Reference transcription returned no text.";
+  }
+  if(msg.command==="voiceCloneStatus"){
+    const status=document.getElementById("voiceCloneStatus");
+    if(status) status.textContent = msg.text || "Voice cloning status updated.";
+    if(msg.voiceRuntime){ renderVoiceCloneConfig(msg.voiceRuntime); }
+    const alStatus=document.getElementById("voiceAlCloneStatus");
+    if(alStatus) alStatus.textContent = msg.text || "";
+    const alDefault=document.getElementById("voiceAlDefaultStatus");
+    if(alDefault && msg.defaultStatus) alDefault.textContent = msg.defaultStatus;
+  }
+  if(msg.command==="voiceAlCatalogUpdate"){
+    renderVoiceAlCatalog(msg.catalog, msg.activeVoiceId);
   }
   if(msg.command==="agentVmDiagnosticRecorded"){
     latestAgentVmMemory = msg.memory || latestAgentVmMemory || {};
@@ -3893,9 +4485,12 @@ window.agentLeeRuntimeState = {
   enabledMcpServers: defaultMcpServerCatalog.map(function(entry){ return entry.id; }),
   customMcpServers: [],
   mcpServerConfigs: {},
-  enabledAgents: defaultAgentCatalog.map(function(entry){ return entry.id; }),
+  enabledAgents: getAgentCatalog({ customAgents: [], agentConfigs: {} }).map(function(entry){ return entry.id; }),
   customAgents: [],
-  agentConfigs: {}
+  agentConfigs: {},
+  enabledWorkers: defaultWorkerCatalog.map(function(entry){ return entry.id; }),
+  customWorkers: [],
+  workerConfigs: {}
 };
 function bootAgentLeeUiHandlers(){
   registerAgentLeeControlButtons();
@@ -3917,6 +4512,8 @@ switchSettingsSection("general");
 renderPluginCatalog({ enabledPlugins: [] });
 renderMcpServers({ enabledMcpServers: defaultMcpServerCatalog.map(function(entry){ return entry.id; }), customMcpServers: [], mcpServerConfigs: {} });
 renderAgents({ enabledAgents: defaultAgentCatalog.map(function(entry){ return entry.id; }), customAgents: [], agentConfigs: {} });
+renderWorkers({ enabledWorkers: defaultWorkerCatalog.map(function(entry){ return entry.id; }), customWorkers: [], workerConfigs: {} });
+renderModelInventory([], window.agentLeeRuntimeState);
 renderPluginMesh([]);
 renderTaskState({ mode:"execute", summary:"I will show the plan and live to-dos here.", status:"Waiting for a new task.", nextTodo:"Waiting for a new task.", todos:[], activities:[], awaitingApproval:false, canExecute:false, savedPlanPath:"", plan:null });
 vscode.postMessage({command:"ready"});
@@ -3941,26 +4538,50 @@ class Provider implements vscode.WebviewViewProvider {
 
 let lastReportPath = "";
 
+function loadModelRoutingCatalog(): { id: string; role: string }[] {
+  try {
+    const routingPath = path.join(ROOT, "agent-lee", "models", "model-routing.json");
+    if (!fs.existsSync(routingPath)) return [];
+    const parsed = JSON.parse(fs.readFileSync(routingPath, "utf8"));
+    return Object.entries(parsed)
+      .filter(([key, value]) => key !== "leeway" && typeof value === "string" && value.trim().length > 0)
+      .map(([role, id]) => ({ id: String(id), role }));
+  } catch {
+    return [];
+  }
+}
+
 async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task") {
   const installedModels = await getModels();
   refreshRuntimeFromInstalled(installedModels);
   const sovereignRuntime = getAgentLeeRuntimeState();
-  const uiModelOptions = installedModels.length
-    ? installedModels
-    : Array.from(
-        new Set(
-          [
-            runtimeState.primaryModel,
-            runtimeState.builderModel,
-            runtimeState.designerModel,
-            runtimeState.verifierModel,
-            "qwen2.5-coder:14b",
-            "qwen2.5-coder:7b",
-            "deepseek-coder-v2:16b",
-            "llama3.1:8b"
-          ].filter(Boolean)
-        )
-      );
+  const routedModels = loadModelRoutingCatalog();
+  const routedRoleMap = routedModels.reduce<Record<string, string[]>>((map, entry) => {
+    if (!map[entry.id]) map[entry.id] = [];
+    map[entry.id].push(entry.role);
+    return map;
+  }, {});
+  const uiModelOptions = Array.from(
+    new Set(
+      [
+        ...installedModels,
+        ...routedModels.map((entry) => entry.id),
+        runtimeState.primaryModel,
+        runtimeState.builderModel,
+        runtimeState.designerModel,
+        runtimeState.verifierModel,
+        "qwen2.5-coder:14b",
+        "qwen2.5-coder:7b",
+        "deepseek-coder-v2:16b",
+        "llama3.1:8b",
+        "llava:7b",
+        "phi3:mini",
+        "nomic-embed-text",
+        "azr",
+        "echo"
+      ].filter(Boolean)
+    )
+  );
   const hive = buildModelHiveStatus(installedModels, {
     builderModel: runtimeState.builderModel,
     designerModel: runtimeState.designerModel,
@@ -3983,6 +4604,16 @@ async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task
   webview.postMessage({
     command: "modelOptions",
     models: uiModelOptions,
+    inventory: uiModelOptions.map((id) => ({
+      id,
+      available: installedModels.includes(id),
+      role: [
+        runtimeState.primaryModel === id ? "primary model" : "",
+        runtimeState.builderModel === id ? "builder model" : "",
+        runtimeState.designerModel === id ? "designer model" : "",
+        runtimeState.verifierModel === id ? "verifier model" : ""
+      ].filter(Boolean).join(" Â· ") || "system model"
+    })),
     selection: {
       primaryModel: runtimeState.primaryModel,
       builderModel: runtimeState.builderModel,
@@ -3992,6 +4623,11 @@ async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task
     state: runtimeState,
     sovereignRuntime
   });
+  try {
+    const catalog = loadVoiceCatalog();
+    const config = loadVoiceRuntime();
+    webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: config?.selectedVoiceId || catalog.defaultVoiceId || "agent-lee-default" });
+  } catch {}
 }
 
 async function runNextQueuedFollowUp(webview: vscode.Webview) {
@@ -4202,12 +4838,20 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       const sanitized = preserveProtectedIds(msg.value, runtimeState.enabledAgents, DEFAULT_RUNTIME_STATE.enabledAgents, PROTECTED_AGENT_IDS);
       blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
       nextValue = sanitized;
+    } else if (msg.key === "enabledWorkers") {
+      const sanitized = preserveProtectedIds(msg.value, runtimeState.enabledWorkers, DEFAULT_RUNTIME_STATE.enabledWorkers, PROTECTED_WORKER_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
     } else if (msg.key === "enabledMcpServers") {
       const sanitized = preserveProtectedIds(msg.value, runtimeState.enabledMcpServers, DEFAULT_RUNTIME_STATE.enabledMcpServers, PROTECTED_MCP_IDS);
       blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
       nextValue = sanitized;
     } else if (msg.key === "agentConfigs") {
       const sanitized = preserveProtectedConfigs(msg.value, runtimeState.agentConfigs, PROTECTED_AGENT_IDS);
+      blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
+      nextValue = sanitized;
+    } else if (msg.key === "workerConfigs") {
+      const sanitized = preserveProtectedConfigs(msg.value, runtimeState.workerConfigs, PROTECTED_WORKER_IDS);
       blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
       nextValue = sanitized;
     } else if (msg.key === "mcpServerConfigs") {
@@ -4243,6 +4887,12 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       currentTaskState.status = nextValue
         ? "Auto-run staged plans is enabled for Full access execute mode."
         : "Auto-run staged plans is disabled.";
+      postTaskState();
+    }
+    if (msg.key === "autoUpdateEnabled") {
+      currentTaskState.status = nextValue
+        ? "Agent Lee auto-update is enabled and will run on startup."
+        : "Agent Lee auto-update is disabled.";
       postTaskState();
     }
     if (msg.key === "approval") {
@@ -4312,6 +4962,17 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
 
   if (msg.command === "refreshRuntime") {
     await postRuntimeInfo(webview);
+  }
+
+  if (msg.command === "updateAgentLeeNow") {
+    if (!context) {
+      showAgentLeeWarning("Agent Lee could not resolve the extension context for update.");
+      return;
+    }
+    currentTaskState.status = "Installing the newest local Agent Lee VSIX into VS Code.";
+    postTaskState();
+    await installManagedVsix(context, "manual");
+    return;
   }
 
   if (msg.command === "setPerformanceProfile") {
@@ -4753,6 +5414,232 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     await postRuntimeInfo(webview, text);
     await runNextQueuedFollowUp(webview);
   }
+
+  if (msg.command === "pickVoiceReference" || msg.command === "voiceAlPickAudio") {
+    const picked = await vscode.window.showOpenDialog({
+      canSelectMany: false,
+      openLabel: "Select voice reference audio",
+      filters: { Audio: ["wav", "mp3", "m4a", "ogg", "flac"] }
+    });
+    const pickedPath = picked?.[0]?.fsPath || "";
+    webview.postMessage({ command: "voiceReferencePicked", path: pickedPath });
+  }
+
+  if (msg.command === "saveVoiceCloneSettings") {
+    try {
+      const payload = msg.payload || {};
+      const config = getVoiceRuntimeConfig();
+      if (payload.audioPath) config.cloneReferenceAudioPath = payload.audioPath;
+      if (payload.transcript) config.cloneReferenceText = payload.transcript;
+      persistVoiceRuntimeConfig(config);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Voice clone settings saved.", voiceRuntime: config });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Save failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "testClonedVoice") {
+    try {
+      const payload = msg.payload || {};
+      const config = getVoiceRuntimeConfig();
+      const testText = payload.testText || "Hey, I'm Agent Lee. I'm online, ready, and listening.";
+      webview.postMessage({ command: "voiceCloneStatus", text: "Generating cloned voice test... this may take a minute." });
+      const outputPath = path.join(ROOT, "agent-lee", "voice", "agent-lee-test-clone.wav");
+      await runCommandCapture(
+        config.clonePythonPath || "python",
+        [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", config.cloneReferenceAudioPath || "", "--ref_text", config.cloneReferenceText || "", "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
+      );
+      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Test complete. Clone voice played successfully.", voiceRuntime: config });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Clone test failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "activateClonedVoice") {
+    try {
+      const config = getVoiceRuntimeConfig();
+      config.engine = "f5-clone-local";
+      persistVoiceRuntimeConfig(config);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Cloned voice is now Agent Lee's active voice.", voiceRuntime: config });
+      await postRuntimeInfo(webview);
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Activation failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "activatePiperVoice") {
+    try {
+      const config = getVoiceRuntimeConfig();
+      config.engine = "piper-local";
+      persistVoiceRuntimeConfig(config);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Piper voice restored as Agent Lee's active voice.", voiceRuntime: config });
+      await postRuntimeInfo(webview);
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Piper activation failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "useBundledReferenceVoice") {
+    try {
+      const config = getVoiceRuntimeConfig();
+      config.cloneReferenceAudioPath = DEFAULT_DEVELOPER_REFERENCE_AUDIO;
+      config.cloneReferenceText = DEFAULT_DEVELOPER_REFERENCE_TEXT;
+      persistVoiceRuntimeConfig(config);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Bundled reference voice loaded.", voiceRuntime: config });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Load failed: ${err.message}` });
+    }
+  }
+
+  // â”€â”€â”€ Voice of Agent Lee catalog handlers â”€â”€â”€
+
+  if (msg.command === "voiceAlTestDefault" || msg.command === "voiceAlTestVoice") {
+    try {
+      const catalog = loadVoiceCatalog();
+      const targetId = msg.command === "voiceAlTestDefault" ? "agent-lee-default" : String(msg.id || "");
+      const testText = "Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done.";
+      const voiceEntry = (catalog.voices || []).find((v: any) => v.id === targetId);
+      const refAudio = voiceEntry?.referenceAudioPath || DEFAULT_DEVELOPER_REFERENCE_AUDIO;
+      const refText = voiceEntry?.referenceText || DEFAULT_DEVELOPER_REFERENCE_TEXT;
+      const config = getVoiceRuntimeConfig();
+      const outputPath = path.join(ROOT, "agent-lee", "voice", "agent-lee-test-clone.wav");
+      webview.postMessage({ command: "voiceCloneStatus", text: `Playing voice: ${voiceEntry?.label || targetId}...` });
+      await runCommandCapture(
+        config.clonePythonPath || "python",
+        [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", refAudio, "--ref_text", refText, "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
+      );
+      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      webview.postMessage({ command: "voiceCloneStatus", text: `Voice "${voiceEntry?.label || targetId}" played successfully.` });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Voice test failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "voiceAlActivateDefault") {
+    try {
+      const config = getVoiceRuntimeConfig();
+      config.engine = "f5-clone-local";
+      config.cloneReferenceAudioPath = DEFAULT_DEVELOPER_REFERENCE_AUDIO;
+      config.cloneReferenceText = DEFAULT_DEVELOPER_REFERENCE_TEXT;
+      config.selectedVoiceId = "agent-lee-default";
+      config.selectedVoiceLabel = "Agent Lee Default Voice";
+      persistVoiceRuntimeConfig(config);
+      const catalog = loadVoiceCatalog();
+      catalog.defaultVoiceId = "agent-lee-default";
+      saveVoiceCatalog(catalog);
+      webview.postMessage({ command: "voiceCloneStatus", text: "Agent Lee default voice restored as active.", voiceRuntime: config, defaultStatus: "Default voice is now active." });
+      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: "agent-lee-default" });
+      await postRuntimeInfo(webview);
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Restore failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "voiceAlRecordMic") {
+    vscode.window.showInformationMessage("Open a terminal and run: cd " + path.join(ROOT, "agent-lee", "voice") + " && .\\voice-cloning-env\\Scripts\\python.exe record_mic.py");
+    webview.postMessage({ command: "voiceCloneStatus", text: "Open a terminal to record. Once done, paste the file path in the Reference audio field." });
+  }
+
+  if (msg.command === "voiceAlCloneAndPreview") {
+    try {
+      const payload = msg.payload || {};
+      if (!payload.audioPath) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide a reference audio file path." }); return; }
+      if (!payload.transcript) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide the transcript of the reference audio." }); return; }
+      const config = getVoiceRuntimeConfig();
+      const testText = payload.testText || "Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done.";
+      const outputPath = path.join(ROOT, "agent-lee", "voice", "agent-lee-clone-preview.wav");
+      webview.postMessage({ command: "voiceCloneStatus", text: "Cloning voice and generating preview... this may take a minute on CPU." });
+      await runCommandCapture(
+        config.clonePythonPath || "python",
+        [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", payload.audioPath, "--ref_text", payload.transcript, "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
+      );
+      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      webview.postMessage({ command: "voiceCloneStatus", text: `Clone preview complete. If it sounds good, click Save to Catalog.` });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Clone preview failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "voiceAlSaveClone") {
+    try {
+      const payload = msg.payload || {};
+      if (!payload.label) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide a name for the voice." }); return; }
+      if (!payload.audioPath) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide a reference audio file." }); return; }
+      if (!payload.transcript) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide the transcript." }); return; }
+      const catalog = loadVoiceCatalog();
+      if ((catalog.voices || []).length >= MAX_VOICE_CATALOG_ENTRIES) {
+        webview.postMessage({ command: "voiceCloneStatus", text: `Voice catalog is full (${MAX_VOICE_CATALOG_ENTRIES} max). Delete a voice first.` });
+        return;
+      }
+      const newId = "voice-" + Date.now();
+      const savedRefPath = path.join(ROOT, "agent-lee", "voice", newId + "-reference.wav");
+      fs.copyFileSync(payload.audioPath, savedRefPath);
+      const entry = {
+        id: newId,
+        label: payload.label,
+        description: `Cloned voice: ${payload.label}`,
+        engine: "f5-clone-local",
+        referenceAudioPath: savedRefPath,
+        referenceText: payload.transcript,
+        isDefault: false,
+        isLocked: false,
+        createdAt: new Date().toISOString()
+      };
+      catalog.voices = catalog.voices || [];
+      catalog.voices.push(entry);
+      saveVoiceCatalog(catalog);
+      webview.postMessage({ command: "voiceCloneStatus", text: `Voice "${payload.label}" saved to catalog.` });
+      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: catalog.defaultVoiceId || "agent-lee-default" });
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Save failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "voiceAlSetActive") {
+    try {
+      const targetId = String(msg.id || "");
+      const catalog = loadVoiceCatalog();
+      const voiceEntry = (catalog.voices || []).find((v: any) => v.id === targetId);
+      if (!voiceEntry) { webview.postMessage({ command: "voiceCloneStatus", text: `Voice not found: ${targetId}` }); return; }
+      catalog.defaultVoiceId = targetId;
+      saveVoiceCatalog(catalog);
+      const config = getVoiceRuntimeConfig();
+      config.engine = "f5-clone-local";
+      config.cloneReferenceAudioPath = voiceEntry.referenceAudioPath;
+      config.cloneReferenceText = voiceEntry.referenceText;
+      config.selectedVoiceId = voiceEntry.id;
+      config.selectedVoiceLabel = voiceEntry.label;
+      persistVoiceRuntimeConfig(config);
+      webview.postMessage({ command: "voiceCloneStatus", text: `Voice "${voiceEntry.label}" is now active.`, voiceRuntime: config });
+      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: targetId });
+      await postRuntimeInfo(webview);
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Set active failed: ${err.message}` });
+    }
+  }
+
+  if (msg.command === "voiceAlDeleteVoice") {
+    try {
+      const targetId = String(msg.id || "");
+      const catalog = loadVoiceCatalog();
+      const voiceEntry = (catalog.voices || []).find((v: any) => v.id === targetId);
+      if (!voiceEntry) { webview.postMessage({ command: "voiceCloneStatus", text: `Voice not found: ${targetId}` }); return; }
+      if (voiceEntry.isLocked) { webview.postMessage({ command: "voiceCloneStatus", text: "Cannot delete the locked default voice." }); return; }
+      catalog.voices = (catalog.voices || []).filter((v: any) => v.id !== targetId);
+      if (catalog.defaultVoiceId === targetId) catalog.defaultVoiceId = "agent-lee-default";
+      saveVoiceCatalog(catalog);
+      if (voiceEntry.referenceAudioPath && fs.existsSync(voiceEntry.referenceAudioPath) && voiceEntry.referenceAudioPath.includes("voice-")) {
+        try { fs.unlinkSync(voiceEntry.referenceAudioPath); } catch {}
+      }
+      webview.postMessage({ command: "voiceCloneStatus", text: `Voice "${voiceEntry.label}" deleted.` });
+      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: catalog.defaultVoiceId });
+      await postRuntimeInfo(webview);
+    } catch (err: any) {
+      webview.postMessage({ command: "voiceCloneStatus", text: `Delete failed: ${err.message}` });
+    }
+  }
+
   } catch (error) {
     const detail = describeFileError(error);
     try {
@@ -4886,7 +5773,40 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(vscode.commands.registerCommand(AGENT_LEE_OPEN_PANEL_COMMAND, () => openPanel(context)));
   context.subscriptions.push(vscode.commands.registerCommand("agentLee.open", () => openPanel(context)));
-  context.subscriptions.push(vscode.commands.registerCommand("agentLee.openSidebar", () => openAgentLeeSidebar()));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.openSidebar", () => openPanel(context)));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.visual.openPanel", async () => {
+    await openLvisPanel(context);
+    const receiptPath = writeLvisReceipt("agentLee.visual.openPanel", "Opened the internal LVIS panel.", {
+      command: "agentLee.visual.openPanel"
+    });
+    appendAgentLeeLine(output, `LVIS panel opened. Receipt: ${receiptPath}`, { voiceMode: "operator" });
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.visual.systemStatus", async () => {
+    const status = await getLvisSystemStatus();
+    appendAgentLeeLine(output, `${status.title}`, { voiceMode: "operator" });
+    appendAgentLeeLine(output, `Gemini present: ${status.geminiPresent ? "yes" : "no"}`, { voiceMode: "operator" });
+    appendAgentLeeLine(output, `Root path: ${status.rootPath}`, { voiceMode: "operator" });
+    for (const route of status.routes) {
+      appendAgentLeeLine(output, `Route ${route.role.toUpperCase()} => configured ${route.configured} | resolved ${route.resolved} | available ${route.available}`, { voiceMode: "operator" });
+    }
+    for (const worker of status.workers) {
+      appendAgentLeeLine(output, `Worker ${worker.name} => ${worker.specialty}`, { voiceMode: "operator" });
+    }
+    output.show(true);
+    const receiptPath = writeLvisReceipt("agentLee.visual.systemStatus", "Collected LVIS runtime status.", {
+      workerCount: status.workers.length,
+      routes: status.routes
+    });
+    showAgentLeeInfo(`LVIS status captured. Receipt: ${receiptPath}`);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.visual.revealWorkspace", async () => {
+    const target = vscode.Uri.file(path.join(ROOT, "agent-lee", "visual-intelligence"));
+    await vscode.commands.executeCommand("revealFileInOS", target);
+    const receiptPath = writeLvisReceipt("agentLee.visual.revealWorkspace", "Revealed the LVIS workspace folder.", {
+      path: target.fsPath
+    });
+    appendAgentLeeLine(output, `LVIS workspace revealed. Receipt: ${receiptPath}`, { voiceMode: "operator" });
+  }));
   context.subscriptions.push(vscode.commands.registerCommand("agentLee.runtimeStatus", async () => {
     await openAgentLeeSidebar();
     const state = getAgentLeeRuntimeState();
@@ -5165,6 +6085,8 @@ export async function activate(context: vscode.ExtensionContext) {
       void Promise.allSettled(Array.from(activeWebviews).map((webview) => postVisibleRuntimeState(webview)));
       showAgentLeeWarning(`Agent Lee runtime initialized in degraded mode: ${detail}`);
     });
+
+  void maybeInstallManagedVsixOnStartup(context);
 }
 
 export function deactivate() {
@@ -5174,5 +6096,6 @@ export function deactivate() {
 
 /*
 DISCOVERY_PIPELINE:
-Voice → Intent → Location → Vertical → Ranking → Render
+Voice â†’ Intent â†’ Location â†’ Vertical â†’ Ranking â†’ Render
 */
+

@@ -51,7 +51,7 @@ export type AgentLeeRuntimeState = {
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const RECEIPT_FILE = path.join(ROOT, "logs", "agent-lee", "runtime-receipts.ndjson");
 const ROUTING_FILE = path.join(ROOT, "agent-lee", "models", "model-routing.json");
-const REPORTS_ROOT = path.join(ROOT, "reports");
+const REPORTS_ROOT = path.join(ROOT, "reports", "Doctor");
 const DOCTOR_REPORT_FILE = "AGENT_LEE_DOCTOR.md";
 const COMPLIANCE_REPORTS_ROOT = path.join(ROOT, "agent-lee", "reports", "compliance");
 

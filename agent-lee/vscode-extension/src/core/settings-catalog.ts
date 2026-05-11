@@ -29,6 +29,18 @@ export type AgentCatalogEntry = {
   identity: LeewayVmIdentity;
 };
 
+export type WorkerCatalogEntry = {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  diagnosticLabel: string;
+  route: string;
+  responsibilities: string[];
+  developerSurface?: "mutable" | "observed-only";
+  lockReason?: string;
+};
+
 export type LeewayVmIdentity = {
   kind: "leeway-mcp-agent" | "leeway-agent";
   realName: string;
@@ -705,6 +717,25 @@ export const DEFAULT_AGENT_CATALOG: AgentCatalogEntry[] = [
     }
   },
   {
+    id: "leeway-visual-orchestrator-agent",
+    name: "Leeway Visual Orchestrator Agent",
+    description: "Routes LVIS asset tasks, assigns workers, enforces governance, and blocks fake success.",
+    identity: {
+      kind: "leeway-agent",
+      realName: "Visual Orchestrator Caelum Voss",
+      family: "Visual Intelligence Family",
+      lineage: "Agent Lee Prime > LVIS > Orchestrator Branch",
+      duties: ["Classify visual requests.", "Assign LVIS workers.", "Enforce receipts and quality gates."],
+      authorities: ["Route governed visual workflows.", "Block unverifiable success claims.", "Publish developer-facing LVIS reports."],
+      vmAddress: "vm://leeway/agent/visual-orchestrator-caelum-voss",
+      notepadPath: "workspace/agents/leeway-visual-orchestrator-agent/notes/visual-orchestrator-caelum-voss.md",
+      databasePath: "memory/db/leeway-visual-orchestrator-agent.sqlite",
+      heartbeat: "lvis-orchestrator-heartbeat",
+      developerSurface: "observed-only",
+      lockReason: "The LVIS orchestrator is observed-only so governance and quality gates cannot be silently weakened."
+    }
+  },
+  {
     id: "shield-governor-agent",
     name: "LeeWay Shield Governor Agent",
     description: "Prime-family security officer for protected action review, zone enforcement, and privileged execution gating.",
@@ -779,5 +810,100 @@ export const DEFAULT_AGENT_CATALOG: AgentCatalogEntry[] = [
       developerSurface: "observed-only",
       lockReason: "Prime Security officers are observed-only so no one can tune away the security controls that protect the runtime."
     }
+  }
+];
+
+export const DEFAULT_WORKER_CATALOG: WorkerCatalogEntry[] = [
+  {
+    id: "leeway-visual-orchestrator-agent",
+    name: "Leeway Visual Orchestrator Agent",
+    description: "Routes LVIS asset tasks, assigns workers, enforces governance, and blocks fake success.",
+    owner: "agent-lee-prime",
+    diagnosticLabel: "LVIS Orchestration",
+    route: "azr",
+    responsibilities: ["Classify visual requests", "Assign LVIS workers", "Enforce receipts and quality gates"],
+    developerSurface: "observed-only",
+    lockReason: "The LVIS orchestrator is observed-only so governance and quality gates cannot be silently weakened."
+  },
+  {
+    id: "leeway-vector-reconstruction-worker",
+    name: "Leeway Vector Reconstruction Worker",
+    description: "Raster-to-SVG, contour recovery, and vector export orchestration for LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Vector Reconstruction",
+    route: "qwen2.5-coder:7b",
+    responsibilities: ["Reconstruct raster inputs", "Preserve contour detail", "Prepare SVG and TSX exports"]
+  },
+  {
+    id: "leeway-voxel-reconstruction-worker",
+    name: "Leeway Voxel Reconstruction Worker",
+    description: "Voxel anatomy, blockout reconstruction, and image-to-voxel routing for LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Voxel Reconstruction",
+    route: "azr",
+    responsibilities: ["Convert visuals to voxels", "Estimate part segmentation", "Track voxel export assumptions"]
+  },
+  {
+    id: "leeway-scene-reconstruction-worker",
+    name: "Leeway Scene Reconstruction Worker",
+    description: "Full-scene environment assembly, placement, and lighting orchestration for LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Scene Reconstruction",
+    route: "llama3.1:8b",
+    responsibilities: ["Assemble scene plans", "Coordinate placement", "Preserve lighting intent"]
+  },
+  {
+    id: "leeway-depth-synthesis-worker",
+    name: "Leeway Depth Synthesis Worker",
+    description: "Depth heuristics, extrusion planning, and silhouette layer estimation for LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Depth Synthesis",
+    route: "phi3:mini",
+    responsibilities: ["Infer depth", "Support extrusion planning", "Document repair loops"]
+  },
+  {
+    id: "leeway-structural-fidelity-worker",
+    name: "Leeway Structural Fidelity Worker",
+    description: "Structural comparison, candidate scoring, and repair-loop governance for LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Structural Fidelity",
+    route: "qwen2.5-coder:7b",
+    responsibilities: ["Compare output to source", "Score candidates", "Drive repair loops"]
+  },
+  {
+    id: "leeway-asset-repair-worker",
+    name: "Leeway Asset Repair Worker",
+    description: "Repair loops for failed SVG, voxel, depth, and mask outputs under LVIS.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Asset Repair",
+    route: "azr",
+    responsibilities: ["Repair failed candidates", "Retry weak outputs", "Reduce distortion before export"]
+  },
+  {
+    id: "leeway-manifest-export-worker",
+    name: "Leeway Manifest Export Worker",
+    description: "Manifest generation, export packaging, and receipt-oriented asset output support.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Manifest Export",
+    route: "phi3:mini",
+    responsibilities: ["Package outputs", "Generate manifest-ready exports", "Record packaging receipts"]
+  },
+  {
+    id: "leeway-project-integration-worker",
+    name: "Leeway Project Integration Worker",
+    description: "Project insertion, registration, and governed integration of LVIS outputs into Agent Lee.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Project Integration",
+    route: "azr",
+    responsibilities: ["Insert LVIS assets", "Keep changes reviewable", "Coordinate pending edits"]
+  },
+  {
+    id: "leeway-visual-memory-worker",
+    name: "Leeway Visual Memory Worker",
+    description: "Stores presets, failure patterns, and run history to strengthen future LVIS executions.",
+    owner: "leeway-visual-orchestrator-agent",
+    diagnosticLabel: "Visual Memory",
+    route: "echo",
+    responsibilities: ["Remember presets", "Track failures", "Suggest future strategies"]
   }
 ];

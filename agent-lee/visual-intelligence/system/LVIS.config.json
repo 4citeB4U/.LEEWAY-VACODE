@@ -1,0 +1,20 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "🟢 CORE",
+    "TAG": "CORE.VISUAL.LVIS.CONFIG",
+    "DISCOVERY_PIPELINE": "Voice → Intent → Location → Vertical → Ranking → Render"
+  },
+  "systemId": "LVIS",
+  "title": "LEEWAY SOVEREIGN VISUAL INTELLIGENCE SYSTEM",
+  "runtime": "Leeway Runtime",
+  "orchestrator": "Lee Prime",
+  "geminiPresent": false,
+  "localLlmStack": {
+    "qwen": "classification + verification",
+    "azr": "master orchestration",
+    "phi3": "workflow planning",
+    "llama": "scene generation assistance",
+    "echo": "memory + diagnostics"
+  }
+}

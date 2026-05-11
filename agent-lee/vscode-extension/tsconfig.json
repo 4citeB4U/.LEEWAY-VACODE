@@ -10,10 +10,12 @@
     "target": "ES2022",
     "outDir": "out",
     "lib": ["ES2022", "DOM"],
+    "jsx": "preserve",
     "sourceMap": true,
     "rootDir": "src",
-    "strict": false,
-    "esModuleInterop": true
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true
   },
   "exclude": ["node_modules"]
 }

@@ -408,7 +408,7 @@ FINAL SYNTHESIS INSTRUCTIONS:
 - Do not say work is complete if files were not actually changed.
 `;
 
-    const synthesisModel = args.model || hive.roles.find((role) => role.role === "builder_model")?.selected;
+    const synthesisModel = hive.roles.find((role) => role.role === "builder_model")?.selected ?? args.model;
     finalResponse = await args.ollama(synthesisPrompt, synthesisModel);
     args.telemetry?.onPhase?.("execute", "completed", "Primary synthesis completed.");
     args.telemetry?.onPhase?.("verify", "in_progress", "Applying verifier checks and evidence summary.");
