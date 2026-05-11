@@ -10,7 +10,7 @@ DISCOVERY_PIPELINE:
 
 import * as fs from "fs";
 import * as path from "path";
-import { JSDOM } from "jsdom";
+
 import { LLMProvider } from "../core/LLMProvider";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
@@ -269,12 +269,11 @@ export function sanitizeSvgForExport(svg: string, width: number, height: number)
 }
 
 export function validateSvgXml(svg: string) {
-  const parser = new (new JSDOM("").window.DOMParser)();
-  const doc = parser.parseFromString(svg, "image/svg+xml");
-  const parserError = doc.querySelector("parsererror");
-  if (parserError) {
-    return { valid: false, error: parserError.textContent || "Unknown SVG parse error" };
-  }
+  const s = String(svg || "").trim();
+  if (!s.startsWith("<")) return { valid: false, error: "Not an XML/SVG string." };
+  if (/<parsererror/i.test(s)) return { valid: false, error: "SVG contains a parsererror element." };
+  if (!/<svg[\s>]/i.test(s)) return { valid: false, error: "No <svg> root element found." };
+  if (!/<\/svg>/i.test(s)) return { valid: false, error: "SVG root element is not closed." };
   return { valid: true, error: null };
 }
 
