@@ -37,6 +37,7 @@ debug.log
 backups/
 patches/
 sandbox/
+_archive/
 
 # OS/editor noise
 .DS_Store

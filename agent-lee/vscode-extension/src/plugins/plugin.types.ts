@@ -80,6 +80,11 @@ export interface PluginCallInput {
   userId?: string;
   workspaceId?: string;
   dryRun?: boolean;
+  sourceUnit?: string;
+  sourceType?: "user" | "agent" | "plugin" | "runtime" | "bridge" | "external";
+  requestReceiptId?: string;
+  capabilityProof?: string[] | string;
+  securityZone?: string;
 }
 
 export interface PluginCallResult {

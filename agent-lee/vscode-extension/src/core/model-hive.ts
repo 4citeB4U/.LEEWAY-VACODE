@@ -1,3 +1,12 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: AI.ORCHESTRATION.MODEL.HIVE
+REGION: 🧠 AI
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 

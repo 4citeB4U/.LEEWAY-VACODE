@@ -10,6 +10,30 @@
   "executionRule": "All tools are requested through Agent Lee Prime first. Tools do not speak directly to the user.",
   "tools": [
     {
+      "id": "leeway-visual-intelligence-system",
+      "name": "LVIS - Leeway Visual Intelligence System",
+      "runtime": "leeway-local",
+      "category": "visual-intelligence",
+      "description": "Leeway-governed visual reconstruction system for SVG, voxel, 3D scene, asset validation, export packaging, and project integration.",
+      "localOnly": true,
+      "forbiddenProviders": ["gemini", "google-genai", "google-ai-studio"],
+      "tools": [
+        "visual.vector.analyzeImage",
+        "visual.vector.traceCandidates",
+        "visual.vector.exportTsx",
+        "visual.voxel.imageToVoxel",
+        "visual.voxel.svgToVoxel",
+        "visual.depth.estimateDepth",
+        "visual.scene.createSceneGraph",
+        "visual.fidelity.scoreAsset",
+        "visual.repair.retryCandidate",
+        "visual.export.packageAsset",
+        "visual.integration.createPendingEdits",
+        "visual.memory.savePreset"
+      ],
+      "route": "leeway-local"
+    },
+    {
       "id": "frontend-mcp",
       "category": "UI/UX",
       "purpose": "Frontend architecture and high-fidelity component scaffolding.",

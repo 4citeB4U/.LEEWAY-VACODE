@@ -1,3 +1,13 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.TASK.PLANNER
+REGION: 🟢 CORE
+PURPOSE: Task planning support for Agent Lee engineering and command execution.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as path from "path";
 
 export type WorkMode = "execute" | "plan" | "ask";

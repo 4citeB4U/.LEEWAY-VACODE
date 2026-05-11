@@ -1,3 +1,12 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.GOVERNANCE.LAW.ENGINE
+REGION: 🟢 CORE
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 export type RuntimeStage =
   | "intake"
   | "routing"

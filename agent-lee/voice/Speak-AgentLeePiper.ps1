@@ -14,6 +14,49 @@ param(
   [string]$ConfigPath
 )
 
+function Resolve-PiperSpeakerId {
+  param(
+    [pscustomobject]$Config,
+    [string]$ModelConfigPath
+  )
+
+  $selectedSpeakerId = ""
+  if ($null -ne $Config.selectedSpeakerId) {
+    $selectedSpeakerId = [string]$Config.selectedSpeakerId
+  }
+
+  if ([string]::IsNullOrWhiteSpace($selectedSpeakerId)) {
+    return $null
+  }
+
+  $trimmed = $selectedSpeakerId.Trim()
+  $numeric = 0
+  if ([int]::TryParse($trimmed, [ref]$numeric)) {
+    return $numeric
+  }
+
+  if (-not (Test-Path $ModelConfigPath)) {
+    return $null
+  }
+
+  try {
+    $modelConfig = Get-Content -Raw $ModelConfigPath | ConvertFrom-Json
+    if ($null -eq $modelConfig.speaker_id_map) {
+      return $null
+    }
+
+    foreach ($property in $modelConfig.speaker_id_map.PSObject.Properties) {
+      if ([string]::Equals($property.Name, $trimmed, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return [int]$property.Value
+      }
+    }
+  } catch {
+    return $null
+  }
+
+  return $null
+}
+
 function Clean-SpeechText {
   param([string]$InputText)
 
@@ -116,6 +159,7 @@ function Apply-WavTuning {
 
   $sampleTrimRatio = 1.0
   $playbackRateRatio = 1.0
+  $pitchRatio = 1.0
 
   if ($null -ne $tuning.sampleTrimRatio) {
     $sampleTrimRatio = [double]$tuning.sampleTrimRatio
@@ -125,7 +169,15 @@ function Apply-WavTuning {
     $playbackRateRatio = [double]$tuning.playbackRateRatio
   }
 
-  if ([math]::Abs($sampleTrimRatio - 1.0) -lt 0.0001 -and [math]::Abs($playbackRateRatio - 1.0) -lt 0.0001) {
+  if ($null -ne $tuning.pitchRatio) {
+    $pitchRatio = [double]$tuning.pitchRatio
+  }
+
+  if (
+    [math]::Abs($sampleTrimRatio - 1.0) -lt 0.0001 -and
+    [math]::Abs($playbackRateRatio - 1.0) -lt 0.0001 -and
+    [math]::Abs($pitchRatio - 1.0) -lt 0.0001
+  ) {
     return $true
   }
 
@@ -137,6 +189,7 @@ from pathlib import Path
 wav_path = Path(sys.argv[1])
 trim_ratio = float(sys.argv[2])
 playback_ratio = float(sys.argv[3])
+pitch_ratio = float(sys.argv[4])
 
 with wave.open(str(wav_path), "rb") as reader:
     params = reader.getparams()
@@ -149,10 +202,12 @@ if trim_ratio <= 0:
     trim_ratio = 1.0
 if playback_ratio <= 0:
     playback_ratio = 1.0
+if pitch_ratio <= 0:
+    pitch_ratio = 1.0
 
 new_frame_count = max(1, int(frame_count * trim_ratio)) if frame_count else 0
 trimmed = frames[:new_frame_count * frame_width] if new_frame_count else frames
-new_rate = max(1, int(params.framerate * playback_ratio))
+new_rate = max(1, int(params.framerate * playback_ratio * pitch_ratio))
 
 with wave.open(str(wav_path), "wb") as writer:
     writer.setnchannels(params.nchannels)
@@ -164,7 +219,7 @@ with wave.open(str(wav_path), "wb") as writer:
   $tempPy = Join-Path $env:TEMP ("agent-lee-voice-tune-" + [guid]::NewGuid().ToString() + ".py")
   try {
     [System.IO.File]::WriteAllText($tempPy, $pythonScript, [System.Text.UTF8Encoding]::new($false))
-    & python $tempPy $Path $sampleTrimRatio $playbackRateRatio | Out-Null
+    & python $tempPy $Path $sampleTrimRatio $playbackRateRatio $pitchRatio | Out-Null
     return $LASTEXITCODE -eq 0
   } catch {
     return $false
@@ -319,6 +374,11 @@ function Invoke-DirectPiperSynthesis {
 
   if ($modelConfig -and (Test-Path $modelConfig)) {
     $arguments += @("--config", $modelConfig)
+  }
+
+  $speakerId = Resolve-PiperSpeakerId -Config $Config -ModelConfigPath $modelConfig
+  if ($null -ne $speakerId) {
+    $arguments += @("--speaker", [string]$speakerId)
   }
 
   $psi = New-Object System.Diagnostics.ProcessStartInfo

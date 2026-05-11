@@ -14,6 +14,11 @@
   "codingHiveVerifier": "qwen2.5-coder:7b",
   "codingHiveReasoner": "deepseek-coder-v2:16b",
   "visualHelper": "llava:7b",
+  "lvisClassifier": "qwen2.5-coder:7b",
+  "lvisOrchestrator": "azr",
+  "lvisPlanner": "phi3:mini",
+  "lvisSceneSynthesizer": "llama3.1:8b",
+  "lvisMemory": "echo",
   "webHelper": "llama3.1:8b",
   "generalHelper": "llama3.1:8b",
   "embeddings": "nomic-embed-text"

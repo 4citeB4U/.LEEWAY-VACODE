@@ -1,3 +1,18 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: 🟣 MCP
+TAG: MCP.TOOLS.ROUTER.MAIN
+
+5WH:
+WHAT = Maps user requests to task classes and local model selections.
+WHY = Keeps local model routing predictable for Agent Lee command flows.
+WHO = Agent Lee / LeeWay Runtime.
+WHERE = agent-lee/vscode-extension/src/tools/router.ts
+WHEN = 2026
+HOW = Keyword classification plus task-to-model routing rules.
+*/
+
 export function classifyTask(input: string) {
   const q = input.toLowerCase();
 
@@ -8,6 +23,7 @@ export function classifyTask(input: string) {
   if (q.includes("delete all") || q.includes("remove all")) return "bulk-delete";
 
   if (q.includes("search") || q.includes("look up") || q.includes("latest docs")) return "web-search";
+  if (q.includes("svg") || q.includes("voxel") || q.includes("3d scene") || q.includes("visual asset") || q.includes("scene reconstruction")) return "visual-intelligence";
   if (q.includes("image") || q.includes("screenshot") || q.includes("picture")) return "image";
   if (q.includes("scan") || q.includes("audit") || q.includes("compliance")) return "scan";
   if (q.includes("fix") || q.includes("repair")) return "fix";
@@ -20,6 +36,12 @@ export function selectModel(task: string) {
   if (task === "fix") return "qwen2.5-coder:14b";
   if (task === "verify") return "deepseek-coder-v2:16b";
   if (task === "web-search") return "llama3.1:8b";
+  if (task === "visual-intelligence") return "azr";
   if (task === "image") return "llava:7b";
   return "qwen2.5-coder:7b";
 }
+
+/*
+DISCOVERY_PIPELINE:
+Voice → Intent → Location → Vertical → Ranking → Render
+*/

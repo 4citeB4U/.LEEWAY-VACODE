@@ -3,6 +3,7 @@ LEEWAY HEADER — DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.SDK.LLMPROVIDER.MAIN
+PURPOSE: Local Ollama provider that routes every model generation request through Agent Lee runtime governance.
 
 COLOR_ONION_HEX:
 NEON=#39FF14
@@ -30,19 +31,38 @@ LICENSE:
 MIT
 */
 
+import { buildModelPromptThroughAgentLee, getAgentLeeRuntimeState } from "./agent-lee-runtime-bootstrap";
+
+function formatUnknownError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 // Simple LLMProvider interface for optional LLM assistance
 export const LLMProvider = {
   async generate(prompt: string, model: string = 'qwen2.5-coder:14b'): Promise<string> {
     try {
+      const runtime = getAgentLeeRuntimeState();
+      if (!runtime.AGENT_LEE_RUNTIME_READY) {
+        return runtime.degradedReason || "Agent Lee runtime is degraded: persona module unavailable.";
+      }
+
       const response = await fetch('http://localhost:11434/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, prompt, stream: false })
+        body: JSON.stringify({
+          model,
+          prompt: buildModelPromptThroughAgentLee(prompt, {
+            taskContext: "LLMProvider local generation request.",
+            modelName: model
+          }),
+          stream: false
+        })
       });
       const data = await response.json();
       return data.response || 'No response from model';
     } catch (error) {
-      return `Error: ${error.message}`;
+      return `Error: ${formatUnknownError(error)}`;
     }
   },
   async getModels(): Promise<string[]> {

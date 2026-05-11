@@ -1,5 +1,15 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.SETTINGS.MAIN
+REGION: 🟢 CORE
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
+import { describeFileError, writeTextWithRetries } from "./file-ops";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const SETTINGS_FILE = path.join(ROOT, "agent-lee", "config", "runtime-state.json");
@@ -17,6 +27,8 @@ export type RuntimeState = {
   onboardingComplete: boolean;
   agentEnvironment: AgentEnvironment;
   appLanguage: AppLanguage;
+  autoUpdateEnabled: boolean;
+  lastAppliedVsixSignature: string;
   requireCtrlEnter: boolean;
   inferenceSpeed: InferenceSpeed;
   followupBehavior: FollowupBehavior;
@@ -28,6 +40,9 @@ export type RuntimeState = {
   enabledAgents: string[];
   customAgents: string[];
   agentConfigs: Record<string, string>;
+  enabledWorkers: string[];
+  customWorkers: string[];
+  workerConfigs: Record<string, string>;
   approval: ApprovalMode;
   autoRunStagedPlans: boolean;
   workMode: WorkMode;
@@ -47,6 +62,8 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
   onboardingComplete: false,
   agentEnvironment: "windows-native",
   appLanguage: "auto",
+  autoUpdateEnabled: true,
+  lastAppliedVsixSignature: "",
   requireCtrlEnter: false,
   inferenceSpeed: "standard",
   followupBehavior: "steer",
@@ -63,29 +80,54 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
     "leeway-playwright",
     "leeway-scheduling",
     "leeway-testsprite",
-    "leeway-validation"
-  ],
-  customMcpServers: [],
-  mcpServerConfigs: {},
-  enabledAgents: [
-    "agent-lee-prime",
-    "leeway-agent-registry",
+    "leeway-validation",
     "frontend-mcp",
     "backend-mcp",
     "design-system-mcp",
     "creative-mcp",
     "memory-mcp",
     "scheduler-mcp",
+    "ui-builder-mcp",
+    "leeway-build-auditor-mcp",
+    "leeway-ci-blueprint-mcp",
+    "leeway-edge-optimizer-mcp",
+    "leeway-full-repo-checker-mcp",
+    "leeway-responsive-ui-mcp",
+    "qa-mcp",
+    "react-native-mcp"
+  ],
+  customMcpServers: [],
+  mcpServerConfigs: {},
+  enabledAgents: [
+    "agent-lee-prime",
     "fs-nav-agent",
     "host-exec-agent",
-    "ui-builder-mcp",
     "media-forge-agent",
-    "leeway-build-auditor-mcp"
+    "mutation-agent",
+    "perception-agent",
+    "shield-governor-agent",
+    "attestation-marshal-agent",
+    "memory-warden-agent",
+    "threat-sentinel-agent"
   ],
   customAgents: [],
   agentConfigs: {},
+  enabledWorkers: [
+    "leeway-visual-orchestrator-agent",
+    "leeway-vector-reconstruction-worker",
+    "leeway-voxel-reconstruction-worker",
+    "leeway-scene-reconstruction-worker",
+    "leeway-depth-synthesis-worker",
+    "leeway-structural-fidelity-worker",
+    "leeway-asset-repair-worker",
+    "leeway-manifest-export-worker",
+    "leeway-project-integration-worker",
+    "leeway-visual-memory-worker"
+  ],
+  customWorkers: [],
+  workerConfigs: {},
   approval: "balanced",
-  autoRunStagedPlans: true,
+  autoRunStagedPlans: false,
   workMode: "execute",
   web: false,
   voice: true,
@@ -121,9 +163,39 @@ export function resolveRuntimeState(current: Partial<RuntimeState> | null | unde
     ...DEFAULT_RUNTIME_STATE,
     ...(current || {})
   };
+  const autoRunStagedPlans = state.workMode === "execute" && state.approval === "full"
+    ? state.autoRunStagedPlans
+    : false;
+  const defaultMcpIds = new Set(DEFAULT_RUNTIME_STATE.enabledMcpServers);
+  const isMcpAgentId = (id: string) => defaultMcpIds.has(id) || id.endsWith("-mcp");
+  const persistedMcpServers = Array.isArray(current?.enabledMcpServers)
+    ? state.enabledMcpServers
+    : DEFAULT_RUNTIME_STATE.enabledMcpServers;
+  const persistedAgents = Array.isArray(current?.enabledAgents)
+    ? state.enabledAgents
+    : DEFAULT_RUNTIME_STATE.enabledAgents;
+  const persistedWorkers = Array.isArray((current as Partial<RuntimeState>)?.enabledWorkers)
+    ? state.enabledWorkers
+    : DEFAULT_RUNTIME_STATE.enabledWorkers;
+  const enabledMcpServers = Array.from(
+    new Set([
+      ...persistedMcpServers,
+      ...persistedAgents.filter(isMcpAgentId)
+    ])
+  );
+  const enabledAgents = Array.from(
+    new Set([
+      ...persistedAgents.filter((id) => !isMcpAgentId(id))
+    ])
+  );
+  const enabledWorkers = Array.from(new Set(persistedWorkers));
 
   return {
     ...state,
+    autoRunStagedPlans,
+    enabledMcpServers,
+    enabledAgents,
+    enabledWorkers,
     primaryModel: pickFirstInstalled(
       installedModels,
       [state.primaryModel, state.builderModel, "qwen2.5-coder:14b", "llama3.1:8b"],
@@ -166,5 +238,9 @@ export function loadRuntimeSettings(installedModels: string[] = []) {
 
 export function saveRuntimeSettings(state: RuntimeState) {
   ensureDir();
-  fs.writeFileSync(SETTINGS_FILE, JSON.stringify(state, null, 2), "utf8");
+  try {
+    writeTextWithRetries(SETTINGS_FILE, JSON.stringify(state, null, 2));
+  } catch (error) {
+    console.warn(`[Agent Lee] Runtime settings persistence failed: ${describeFileError(error)}`);
+  }
 }

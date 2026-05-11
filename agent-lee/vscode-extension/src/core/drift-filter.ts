@@ -55,3 +55,12 @@ export function classifyDrift(filePath: string, changeType: string) {
     reason: "Relevant source change"
   };
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.DRIFT.FILTER.MAIN
+REGION: 🟢 CORE
+PURPOSE: Drift filtering and governance signal cleanup for Agent Lee runtime stability.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

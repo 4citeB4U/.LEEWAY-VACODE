@@ -1,28 +1,14 @@
 /*
-LEEWAY HEADER — DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: 🟢 CORE
-TAG: CORE.INDEXING.BACKGROUND.COMMANDS
-
-5WH:
-WHAT = Agent Lee background indexer commands
-WHY = Exposes batch/status/pause/resume control for the governed workspace indexer
-WHO = Agent Lee Background Indexer Runtime
-WHERE = src/indexing/backgroundIndexer.commands.ts
-WHEN = 2026
-HOW = VS Code command registrations over the background indexer service
-
-AGENTS:
-PRIME
-DOCTOR
-VOICE
-AUDIT
-
-LICENSE:
-MIT
+REGION: CORE
+TAG: CORE.INDEXING.COMMANDS.MAIN
+PURPOSE: Background indexer command surface governed by Agent Lee sovereign runtime.
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
 import { agentLeeLiveTaskEvents } from "../live-voice/liveTaskEvents";
 import { getOrCreateBackgroundIndexerService } from "./backgroundIndexer.service";
 import { getOrCreateIndexQueryService } from "./indexQuery.service";
@@ -31,6 +17,17 @@ export function registerAgentLeeBackgroundIndexerCommands(
   context: vscode.ExtensionContext,
   speak: (text: string) => void | Promise<void>
 ): void {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "indexing.commands") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || "";
   const service = getOrCreateBackgroundIndexerService(workspaceRoot);
   const indexQuery = getOrCreateIndexQueryService(workspaceRoot);
@@ -49,7 +46,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
       const state = service.status();
       const message = `Index status: ${state.phase}. Indexed ${state.indexedFiles} files. ${state.queuedFiles} queued.`;
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.status");
     })
   );
 
@@ -58,7 +55,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
       const state = service.pause();
       const message = state.message;
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.pause");
     })
   );
 
@@ -67,7 +64,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
       const state = service.resume();
       const message = state.message;
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.resume");
     })
   );
 
@@ -85,7 +82,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
         ? `Related files for ${rel}: ${related.slice(0, 12).join(", ")}`
         : `No related files found for ${rel}.`;
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.related-files");
     })
   );
 
@@ -96,7 +93,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
         ? `Dependency index has ${status.filesIndexed} files, ${status.importEdges} import edges, ${status.commandEdges} command edges, and ${status.missingHeaders} files missing LeeWay headers.`
         : "Dependency index is not available yet. Run an index batch first.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.dependency-status");
     })
   );
 
@@ -107,7 +104,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
         ? `Found ${files.length} file(s) missing LeeWay headers: ${files.slice(0, 12).join(", ")}`
         : "No missing LeeWay headers detected in indexed files.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.missing-headers");
     })
   );
 
@@ -122,7 +119,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
         ? `Indexed ${mapped.length} command registration(s). ${preview}`
         : "No command registrations were found in the index.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.command-map");
     })
   );
 
@@ -139,12 +136,7 @@ export function registerAgentLeeBackgroundIndexerCommands(
         ? `Symbol ${target} appears in: ${files.slice(0, 12).join(", ")}`
         : `No indexed file references symbol ${target}.`;
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "indexing.symbol-search");
     })
   );
 }
-
-/*
-DISCOVERY_PIPELINE:
-Voice → Intent → Location → Vertical → Ranking → Render
-*/

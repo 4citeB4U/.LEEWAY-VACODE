@@ -1,6 +1,17 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.EDITOR_BRIDGE.MAIN
+REGION: 🟢 CORE
+PURPOSE: Detects supported editors and installs Agent Lee editor tooling from internal standalone assets.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 import { execFile } from "child_process";
+import { getAgentLeeRoot } from "./leeway-connectivity-loader";
 
 export type EditorBridge = {
   id: string;
@@ -12,7 +23,7 @@ export type EditorBridge = {
 };
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
-const PYCHARM_TOOLSET = path.join(ROOT, "LeeWay-Standards", "leeway-pycharm-tools.xml");
+const PYCHARM_TOOLSET = path.join(getAgentLeeRoot(), "sdk", "standards", "leeway-pycharm-tools.xml");
 
 function exists(file: string) {
   try {

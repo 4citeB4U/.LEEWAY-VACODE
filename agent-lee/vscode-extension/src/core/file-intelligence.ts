@@ -1,3 +1,13 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.FILE.INTELLIGENCE.MAIN
+REGION: 🟢 CORE
+PURPOSE: File analysis and workspace intelligence for Agent Lee inspections.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import * as fs from "fs";
 import * as path from "path";
 
@@ -7,6 +17,11 @@ const CODE_EXT = /\.(ts|tsx|js|jsx|json|html|css|md|mjs|cjs|py|ps1|yaml|yml|xml|
 export type FileContextTelemetry = {
   onDiscoverFile?: (file: string) => void;
   onReadFile?: (file: string) => void;
+};
+
+export type BuildContextOptions = FileContextTelemetry & {
+  maxFiles?: number;
+  sampleLimit?: number;
 };
 
 export function extractPathFromPrompt(prompt: string): string {
@@ -43,11 +58,11 @@ export function walkFiles(root: string, out: string[] = [], max = 800, telemetry
   return out;
 }
 
-export function buildContext(root: string, telemetry?: FileContextTelemetry) {
-  const files = walkFiles(root, [], 800, telemetry);
-  const samples = files.slice(0, 50).map((file) => {
+export function buildContext(root: string, options?: BuildContextOptions) {
+  const files = walkFiles(root, [], options?.maxFiles ?? 800, options);
+  const samples = files.slice(0, options?.sampleLimit ?? 50).map((file) => {
     try {
-      telemetry?.onReadFile?.(file);
+      options?.onReadFile?.(file);
       return {
         file,
         preview: fs.readFileSync(file, "utf8").slice(0, 1800)

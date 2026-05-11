@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { spawn, ChildProcess } from "child_process";
-import type { Page } from "playwright-core";
+import type { ConsoleMessage, Page, Request, Response } from "playwright-core";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const BROWSER_REPORT_DIR = path.join(ROOT, "agent-lee", "reports", "browser");
@@ -14,6 +14,11 @@ type PreviewSession = {
   key: string;
   url: string;
   process: ChildProcess | null;
+};
+
+type CursorPosition = {
+  px: number;
+  py: number;
 };
 
 export type BrowserFlowAction =
@@ -610,18 +615,18 @@ export async function inspectVisualTarget(args: {
     const consoleWarnings: string[] = [];
     const jsErrors: string[] = [];
 
-    page.on("console", (msg) => {
+    page.on("console", (msg: ConsoleMessage) => {
       if (msg.type() === "error") {
         consoleErrors.push(msg.text());
       } else if (msg.type() === "warning") {
         consoleWarnings.push(msg.text());
       }
     });
-    page.on("pageerror", (error) => {
+    page.on("pageerror", (error: Error) => {
       pageErrors.push(error.message);
       jsErrors.push(error.message);
     });
-    page.on("request", (request) => {
+    page.on("request", (request: Request) => {
       networkRequests.push({
         url: request.url(),
         method: request.method(),
@@ -629,7 +634,7 @@ export async function inspectVisualTarget(args: {
         timestamp: Date.now()
       });
     });
-    page.on("response", (response) => {
+    page.on("response", (response: Response) => {
       const request = networkRequests.find((r) => r.url === response.url());
       if (request) {
         request.status = response.status();
@@ -799,12 +804,12 @@ export async function runVisualUserFlow(args: {
 
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } });
-    page.on("console", (msg) => {
+    page.on("console", (msg: ConsoleMessage) => {
       if (msg.type() === "error" || msg.type() === "warning") {
         consoleErrors.push(msg.text());
       }
     });
-    page.on("pageerror", (error) => {
+    page.on("pageerror", (error: Error) => {
       pageErrors.push(error.message);
     });
 
@@ -816,7 +821,7 @@ export async function runVisualUserFlow(args: {
     let mouse = { x: 60, y: 60 };
     if (showCursor) {
       await page.evaluate(
-        ({ px, py }) => (window as any).__agentLeeCursorMove?.(px, py, false),
+        ({ px, py }: CursorPosition) => (window as any).__agentLeeCursorMove?.(px, py, false),
         { px: mouse.x, py: mouse.y }
       );
     }
@@ -850,7 +855,7 @@ export async function runVisualUserFlow(args: {
           if (action.type === "click") {
             if (showCursor) {
               await page.evaluate(
-                ({ px, py }) => (window as any).__agentLeeCursorMove?.(px, py, true),
+                ({ px, py }: CursorPosition) => (window as any).__agentLeeCursorMove?.(px, py, true),
                 { px: mouse.x, py: mouse.y }
               );
             }
@@ -951,3 +956,12 @@ export function stopBrowserPreviews() {
   }
   previewSessions.clear();
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.BROWSER.ENGINE
+REGION: 🟢 CORE
+PURPOSE: Browser automation and runtime page inspection support for Agent Lee verification.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

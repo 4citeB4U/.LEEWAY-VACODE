@@ -8,12 +8,17 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 
 param(
   [string]$ExtensionDir,
-  [string]$OutputName = "agent-lee-1.1.1-sovereign-runtime.vsix"
+  [string]$OutputName
 )
 
 $ErrorActionPreference = "Stop"
 
 $resolvedExtensionDir = & (Join-Path $PSScriptRoot "Resolve-AgentLeeExtension.ps1") -ExtensionDir $ExtensionDir
+$packageJsonPath = Join-Path $resolvedExtensionDir "package.json"
+$package = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+if (-not $OutputName) {
+  $OutputName = "$($package.name)-$($package.version).vsix"
+}
 $outputPath = Join-Path $resolvedExtensionDir $OutputName
 
 Write-Host "Compiling extension in $resolvedExtensionDir" -ForegroundColor Cyan
@@ -35,8 +40,8 @@ try {
     throw "TypeScript compile failed."
   }
 
-  if (-not (Test-Path "out\extension.js")) {
-    throw "Compile finished, but out\extension.js was not created."
+  if (-not (Test-Path "dist\extension.js")) {
+    throw "Compile finished, but dist\extension.js was not created."
   }
 
   & npx.cmd @vscode/vsce package --no-rewrite-relative-links -o $OutputName

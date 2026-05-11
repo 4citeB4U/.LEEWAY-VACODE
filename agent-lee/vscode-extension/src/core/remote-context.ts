@@ -57,3 +57,12 @@ export async function fetchRemoteContext(url: string): Promise<RemoteContext> {
     summary: `REMOTE_URL: ${url}\nCONTENT_TYPE: ${contentType || "unknown"}\nCONTENT:\n${body.slice(0, 6000)}`
   };
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.CONTEXT.REMOTE.MAIN
+REGION: 🟢 CORE
+PURPOSE: Remote context intake and workspace context support for Agent Lee operations.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

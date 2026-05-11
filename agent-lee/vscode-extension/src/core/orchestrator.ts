@@ -1,3 +1,12 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.ORCHESTRATOR.MAIN
+REGION: 🟢 CORE
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/
+
 import { buildContext } from "./file-intelligence";
 import { store } from "./memory";
 import { loadSovereignContext } from "./governance-loader";
@@ -31,6 +40,7 @@ function buildSharedPrompt(args: {
   webContext: string;
   browserContext: string;
   capabilitySummary?: string;
+  developerProfileSummary?: string;
   ctx: { total: number; samples: { file: string; preview: string }[] };
   hiveSummary: string;
 }) {
@@ -80,6 +90,9 @@ ${args.approval}
 CAPABILITY CATALOG:
 ${args.capabilitySummary || "No capability catalog loaded."}
 
+DEVELOPER PROFILE:
+${args.developerProfileSummary || "No developer profile signals stored yet. Stay calm, plain-language first, and adapt as the user reveals preferences."}
+
 MODEL HIVE:
 ${args.hiveSummary}
 
@@ -120,6 +133,7 @@ export async function runSupervisor(args: {
   explicitUrl?: string;
   remoteContext?: string;
   capabilitySummary?: string;
+  developerProfileSummary?: string;
   prebuiltContext?: { total: number; samples: { file: string; preview: string }[] };
   telemetry?: SupervisorTelemetry;
   ollama: (prompt: string, model: string) => Promise<string>;
@@ -272,6 +286,7 @@ Ask me to audit or explain, or switch approval to BALANCED/FULL AUTO for change 
     webContext,
     browserContext,
     capabilitySummary: args.capabilitySummary,
+    developerProfileSummary: args.developerProfileSummary,
     ctx,
     hiveSummary
   });
@@ -393,7 +408,7 @@ FINAL SYNTHESIS INSTRUCTIONS:
 - Do not say work is complete if files were not actually changed.
 `;
 
-    const synthesisModel = args.model || hive.roles.find((role) => role.role === "builder_model")?.selected;
+    const synthesisModel = hive.roles.find((role) => role.role === "builder_model")?.selected ?? args.model;
     finalResponse = await args.ollama(synthesisPrompt, synthesisModel);
     args.telemetry?.onPhase?.("execute", "completed", "Primary synthesis completed.");
     args.telemetry?.onPhase?.("verify", "in_progress", "Applying verifier checks and evidence summary.");

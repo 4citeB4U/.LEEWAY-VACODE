@@ -1,13 +1,16 @@
 /*
-LEEWAY HEADER - DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.EXECUTION.EDITBUFFER.ADAPTER
+PURPOSE: Execution brain routing into edit buffer under Agent Lee governance.
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as path from "path";
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
+import { ensureLeewayCompliantContent, isGovernedFile } from "../core/leeway-write-policy";
 import { openAgentLeeDiff } from "../edit-buffer/editBuffer.diffProvider";
 import { refreshAgentLeeDecorations } from "../edit-buffer/editBuffer.decorations";
 import { createId, editBufferStore } from "../edit-buffer/editBuffer.store";
@@ -35,6 +38,17 @@ export async function sendExecutionPlanToEditBuffer(
   plan: ExecutionBrainPlanLike,
   workspaceRoot?: string
 ): Promise<string> {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "execution.editbuffer.adapter") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
   const pkg = editBufferStore.createPackage(plan.title, plan.objective);
   const hunksByFile = groupBy(plan.hunks, (hunk) => hunk.filePath);
 
@@ -62,7 +76,7 @@ export async function sendExecutionPlanToEditBuffer(
       };
     });
 
-    const proposedText = applyPreviewHunks(currentText, editHunks);
+    const proposedText = buildGovernedPreviewText(uri.fsPath, currentText, editHunks);
     const fileEdit: AgentLeeFileEdit = {
       id: fileId,
       uri,
@@ -85,8 +99,9 @@ export async function sendExecutionPlanToEditBuffer(
     await openAgentLeeDiff(pkg.id, firstFile.id);
   }
 
-  void vscode.window.showInformationMessage(
-    `Agent Lee created pending edits from Execution Brain: ${pkg.files.length} file(s).`
+  showAgentLeeRuntimeInfo(
+    `Agent Lee created pending edits from Execution Brain: ${pkg.files.length} file(s).`,
+    "execution.editbuffer.created"
   );
   return pkg.id;
 }
@@ -166,6 +181,12 @@ function resolveHunkRange(
   }
 
   throw new Error(`Could not locate original text for hunk "${hunk.title}" in ${hunk.filePath}.`);
+}
+
+function buildGovernedPreviewText(filePath: string, currentText: string, hunks: AgentLeeEditHunk[]) {
+  const preview = applyPreviewHunks(currentText, hunks);
+  if (!isGovernedFile(filePath)) return preview;
+  return ensureLeewayCompliantContent(filePath, preview, `Agent Lee pending edit package for ${path.basename(filePath)}.`);
 }
 
 function applyPreviewHunks(currentText: string, hunks: AgentLeeEditHunk[]) {

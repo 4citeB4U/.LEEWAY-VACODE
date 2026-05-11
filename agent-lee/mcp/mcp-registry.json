@@ -6,6 +6,17 @@
     "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
   },
   "name": "agent-lee-leeway-mcp-registry",
-  "tools": ["leeway.scan", "leeway.fix", "leeway.verify", "leeway.model.route"]
+  "tools": [
+    "leeway-visual-intelligence-system",
+    "leeway.scan",
+    "leeway.fix",
+    "leeway.verify",
+    "leeway.model.route",
+    "persona.runtime.bridge",
+    "write.policy",
+    "engineering.loop",
+    "sdk.validator",
+    "agent.registry.loader"
+  ]
 }
 

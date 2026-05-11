@@ -1,28 +1,14 @@
 /*
-LEEWAY HEADER — DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: 🟢 CORE
+REGION: CORE
 TAG: CORE.PERFORMANCE.COMMANDS.MAIN
-
-5WH:
-WHAT = Agent Lee performance command registration
-WHY = Lets user switch runtime profiles and inspect runtime load
-WHO = Agent Lee Runtime Performance Governor
-WHERE = src/performance/performance.commands.ts
-WHEN = 2026
-HOW = VS Code commands wired to performance governor
-
-AGENTS:
-DOCTOR
-PRIME
-VOICE
-AUDIT
-
-LICENSE:
-MIT
+PURPOSE: Performance command surface governed by Agent Lee runtime.
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
 import type { PerformanceProfile, RuntimeBudgetOverrideKey } from "./performance.types";
 import { performanceGovernor } from "./performanceGovernor";
 import { agentLeeLiveTaskEvents } from "../live-voice/liveTaskEvents";
@@ -52,6 +38,17 @@ export function registerAgentLeePerformanceCommands(
   context: vscode.ExtensionContext,
   speak: (text: string) => void | Promise<void>
 ): void {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "performance.commands") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand("agentLee.performance.setProfile", async (selected?: PerformanceProfile) => {
       let profile: PerformanceProfile | undefined = selected;
@@ -93,7 +90,7 @@ export function registerAgentLeePerformanceCommands(
     vscode.commands.registerCommand("agentLee.performance.status", async () => {
       const summary = performanceGovernor.summarize();
       await speak(summary);
-      vscode.window.showInformationMessage(summary);
+      showAgentLeeRuntimeInfo(summary, "performance.status");
     })
   );
 
@@ -131,7 +128,7 @@ export function registerAgentLeePerformanceCommands(
         ? `Services: ${services.map((service) => `${service.id}:${service.state}`).join(", ")}.`
         : "No lazy services are registered yet.";
       await speak(summary);
-      vscode.window.showInformationMessage(summary);
+      showAgentLeeRuntimeInfo(summary, "performance.services");
     })
   );
 
@@ -142,7 +139,7 @@ export function registerAgentLeePerformanceCommands(
         ? `Paused services: ${paused.join(", ")}.`
         : "No services were available to pause.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "performance.pause-services");
     })
   );
 
@@ -153,7 +150,7 @@ export function registerAgentLeePerformanceCommands(
         ? `Resumed services: ${resumed.join(", ")}.`
         : "No services were available to resume.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "performance.resume-services");
     })
   );
 
@@ -164,7 +161,7 @@ export function registerAgentLeePerformanceCommands(
         ? `Disposed idle services: ${disposed.join(", ")}.`
         : "No idle services needed disposal.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "performance.dispose-idle-services");
     })
   );
 
@@ -175,12 +172,7 @@ export function registerAgentLeePerformanceCommands(
         ? `Warmed core services: ${warmed.join(", ")}.`
         : "No core services were warmed.";
       await speak(message);
-      vscode.window.showInformationMessage(message);
+      showAgentLeeRuntimeInfo(message, "performance.warm-core-services");
     })
   );
 }
-
-/*
-DISCOVERY_PIPELINE:
-Voice → Intent → Location → Vertical → Ranking → Render
-*/

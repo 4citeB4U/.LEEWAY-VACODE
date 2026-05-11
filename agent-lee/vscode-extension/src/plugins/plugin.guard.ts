@@ -22,6 +22,7 @@ MIT
 */
 
 import type { AgentLeePlugin, PluginCallInput, PluginPermission } from "./plugin.types";
+import { assessPluginTrust } from "../core/zero-trust";
 
 export interface PluginGuardResult {
   allowed: boolean;
@@ -82,6 +83,15 @@ export function guardPluginCall(
       requiresConfirmation: false,
       reason: `${plugin.name} does not allow ${requiredPermission} permission.`,
       missingPermissions: [requiredPermission]
+    };
+  }
+
+  const trust = assessPluginTrust(plugin, input, userConfirmed);
+  if (!trust.allowed) {
+    return {
+      allowed: false,
+      requiresConfirmation: trust.requiresConfirmation,
+      reason: trust.reason
     };
   }
 

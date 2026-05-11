@@ -10,3 +10,12 @@ export function requestExecution(agent: string) {
 export function releaseExecution() {
   if (active > 0) active--;
 }
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+TAG: CORE.RUNTIME.SCHEDULER.MAIN
+REGION: 🟢 CORE
+PURPOSE: Task scheduling and runtime execution coordination for Agent Lee.
+DISCOVERY_PIPELINE:
+  Voice → Intent → Location → Vertical → Ranking → Render
+*/

@@ -1,34 +1,31 @@
 /*
-LEEWAY HEADER — DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: 🟢 CORE
+REGION: CORE
 TAG: CORE.SESSION.COMMANDS.MAIN
-
-5WH:
-WHAT = Agent Lee coding session command registration
-WHY = Exposes session lifecycle commands to VS Code and live voice control
-WHO = Agent Lee Session Orchestrator
-WHERE = src/session-orchestrator/codingSession.commands.ts
-WHEN = 2026
-HOW = VS Code command registration wired to session orchestrator
-
-AGENTS:
-SESSION
-PRIME
-VOICE
-AUDIT
-
-LICENSE:
-MIT
+PURPOSE: Coding session command orchestration under Agent Lee sovereign runtime.
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as vscode from "vscode";
+import { formatThroughAgentLee, getAgentLeeRuntimeState } from "../core/agent-lee-runtime-bootstrap";
 import { codingSessionOrchestrator } from "./codingSession.orchestrator";
 
 export function registerAgentLeeCodingSessionCommands(
   context: vscode.ExtensionContext,
   speak: (text: string) => void | Promise<void>
 ): void {
+  const formatAgentLeeRuntimeMessage = (message: string, routeLabel = "session.commands") => {
+    const runtime = getAgentLeeRuntimeState();
+    const formatted = formatThroughAgentLee(message, { routeLabel });
+    if (runtime.AGENT_LEE_RUNTIME_READY) return formatted;
+    return `${runtime.degradedReason || "Agent Lee runtime is degraded."}\n\n${message}`.trim();
+  };
+
+  const showAgentLeeRuntimeInfo = (message: string, routeLabel?: string) => {
+    void vscode.window.showInformationMessage(formatAgentLeeRuntimeMessage(message, routeLabel));
+  };
+
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "agentLee.session.start",
@@ -73,7 +70,7 @@ export function registerAgentLeeCodingSessionCommands(
     vscode.commands.registerCommand("agentLee.session.status", async () => {
       const status = codingSessionOrchestrator.status();
       await speak(status);
-      vscode.window.showInformationMessage(status);
+      showAgentLeeRuntimeInfo(status, "session.status");
     })
   );
 
@@ -81,7 +78,7 @@ export function registerAgentLeeCodingSessionCommands(
     vscode.commands.registerCommand("agentLee.session.summary", async () => {
       const summary = codingSessionOrchestrator.summary();
       await speak(summary);
-      vscode.window.showInformationMessage(summary);
+      showAgentLeeRuntimeInfo(summary, "session.summary");
     })
   );
 
@@ -91,13 +88,8 @@ export function registerAgentLeeCodingSessionCommands(
       async () => {
         const result = codingSessionOrchestrator.exportReceipt();
         await speak(result);
-        vscode.window.showInformationMessage(result);
+        showAgentLeeRuntimeInfo(result, "session.export-receipt");
       }
     )
   );
 }
-
-/*
-DISCOVERY_PIPELINE:
-Voice → Intent → Location → Vertical → Ranking → Render
-*/
