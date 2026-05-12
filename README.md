@@ -18,397 +18,196 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
   <img src="./agent-lee/vscode-extension/media/readme-header.png" alt="Agent Lee LeeWay autonomous engineering system in VS Code" width="100%" />
 </p>
 
-Agent Lee is not positioned as another chat box that happens to write code.
+From this point forward, this is the authoritative Leeway VS Code sovereign stack and governance structure for the LVIS ecosystem and related Agent Lee systems.
 
-It is a governed engineering runtime built around a stronger idea:
+## Workflow Execution
 
-**AI should not merely be powerful. It should be accountable, inspectable, structured, teachable, and safe to operate inside real development environments.**
+Agent Lee operates via a strict governance and execution workflow:
+1. **Scan workspace:** Analyze the local environment.
+2. **Build context pack:** Accumulate necessary codebase knowledge.
+3. **Create work package:** Structure the tasks based on user intent.
+4. **Generate pending hunks:** Formulate local code edits.
+5. **Show diff:** Present changes for review.
+6. **Ask for approval:** Request explicit user permission.
+7. **Apply with WorkspaceEdit:** Make physical changes.
+8. **Verify:** Check compilation, tests, and formatting.
+9. **Write receipt:** Produce audit logs.
+10. **Report truthfully:** Provide a governed, sovereign response to the user.
 
-That is the purpose of **LeeWay Standards**.
+---
 
-This repository packages a full Agent Lee standalone system:
+## Canonical Leeway VS Code Runtime Stack
 
-- a VS Code application shell
-- a sovereign runtime
-- named Agent VM identities
-- governed specialist agents and MCP agents
-- zero-trust security enforcement
-- memory provenance and receipt systems
-- voice, browser, verification, and evidence tooling
-- a standards body that defines how the entire system is allowed to behave
+### LLMs
+| Model | Role |
+| :--- | :--- |
+| `qwen2.5-coder:1.5b` | Lightweight routing, classification |
+| `qwen2.5-coder:7b` | Coding, tool orchestration |
+| `qwen2.5-coder:14b` | Coding, routing, classification, tool orchestration |
+| `deepseek-coder-v2:16b` | Heavy code synthesis, multi-file reasoning |
+| `llama3.1:8b` | Scene generation, structural synthesis |
+| `llava:7b` | Vision understanding, image interpretation |
+| `phi3:mini` | Lightweight execution tasks |
+| `nomic-embed-text`| Vector memory, retrieval |
+| `azr` | Reasoning, repair-loop cognition |
+| `echo` | Memory, diagnostics, receipts |
 
-Local migration snapshots under `_archive/` are treated as machine-local backup material and are not part of the published source of truth for this repository.
+---
 
-## The Vision
+## Canonical Agent Lineup
 
-Most AI developer tools optimize for speed first and governance later.
+| Name | Family | Skills | Purpose | Job |
+| :--- | :--- | :--- | :--- | :--- |
+| **agent-lee-prime** | Prime | Routing, Execution | Sovereign Coordinator | Primary Sovereign Agent |
+| **fs-nav-agent** | Navigator | FS Inspection | Workspace discovery | File system navigation |
+| **host-exec-agent** | Executor | Shell Commands | CLI interactions | Host execution operations |
+| **media-forge-agent** | Forge | Media generation | Asset generation | Media synthesis |
+| **mutation-agent** | Forge | Code diffing | Writing changes | File modification |
+| **perception-agent** | Intelligence | Insight generation| Vision and analysis | Perception tasks |
+| **leeway-visual-orchestrator-agent**| LVIS | Visual workflows | Coordinate graphics | Visual Governance Agent |
+| **shield-governor-agent** | Security | Enforcement | Block risky ops | Review protected actions |
+| **attestation-marshal-agent** | Security | Verification | Agent verification | Verify identity claims |
+| **memory-warden-agent** | Security | Provenance | Ledger maintenance | Protect memory states |
+| **threat-sentinel-agent** | Security | Monitoring | Threat hunting | Hunt rogue workflows |
 
-LeeWay does the opposite.
+---
 
-It starts from the assumption that modern AI systems will eventually face:
+## Canonical MCPs
 
-- impersonation
-- rogue tools
-- workflow poisoning
-- memory poisoning
-- hidden escalation
-- deceptive internal behavior
-- AI-assisted social engineering
-- trusted-looking compromise attempts
+The following MCP (Model Context Protocol) plugins form the Leeway governance structure:
 
-So Agent Lee is designed as a **governance-first AI engineering environment** where:
+| MCP | Function |
+| :--- | :--- |
+| **leeway-agent-registry** | Agent VM registration |
+| **leeway-desktop-commander** | Desktop environment bridge |
+| **leeway-docs-rag** | Documentation retrieval |
+| **leeway-health** | System health monitoring |
+| **leeway-insforge** | Instructions forging |
+| **leeway-memory** | Persistent memory ledger |
+| **leeway-planner** | Task breakdown and routing |
+| **leeway-playwright** | Browser automation |
+| **leeway-scheduling** | Task timing and cron |
+| **leeway-testsprite** | Test orchestration |
+| **leeway-validation** | Governance compliance checking |
+| **frontend-mcp** | Frontend execution bridge |
+| **backend-mcp** | Backend execution bridge |
+| **design-system-mcp** | UI design tokens bridge |
+| **creative-mcp** | Visual creative execution |
+| **memory-mcp** | Standard memory integration |
+| **scheduler-mcp** | Time-based scheduling |
+| **ui-builder-mcp** | UI components builder |
+| **leeway-build-auditor-mcp** | Build auditing |
+| **leeway-ci-blueprint-mcp** | CI/CD operations |
+| **leeway-edge-optimizer-mcp** | Performance optimizations |
+| **leeway-full-repo-checker-mcp**| Complete repo review |
+| **leeway-responsive-ui-mcp** | Responsive design tasks |
+| **qa-mcp** | QA validation |
+| **react-native-mcp** | Mobile ecosystem integration |
+| **leeway-visual-intelligence-system**| Primary LVIS framework bridge |
 
-- the runtime is structured before it is expressive
-- every important action is attributable
-- specialist agents are visible as declared VM identities
-- security and validation are part of the operating model, not optional extras
-- developer flexibility exists, but never at the expense of constitutional integrity
+---
 
-## What LeeWay Standards Actually Are
+## Canonical LVIS Subsystem
 
-LeeWay Standards are the governing rules, metadata requirements, trust boundaries, and operational laws that define how this system behaves.
+LVIS = **Leeway Visual Intelligence System**
 
-At a practical level, they require:
+**Purpose:**
+- SVG reconstruction
+- voxel reconstruction
+- 3D scene reconstruction
+- quality verification
+- repair loops
+- asset packaging
+- project integration
+- developer-ready exports
 
-- governed files to carry LeeWay metadata
-- scores below `70` to be treated as blocking
-- receipts for edits, commands, plugin calls, and verification work
-- final user-facing output to remain sovereign through Agent Lee Prime
-- trust to be earned per action, not inherited by default
-- memory to be treated as evidence-bearing state
-- higher-risk capabilities to be constrained by confirmation, visibility, and auditability
+### LVIS Objective
+Transform Leeway VS Code into a sovereign visual engineering platform capable of:
+- `image` &rarr; `SVG`
+- `image` &rarr; `voxel`
+- `SVG` &rarr; `voxel`
+- `image` &rarr; `3D scene`
+- `3D asset` &rarr; `React component`
+- `asset` &rarr; `validated project integration`
 
-This turns the repo into more than a codebase.
+With:
+*local models, local orchestration, Leeway workers, MCP governance, deterministic reconstruction, developer-safe workflows.*
 
-It becomes a **governed application fabric**.
+### Canonical LVIS Workers
 
-## Why This System Feels Different
+| Worker | Role |
+| :--- | :--- |
+| **leeway-visual-orchestrator-agent**| Primary orchestrator |
+| **leeway-vector-reconstruction-worker**| SVG and 2D shapes |
+| **leeway-voxel-reconstruction-worker**| Voxelized space synthesis |
+| **leeway-scene-reconstruction-worker**| 3D composition |
+| **leeway-depth-synthesis-worker** | Depth analysis |
+| **leeway-structural-fidelity-worker**| Quality and shape matching |
+| **leeway-asset-repair-worker** | Automated refinement |
+| **leeway-manifest-export-worker** | Asset bundle generation |
+| **leeway-project-integration-worker**| Integration code writing |
+| **leeway-visual-memory-worker** | Image and state caching |
 
-The design goal is not "autonomy at any cost."
+---
 
-The design goal is:
+## Canonical Governance Rules
 
-**high-agency AI inside a runtime that can explain itself, show its work, and protect its own constitutional core.**
+**Leeway Standards:**
+- schema-first
+- local-first
+- receipt-required
+- deterministic-tools-first
+- pending-edits workflow
+- agent ownership
+- auditability
+- repair loops
+- quality gates
+- no blind edits
 
-That is why the product combines:
+---
 
-- a premium conversational interface
-- real workspace intelligence
-- visible agent lineups
-- VM-based diagnostics surfaces
-- browser evidence
-- voice interaction
-- standards enforcement
-- runtime governance
-- security officers
+## Canonical Runtime Identity
 
-The result is meant to feel closer to a next-generation operating layer for AI-assisted engineering than a conventional extension.
+| Identity Component | Assigned |
+| :--- | :--- |
+| **Host** | Leeway VS Code |
+| **Primary Sovereign Agent** | agent-lee-prime |
+| **Visual Governance Agent** | leeway-visual-orchestrator-agent |
+| **Visual Subsystem** | leeway-visual-intelligence-system |
 
-## The Core System Model
+---
 
-At the center of the application is **Agent Lee Prime**.
-
-Agent Lee Prime is the sovereign coordinator and the only final speaker to the user. Everything else operates through governed lanes around that core:
-
-1. **User interaction**
-   Voice, typed prompts, chat surfaces, settings, and the VS Code shell.
-2. **Intent and routing**
-   Agent Lee interprets requests, chooses tools, determines whether external context is needed, and applies LeeWay law checks.
-3. **Agent and MCP orchestration**
-   Named specialists and MCP-linked systems participate as subordinate runtime units with declared duties, authorities, lineage, and VM identities.
-4. **Execution and verification**
-   Workspace inspection, repairs, browser runs, evidence capture, verification commands, and receipts.
-5. **Governance and security**
-   Law engine, zero-trust policy, protected agents, provenance-bearing memory, and Prime Security officers.
-
-This flow is why the system can feel expressive while still remaining structured.
+## Canonical Visual Intelligence Routing
 
 <p align="center">
   <img src="./agent-lee/vscode-extension/media/readme-system-flow.png" alt="Agent Lee system flow with VS Code, model hive, law engine, browser validator, voice, memory, reports, and LeeWay standards" width="100%" />
 </p>
 
-## Architectural Pillars
-
-### 1. Sovereign Runtime
-
-Agent Lee runs as a governed standalone runtime rooted in `%USERPROFILE%\.leeway-vscode`.
-
-That runtime owns:
-
-- persistent configuration
-- memory ledgers
-- receipts
-- agent catalogs
-- MCP catalogs
-- compliance reports
-- browser evidence
-- voice settings
-- execution artifacts
-
-This gives the system continuity and a stable operational center rather than making every interaction stateless.
-
-### 2. Agent VM Identity
-
-Agents in LeeWay are not vague internal helpers.
-
-They are presented as explicit **Agent VM identities** with:
-
-- real name
-- family
-- lineage
-- duties
-- authorities
-- VM address
-- note surface
-- memory/database path
-- heartbeat
-
-That means developers can inspect who an agent claims to be, what it is allowed to do, and how it fits into the broader runtime hierarchy.
-
-### 3. Governance-First Control
-
-LeeWay assumes capability without governance becomes risk.
-
-So the runtime keeps visible control over:
-
-- approvals
-- validation
-- sandbox boundaries
-- memory trust
-- plugin permissions
-- protected execution surfaces
-- proof and receipt generation
-
-### 4. Evidence Over Vibes
-
-Agent Lee does not aim to "sound confident."
-
-It aims to produce:
-
-- real file references
-- real browser evidence
-- real receipts
-- real verification outputs
-- real runtime state transitions
-
-That is a major design difference.
-
-## The Feature Surface
-
-| Capability | What It Delivers |
+| Engine/Model | Execution Goal |
 | :--- | :--- |
-| Agent Lee sidebar | A dedicated governed chat and control surface in VS Code. |
-| Sovereign routing | Final responses stay under Agent Lee Prime rather than leaking through uncontrolled subordinate voices. |
-| Three-model hive | Separate Builder, Designer/UX, and Verifier model roles for more structured reasoning. |
-| Workspace intelligence | Reads the real workspace, samples files, and builds context before responding. |
-| External path approval | Requests approval before inspecting folders outside the active workspace. |
-| URL context ingestion | Pulls remote context when the request explicitly references a target URL. |
-| Voice I/O | Supports spoken output and microphone-backed input when available. |
-| Browser evidence | Runs browser-backed visual inspection and captures concrete proof. |
-| Edit-buffer workflow | Supports staged, reviewable change packages instead of hidden direct mutation. |
-| Compliance scanning | Verifies LeeWay metadata and blocking-score rules across the workspace. |
-| Memory provenance | Writes memory artifacts with trust, provenance, and verification state. |
-| Zero-trust plugin routing | Routes plugin work through approval, permissions, and receipts instead of ambient trust. |
-| Worker identity review | Evaluates worker and bridge diagnostic events before treating them as reliable runtime state. |
-| Agent VM monitor | Lets you inspect subordinate agents and MCP agents through a governed VM-style diagnostics surface. |
-| Prime Security Wing | Provides declared security officers for attestation, integrity, approval review, and threat hunting. |
+| **Qwen Models** | coding, routing, classification, tool orchestration |
+| **DeepSeek Coder** | heavy code synthesis, multi-file reasoning |
+| **LLaVA** | vision understanding, image interpretation |
+| **Llama3.1** | scene generation, structural synthesis |
+| **phi3:mini** | lightweight execution tasks |
+| **AZR** | reasoning, repair-loop cognition |
+| **echo** | memory, diagnostics, receipts |
+| **nomic-embed-text**| vector memory, retrieval |
 
-## The Agent Experience Inside The App
+---
 
-One of the most distinctive parts of this system is that agents are not hidden behind vague marketing language.
+## Control Surfaces
 
-Inside the application, the developer can see:
-
-- the lineup of available agents
-- which ones are enabled
-- their VM surfaces
-- their diagnostics
-- their family and lineage
-- their notepad and memory paths
-- their recent runtime events
-
-This is important because LeeWay treats transparency as part of trust.
-
-If an agent participates in the runtime, it should be understandable as a declared operating unit.
-
-## Mutable Agents vs Protected Agents
-
-LeeWay supports controlled developer customization, but not universal mutability.
-
-That distinction matters.
-
-### Mutable agents
-
-Most specialist agents can be:
-
-- enabled or disabled
-- lightly configured
-- observed inside their VM surfaces
-- adapted to suit a team's development style
-
-This preserves flexibility for real-world workflows.
-
-### Protected agents
-
-Some agents exist to preserve constitutional integrity and runtime trust. These must remain visible but non-manipulable.
-
-Protected agents are now presented as **Observed Only**. Developers can inspect them, read diagnostics, and understand what they do, but they cannot directly reconfigure them through the app's normal control surfaces.
-
-That protection currently applies to:
-
-- Agent Lee Prime
-- Prime Security officers
-- LeeWay Registry MCP Agent
-- LeeWay Validation MCP Agent
-
-This prevents the exact failure mode the system is designed to resist:
-
-**someone weakening the agents that are supposed to protect the runtime.**
-
-## Prime Family Security Officers
-
-LeeWay now includes a formal **Prime Security Wing**. These are not abstract concepts. They are declared Agent VM identities with clear roles.
-
-| Officer | VM Address | Purpose |
-| :--- | :--- | :--- |
-| Shield Governor Serah Kane | `vm://leeway/agent/shield-governor-serah-kane` | Reviews protected actions, enforces zone boundaries, and blocks unverifiable privileged execution. |
-| Attestation Marshal Dorian Vale | `vm://leeway/agent/attestation-marshal-dorian-vale` | Verifies agent, worker, and bridge identity claims before privileged trust is granted. |
-| Memory Warden Nyra Sol | `vm://leeway/agent/memory-warden-nyra-sol` | Protects memory provenance, recall integrity, and poisoning resistance. |
-| Threat Sentinel Oren Pike | `vm://leeway/agent/threat-sentinel-oren-pike` | Hunts drift, rogue workflows, contradiction patterns, and trusted-looking lateral movement. |
-
-These officers are present because security in modern AI systems cannot depend on good intentions alone.
-
-It must depend on structure.
-
-## Zero-Trust Security Posture
-
-LeeWay assumes:
-
-- no plugin is trusted by default
-- no worker is trusted by default
-- no memory entry is trusted by default
-- no workflow is trusted by default
-- no imported or external surface is trusted by default
-
-Instead, the runtime looks for:
-
-- identity context
-- capability scope
-- provenance
-- verification state
-- receipt coverage
-- zone placement
-
-This is enforced in the runtime, not just described in a policy document.
-
-### Security Zones
-
-| Zone | Purpose | Trust Posture |
-| :--- | :--- | :--- |
-| `Z0` | Core governance and constitutional control | Most protected, hardest to alter |
-| `Z1` | Trusted runtime agents and governed services | Monitored, explicit authority required |
-| `Z2` | External connectors, plugins, browsers, imported interaction surfaces | Sandboxed and review-oriented |
-| `Z3` | Unknown, quarantine-required, or experimental surfaces | Isolated and disposable |
-
-This zoned model helps the system prevent a lower-trust surface from silently reaching core governance power.
-
-## How Memory Works
-
-LeeWay treats memory as operational evidence, not as unquestioned truth.
-
-Memory artifacts can carry:
-
-- source unit
-- source type
-- provenance
-- verification state
-- trust score
-- request receipt linkage
-- capability proof
-- security zone context
-
-This matters because memory poisoning is one of the biggest long-horizon threats in agentic systems.
-
-If you let memory become silent truth, you create a perfect place for deception to live.
-
-## The Model Hive
-
-Agent Lee separates different cognitive roles rather than pretending one model should do everything equally well.
-
-Default role preferences:
-
-| Role | Default Model |
-| :--- | :--- |
-| Builder | `qwen2.5-coder:14b` |
-| Designer/UX | `qwen2.5-coder:7b` |
-| Verifier | `deepseek-coder-v2:16b` |
-
-If those exact models are not installed, Agent Lee automatically selects compatible installed alternatives.
-
-This gives the system a practical way to separate:
-
-- implementation
-- interface judgment
-- verification judgment
-
-## Browser Evidence and Verification
-
-For front-end and experience work, Agent Lee can inspect a running surface and generate concrete browser evidence such as:
-
-- screenshots
-- visual diffs
-- browser reports
-- accessibility findings
-- network summaries
-- console errors
-- broken link checks
-- missing image checks
-- browser flow reports
-
-Evidence is written under:
-
-```txt
-%USERPROFILE%\.leeway-vscode\agent-lee\reports\browser
-```
-
-This makes visual work auditable rather than purely descriptive.
-
-## Interface Controls
-
-The settings and runtime controls are designed to expose the operating model, not hide it.
-
-| Control | What It Governs |
-| :--- | :--- |
-| Builder Model | Primary build and implementation route |
-| Designer/UX Model | UI judgment and visual reasoning route |
-| Verifier Model | Risk, compliance, and regression route |
-| Approval | `SAFE`, `BALANCED`, or `FULL AUTO` autonomy posture |
-| Web | Controlled web lookup behavior |
-| Voice | Spoken response output |
-| Visual Browser | Browser-backed UI inspection mode |
-| Show Cursor | Visible cursor movement during browser flows |
-| Browser Slow Motion | Human-viewable pacing for validation runs |
-| Mic | Voice input when supported by the webview |
-| History | Conversation continuity and recall |
-| README | Packaged documentation surface |
+The UI is structured around governed panels inside VS Code. The correct buttons provide access to these runtime modes:
 
 <p align="center">
-  <img src="./agent-lee/vscode-extension/media/leeway-standards-button.png" alt="Agent Lee status bar launcher and LeeWay standards button" width="70%" />
+   <img src="./agent-lee/vscode-extension/media/leeway-standards-button.png" alt="LeeWay standards button" width="72%" />
 </p>
 
-## Main Repository Paths
-
-| Path | What Lives There |
-| :--- | :--- |
-| `agent-lee/vscode-extension` | The shipping VS Code application, runtime UI, extension source, and packaged media |
-| `agent-lee/governance/law` | Constitutional laws, zero-trust policy, collaboration contracts, and security charters |
-| `agent-lee/agents/registry` | Internal runtime registry used for agent discovery and validation |
-| `agent-lee/sdk/standards` | Canonical standards sources and registry documents |
-| `agent-lee/mcp` | MCP and capability routing metadata |
-| `agent-lee/voice` | Voice runtime configuration and local speech scripts |
-| `agent-lee/scripts` | Build, install, doctor, validation, and support scripts |
-| `memory` | Persisted memory and ledger data |
-| `reports` | Verification, compliance, browser, and engineering receipts |
+<p align="center">
+   <img src="./agent-lee/vscode-extension/media/top-right-button-new.png" alt="Top-right button reference" width="48%" />
+   <img src="./agent-lee/vscode-extension/media/bottom-button-for-agent-lee.png" alt="Bottom button reference" width="48%" />
+</p>
 
 ## Commands
 
@@ -423,104 +222,6 @@ The settings and runtime controls are designed to expose the operating model, no
 | `Agent Lee: Engineer Task` | Starts a governed engineering flow |
 | `Agent Lee: Stop Voice` | Stops active speech playback |
 | `Agent Lee: Open README` | Opens the packaged documentation surface |
-
-## Local Runtime Expectations
-
-Agent Lee expects local Ollama access for model-backed operation:
-
-```powershell
-ollama serve
-ollama run qwen2.5-coder:14b
-```
-
-Runtime state is persisted at:
-
-```txt
-%USERPROFILE%\.leeway-vscode\agent-lee\config\runtime-state.json
-```
-
-## Build And Package
-
-```powershell
-cd .\agent-lee\vscode-extension
-npm install
-npm run compile
-npx @vscode/vsce package -o agent-lee-1.1.1-sovereign-runtime.vsix
-code --install-extension .\agent-lee-1.1.1-sovereign-runtime.vsix --force
-```
-
-Or run the repo-level doctor:
-
-```powershell
-.\test-extension.ps1 -Build -Package -CheckOllama
-```
-
-## Example Prompts
-
-```txt
-Look at this workspace and explain the architecture using real files you can see.
-```
-
-```txt
-Review this homepage visually and give me the browser evidence paths.
-```
-
-```txt
-Inspect C:\Path\To\AnotherProject and compare its structure to this workspace.
-```
-
-```txt
-What capabilities, MCPs, agents, model roles, and protected security surfaces are currently connected?
-```
-
-## The Big Idea
-
-LeeWay is attempting something larger than "AI that helps write code."
-
-It is attempting to prove that AI engineering systems can be:
-
-- operationally elegant
-- deeply transparent
-- adaptable for real teams
-- strong enough to ship work
-- disciplined enough to govern themselves
-
-That is why this application is structured the way it is.
-
-It is not just a tool.
-
-It is a demonstration of what a **governed AI engineering civilization** can look like when architecture, law, interface, security, and developer experience are designed as one system.
-
-## LeeWay Standards Bridge
-
-The full constitutional and teaching layer lives in [agent-lee/standards/LEEWAY_STANDARDS.md](agent-lee/standards/LEEWAY_STANDARDS.md).
-
-This README is the product-facing narrative for the current application, while the standards document explains the governing rules, protected identities, model hive, voice lock, evidence flow, and image assets that the app must continue to reflect.
-
-<p align="center">
-   <img src="./LeeWayStandardslogo.png" alt="LeeWay Standards logo" width="220" />
-</p>
-
-<p align="center">
-   <img src="./readme.md-image-header.png" alt="Workspace README header art" width="100%" />
-</p>
-
-<p align="center">
-   <img src="./readms.md-image-1.png" alt="Workspace secondary README art" width="100%" />
-</p>
-
-<p align="center">
-   <img src="./leeway-standards-button.png" alt="LeeWay standards button" width="72%" />
-</p>
-
-<p align="center">
-   <img src="./all%20buttons.png" alt="Workspace control surface overview" width="100%" />
-</p>
-
-<p align="center">
-   <img src="./top%20right%20button%20.png" alt="Top-right button reference" width="48%" />
-   <img src="./bottom%20button%20for%20agent%20lee%20.png" alt="Bottom button reference" width="48%" />
-</p>
 
 ## Author
 
