@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_CONSTRUCTION_LAW_GATE",
-    "generatedAt":  "2026-05-14T07:47:25.3461737-05:00",
+    "generatedAt":  "2026-05-14T07:50:34.4522817-05:00",
     "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
     "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
     "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
@@ -61,7 +61,7 @@
                    }
                ],
     "smokeTests":  {
-                       "generatedAt":  "2026-05-14T07:47:25.2736274-05:00",
+                       "generatedAt":  "2026-05-14T07:50:34.3783983-05:00",
                        "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
                        "skillZip":  "C:\\Users\\Leona\\.leeway-vscode\\skill.zip",
                        "runs":  [
@@ -510,6 +510,10 @@
                                                        "  },",
                                                        "  {",
                                                        "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_074049.md\",",
+                                                       "    \"classification\": \"generated\"",
+                                                       "  },",
+                                                       "  {",
+                                                       "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_074657.md\",",
                                                        "    \"classification\": \"generated\"",
                                                        "  },",
                                                        "  {",

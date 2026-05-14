@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_APPLICATION_INTEGRITY_GATE",
-    "generatedAt":  "2026-05-14T07:47:46.0166036-05:00",
+    "generatedAt":  "2026-05-14T07:50:55.5175724-05:00",
     "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
     "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
     "passed":  true,
@@ -81,24 +81,24 @@
                        "name":  "LeeWay compliance scan",
                        "pass":  true,
                        "detail":  "Failed checks: 0; LeeWay score: 97.83; Blocking files: 0",
-                       "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\reports\\Doctor\\doctor-20260514-074725\\agent-lee-doctor.json"
+                       "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\reports\\Doctor\\doctor-20260514-075035\\agent-lee-doctor.json"
                    }
                ],
     "evidence":  {
                      "resultPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-integrity-result.json",
-                     "receiptPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\receipts\\leeway_application_integrity_gate_2026-05-14_074657.md",
+                     "receiptPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\receipts\\leeway_application_integrity_gate_2026-05-14_075006.md",
                      "vsixPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\agent-lee-leeway-coding-system-1.2.3.vsix",
                      "runtimeSmokeResult":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\runtime-smoke-voice-provider-result.json",
                      "hostRouterResult":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\lavr-host-router-dynamic-result.json",
                      "playbackResult":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\lavr-playback-gate-dynamic-result.json",
-                     "doctorReport":  "C:\\Users\\Leona\\.leeway-vscode\\reports\\Doctor\\doctor-20260514-074725\\agent-lee-doctor.json",
+                     "doctorReport":  "C:\\Users\\Leona\\.leeway-vscode\\reports\\Doctor\\doctor-20260514-075035\\agent-lee-doctor.json",
                      "commandAudit":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-integrity-command-audit.json",
                      "identityGraph":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-identity-graph-result.json",
                      "constructionLaw":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-construction-law-result.json"
                  },
     "harnessResults":  {
                            "runtimeSmoke":  {
-                                                "date":  "2026-05-14T12:47:06.296Z",
+                                                "date":  "2026-05-14T12:50:15.603Z",
                                                 "checks":  [
                                                                {
                                                                    "name":  "LAVR browser fallback selected + mic commit path",
@@ -257,7 +257,7 @@
                                                 "failed":  0
                                             },
                            "hostRouter":  {
-                                              "date":  "2026-05-14T12:47:07.368Z",
+                                              "date":  "2026-05-14T12:50:16.647Z",
                                               "checks":  [
                                                              {
                                                                  "name":  "success terminal path",
@@ -292,7 +292,7 @@
                                               "failed":  0
                                           },
                            "playback":  {
-                                            "generatedAt":  "2026-05-14T12:47:08.736Z",
+                                            "generatedAt":  "2026-05-14T12:50:18.014Z",
                                             "totals":  {
                                                            "passed":  5,
                                                            "total":  5
@@ -322,15 +322,15 @@
                                             "events":  [
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STARTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-gcuncq",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-21h33c",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-9rzgar",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-9sf0kf",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-1"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_SEGMENT_QUEUED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-gcuncq",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-21h33c",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-9rzgar",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-9sf0kf",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-1",
                                                                "lavrAudioSegmentId":  "lavr-seg-1",
@@ -339,8 +339,8 @@
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_COMPLETED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-gcuncq",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-21h33c",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-9rzgar",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-9sf0kf",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-1",
                                                                "queuedSegments":  1,
@@ -348,15 +348,15 @@
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STARTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_SEGMENT_QUEUED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2",
                                                                "lavrAudioSegmentId":  "lavr-seg-2",
@@ -365,32 +365,32 @@
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STOP_REQUESTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2",
                                                                "reason":  "voice_barge_in_interrupt"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_CANCELLED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2",
                                                                "reason":  "voice_barge_in_interrupt"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_DUPLICATE_STOP_SUPPRESSED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2",
                                                                "reason":  "duplicate_cancel_attempt"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmnz-1n1gl8",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmnz-wty39q",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-zljgv1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-88w6a2",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-2",
                                                                "lavrAudioSegmentId":  "lavr-seg-2",
@@ -398,38 +398,38 @@
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STARTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmo0-zsmf1d",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmo0-hrq36p",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-nhs56f",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-s45zze",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-3"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STOP_REQUESTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmo0-zsmf1d",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmo0-hrq36p",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-nhs56f",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-s45zze",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-3",
                                                                "reason":  "replaced_by_new_playback"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_CANCELLED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmo0-zsmf1d",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmo0-hrq36p",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-nhs56f",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-s45zze",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-3",
                                                                "reason":  "replaced_by_new_playback"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STARTED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmo0-x9z375",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmo0-mdions",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-ebvww1",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-38bnrw",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-4"
                                                            },
                                                            {
                                                                "eventType":  "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
-                                                               "lavrPlaybackId":  "lavr-pb-mp5hgmo0-zsmf1d",
-                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hgmo0-hrq36p",
+                                                               "lavrPlaybackId":  "lavr-pb-mp5hkopq-nhs56f",
+                                                               "lavrSpeechOutputId":  "lavr-sout-mp5hkopq-s45zze",
                                                                "lavrSessionId":  "lavr-session-test",
                                                                "lavrTurnId":  "lavr-turn-3",
                                                                "lavrAudioSegmentId":  "lavr-seg-old-turn",
@@ -439,7 +439,7 @@
                                         }
                        },
     "doctor":  {
-                   "generatedAt":  "2026-05-14T07:47:45.6376169-05:00",
+                   "generatedAt":  "2026-05-14T07:50:55.1149758-05:00",
                    "workspaceDir":  "C:\\Users\\Leona\\.leeway-vscode",
                    "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
                    "vsixPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\agent-lee-leeway-coding-system-1.2.3.vsix",
@@ -1715,7 +1715,7 @@
                      },
     "identityGraph":  {
                           "gate":  "LEEWAY_APPLICATION_IDENTITY_GRAPH_GATE",
-                          "generatedAt":  "2026-05-14T07:47:19.1897734-05:00",
+                          "generatedAt":  "2026-05-14T07:50:28.7787936-05:00",
                           "version":  "2026-05-14.voice-ownership",
                           "passed":  true,
                           "summary":  {
@@ -4496,7 +4496,7 @@
                       },
     "constructionLaw":  {
                             "gate":  "LEEWAY_CONSTRUCTION_LAW_GATE",
-                            "generatedAt":  "2026-05-14T07:47:25.3461737-05:00",
+                            "generatedAt":  "2026-05-14T07:50:34.4522817-05:00",
                             "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
                             "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
                             "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
@@ -4557,7 +4557,7 @@
                                            }
                                        ],
                             "smokeTests":  {
-                                               "generatedAt":  "2026-05-14T07:47:25.2736274-05:00",
+                                               "generatedAt":  "2026-05-14T07:50:34.3783983-05:00",
                                                "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
                                                "skillZip":  "C:\\Users\\Leona\\.leeway-vscode\\skill.zip",
                                                "runs":  [
@@ -5006,6 +5006,10 @@
                                                                                "  },",
                                                                                "  {",
                                                                                "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_074049.md\",",
+                                                                               "    \"classification\": \"generated\"",
+                                                                               "  },",
+                                                                               "  {",
+                                                                               "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_074657.md\",",
                                                                                "    \"classification\": \"generated\"",
                                                                                "  },",
                                                                                "  {",
