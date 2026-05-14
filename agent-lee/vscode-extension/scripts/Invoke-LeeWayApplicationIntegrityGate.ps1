@@ -214,7 +214,7 @@ $receiptPath = Join-Path $receiptDir ("leeway_application_integrity_gate_" + (Ge
 $doctorScriptPath = Join-Path $WorkspaceRoot "agent-lee\scripts\Invoke-AgentLeeDoctor.ps1"
 $doctorOutputRoot = Join-Path $WorkspaceRoot "reports\Doctor"
 $vsixPath = Join-Path $resolvedExtensionDir ("{0}-{1}.vsix" -f $packageJson.name, $packageJson.version)
-$vsixExtractRoot = Join-Path $testEvidenceDir "vsix-smoke\extracted-integrity-gate"
+$vsixScanRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("leeway-vsix-scan-" + [guid]::NewGuid().ToString("N"))
 
 New-Item -ItemType Directory -Force -Path $testEvidenceDir | Out-Null
 New-Item -ItemType Directory -Force -Path $receiptDir | Out-Null
@@ -276,9 +276,17 @@ $vsixExists = Test-Path -LiteralPath $vsixPath
 $checks.Add((New-GateCheck -Name "VSIX exists after packaging" -Pass $vsixExists -Detail $vsixPath -EvidencePath $vsixPath))
 
 if ($vsixExists) {
-  Expand-VsixForScan -VsixPath $vsixPath -DestinationRoot $vsixExtractRoot
-  $vsixAudit = Get-VsixIntegrityAudit -ExtractedRoot $vsixExtractRoot
+  $vsixAudit = $null
   $vsixAuditPath = Join-Path $testEvidenceDir "leeway-application-integrity-vsix-scan.json"
+  try {
+    New-Item -ItemType Directory -Force -Path $vsixScanRoot | Out-Null
+    Expand-VsixForScan -VsixPath $vsixPath -DestinationRoot $vsixScanRoot
+    $vsixAudit = Get-VsixIntegrityAudit -ExtractedRoot $vsixScanRoot
+  } finally {
+    if (Test-Path -LiteralPath $vsixScanRoot) {
+      Remove-Item -LiteralPath $vsixScanRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+  }
   $vsixAudit | ConvertTo-Json -Depth 6 | Out-File -LiteralPath $vsixAuditPath -Encoding utf8
   $checks.Add((New-GateCheck -Name "VSIX stale artifact and cloud-provider leakage scan" -Pass $vsixAudit.pass -Detail ("Hits: " + $vsixAudit.hits.Count + "; Files: " + $vsixAudit.fileCount) -EvidencePath $vsixAuditPath))
 } else {
