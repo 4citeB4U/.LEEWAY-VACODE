@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_APPLICATION_IDENTITY_GRAPH_GATE",
-    "generatedAt":  "2026-05-14T07:41:12.2694196-05:00",
+    "generatedAt":  "2026-05-14T07:47:19.1897734-05:00",
     "version":  "2026-05-14.voice-ownership",
     "passed":  true,
     "summary":  {
@@ -118,7 +118,7 @@
                    {
                        "name":  "generated clone WAV outputs are classified",
                        "pass":  true,
-                       "detail":  "Generated clone files: 7; Classified node present: True"
+                       "detail":  "Generated clone files: 0; Classified node present: True"
                    }
                ],
     "graph":  {
