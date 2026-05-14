@@ -68,6 +68,20 @@ function Get-HeaderPresence {
   return $content -match 'LEEWAY_HEADER|LEEWAY HEADER'
 }
 
+function Get-JsonFileSafely {
+  param([string]$Path)
+
+  if (-not (Test-Path -LiteralPath $Path)) {
+    return $null
+  }
+
+  try {
+    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+  } catch {
+    return $null
+  }
+}
+
 function Get-ExtensionCommandSurface {
   param([string]$ExtensionSourcePath)
 
@@ -358,6 +372,70 @@ $missingContextExclusions = @(
   }
 )
 $checks.Add((New-IdentityCheck -Name "context contamination exclusions are present" -Pass ($missingContextExclusions.Count -eq 0) -Detail ("Missing exclusions: " + $missingContextExclusions.Count)))
+
+$voiceLockPath = Join-Path $resolvedWorkspaceRoot "agent-lee\voice\VOICE_LOCK.md"
+$voiceRuntimePath = Join-Path $resolvedWorkspaceRoot "agent-lee\voice\voice-runtime.json"
+$voicePipelinePath = Join-Path $resolvedWorkspaceRoot "agent-lee\voice\Speak-AgentLeePiper.ps1"
+$voiceCatalogPath = Join-Path $resolvedWorkspaceRoot "agent-lee\voice\voice-audition-catalog.json"
+$disabledModelsRoot = Join-Path $resolvedWorkspaceRoot "agent-lee\voice\models-disabled"
+
+$checks.Add((New-IdentityCheck -Name "voice lock governing file exists" -Pass (Test-Path -LiteralPath $voiceLockPath) -Detail $voiceLockPath))
+$checks.Add((New-IdentityCheck -Name "voice runtime configuration exists" -Pass (Test-Path -LiteralPath $voiceRuntimePath) -Detail $voiceRuntimePath))
+$checks.Add((New-IdentityCheck -Name "locked Piper speech pipeline exists" -Pass (Test-Path -LiteralPath $voicePipelinePath) -Detail $voicePipelinePath))
+
+$voiceRuntime = Get-JsonFileSafely -Path $voiceRuntimePath
+$lockedModelExists = $false
+$lockedConfigExists = $false
+$lockedModelDetail = "voice-runtime.json not readable."
+$lockedConfigDetail = "voice-runtime.json not readable."
+if ($voiceRuntime) {
+  $lockedModelPath = [string]$voiceRuntime.piperModelPath
+  $lockedConfigPath = [string]$voiceRuntime.piperConfigPath
+  $lockedModelExists = -not [string]::IsNullOrWhiteSpace($lockedModelPath) -and (Test-Path -LiteralPath $lockedModelPath)
+  $lockedConfigExists = -not [string]::IsNullOrWhiteSpace($lockedConfigPath) -and (Test-Path -LiteralPath $lockedConfigPath)
+  $lockedModelDetail = if ($lockedModelExists) { $lockedModelPath } else { "Missing locked model: $lockedModelPath" }
+  $lockedConfigDetail = if ($lockedConfigExists) { $lockedConfigPath } else { "Missing locked config: $lockedConfigPath" }
+}
+$checks.Add((New-IdentityCheck -Name "locked Piper model exists" -Pass $lockedModelExists -Detail $lockedModelDetail))
+$checks.Add((New-IdentityCheck -Name "locked Piper config exists" -Pass $lockedConfigExists -Detail $lockedConfigDetail))
+
+$catalogPass = $false
+$catalogDetail = "voice-audition-catalog.json not readable."
+$voiceCatalog = Get-JsonFileSafely -Path $voiceCatalogPath
+$disabledModelsNode = $nodes | Where-Object { $_.id -eq "LEEWAY_APP::VOICE::QUARANTINE::DISABLED_MODELS" } | Select-Object -First 1
+$generatedClonesNode = $nodes | Where-Object { $_.id -eq "LEEWAY_APP::VOICE::GENERATED::CLONED_WAV_OUTPUTS" } | Select-Object -First 1
+if ($voiceCatalog) {
+  $missingCatalogPaths = New-Object System.Collections.Generic.List[string]
+  $quarantinedCatalogPaths = New-Object System.Collections.Generic.List[string]
+  foreach ($candidate in @($voiceCatalog.candidates)) {
+    foreach ($candidatePath in @([string]$candidate.modelPath, [string]$candidate.configPath)) {
+      if ([string]::IsNullOrWhiteSpace($candidatePath)) {
+        continue
+      }
+      if (Test-Path -LiteralPath $candidatePath) {
+        continue
+      }
+
+      $pathLeaf = Split-Path -Leaf $candidatePath
+      $disabledCandidatePath = Join-Path $disabledModelsRoot $pathLeaf
+      if ($null -ne $disabledModelsNode -and (Test-Path -LiteralPath $disabledCandidatePath)) {
+        $quarantinedCatalogPaths.Add($candidatePath) | Out-Null
+        continue
+      }
+
+      $missingCatalogPaths.Add($candidatePath) | Out-Null
+    }
+  }
+
+  $catalogPass = ($missingCatalogPaths.Count -eq 0)
+  $catalogDetail = "Missing active refs: $($missingCatalogPaths.Count); Quarantined refs: $($quarantinedCatalogPaths.Count)"
+}
+$checks.Add((New-IdentityCheck -Name "voice audition catalog missing references are quarantined or resolved" -Pass $catalogPass -Detail $catalogDetail))
+
+$generatedCloneFiles = @(Get-ChildItem -LiteralPath (Join-Path $resolvedWorkspaceRoot "agent-lee\voice") -File -Filter "agent-lee-cloned-*.wav" -ErrorAction SilentlyContinue)
+$generatedClonePass = ($null -ne $generatedClonesNode)
+$generatedCloneDetail = "Generated clone files: $($generatedCloneFiles.Count); Classified node present: $($null -ne $generatedClonesNode)"
+$checks.Add((New-IdentityCheck -Name "generated clone WAV outputs are classified" -Pass $generatedClonePass -Detail $generatedCloneDetail))
 
 $failedChecks = @($checks | Where-Object { -not $_.pass })
 $result = [pscustomobject]@{

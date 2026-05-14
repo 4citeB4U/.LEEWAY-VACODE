@@ -1,13 +1,13 @@
 ﻿{
     "gate":  "LEEWAY_APPLICATION_IDENTITY_GRAPH_GATE",
-    "generatedAt":  "2026-05-14T07:33:22.0250117-05:00",
-    "version":  "2026-05-14.construction-law",
+    "generatedAt":  "2026-05-14T07:41:12.2694196-05:00",
+    "version":  "2026-05-14.voice-ownership",
     "passed":  true,
     "summary":  {
-                    "totalChecks":  15,
+                    "totalChecks":  22,
                     "failedChecks":  0,
-                    "registeredNodes":  63,
-                    "registeredFiles":  45
+                    "registeredNodes":  73,
+                    "registeredFiles":  50
                 },
     "checks":  [
                    {
@@ -84,6 +84,41 @@
                        "name":  "context contamination exclusions are present",
                        "pass":  true,
                        "detail":  "Missing exclusions: 0"
+                   },
+                   {
+                       "name":  "voice lock governing file exists",
+                       "pass":  true,
+                       "detail":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\VOICE_LOCK.md"
+                   },
+                   {
+                       "name":  "voice runtime configuration exists",
+                       "pass":  true,
+                       "detail":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\voice-runtime.json"
+                   },
+                   {
+                       "name":  "locked Piper speech pipeline exists",
+                       "pass":  true,
+                       "detail":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\Speak-AgentLeePiper.ps1"
+                   },
+                   {
+                       "name":  "locked Piper model exists",
+                       "pass":  true,
+                       "detail":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx"
+                   },
+                   {
+                       "name":  "locked Piper config exists",
+                       "pass":  true,
+                       "detail":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\models\\en_US-hfc_male-medium.onnx.json"
+                   },
+                   {
+                       "name":  "voice audition catalog missing references are quarantined or resolved",
+                       "pass":  true,
+                       "detail":  "Missing active refs: 0; Quarantined refs: 6"
+                   },
+                   {
+                       "name":  "generated clone WAV outputs are classified",
+                       "pass":  true,
+                       "detail":  "Generated clone files: 7; Classified node present: True"
                    }
                ],
     "graph":  {
@@ -110,6 +145,16 @@
                                           "LEEWAY_APP::CAPABILITY::CATALOG::BUILDER",
                                           "LEEWAY_APP::BROWSER::VALIDATOR::ROOT",
                                           "LEEWAY_APP::MEMORY::STORE::LOCAL_MEMORY",
+                                          "LEEWAY_APP::VOICE::LAW::VOICE_LOCK",
+                                          "LEEWAY_APP::VOICE::CONFIG::RUNTIME",
+                                          "LEEWAY_APP::VOICE::PIPELINE::PIPER_SPEECH",
+                                          "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_MODEL",
+                                          "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_CONFIG",
+                                          "LEEWAY_APP::VOICE::ASSET::LIVE_CLONE_OUTPUT",
+                                          "LEEWAY_APP::VOICE::ASSET::TEST_CLONE_OUTPUT",
+                                          "LEEWAY_APP::VOICE::CATALOG::AUDITION_REGISTRY",
+                                          "LEEWAY_APP::VOICE::QUARANTINE::DISABLED_MODELS",
+                                          "LEEWAY_APP::VOICE::GENERATED::CLONED_WAV_OUTPUTS",
                                           "LEEWAY_APP::VOICE::LAVR::LOCAL_RUNTIME",
                                           "LEEWAY_APP::VOICE::LAVR::BROWSER_FALLBACK",
                                           "LEEWAY_APP::VOICE::LAVR::TURN_GATE",
@@ -134,6 +179,11 @@
                                         "AGENTS.md",
                                         "agent-lee/governance/law/leeway-agent-code-generation-law.md",
                                         "agent-lee/scripts/Invoke-AgentLeeDoctor.ps1",
+                                        "agent-lee/voice/Speak-AgentLeeCloned.ps1",
+                                        "agent-lee/voice/Speak-AgentLeePiper.ps1",
+                                        "agent-lee/voice/VOICE_LOCK.md",
+                                        "agent-lee/voice/voice-audition-catalog.json",
+                                        "agent-lee/voice/voice-runtime.json",
                                         "agent-lee/vscode-extension/.vscodeignore",
                                         "agent-lee/vscode-extension/dist/extension.js",
                                         "agent-lee/vscode-extension/package.json",
@@ -1450,6 +1500,202 @@
                                                      "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
                                                  ],
                                     "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::LAW::VOICE_LOCK",
+                                    "name":  "Voice lock governing law",
+                                    "classification":  "GOVERNANCE_GATE",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "LAW",
+                                    "file":  "agent-lee/voice/VOICE_LOCK.md",
+                                    "runtimeRole":  "Locks the active Agent Lee Piper voice identity and tuning unless an explicit re-audition is approved.",
+                                    "verification":  [
+                                                         "application identity graph gate",
+                                                         "application integrity gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/VOICE_LOCK.md",
+                                                     "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::CONFIG::RUNTIME",
+                                    "name":  "Voice runtime configuration",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "CONFIG",
+                                    "file":  "agent-lee/voice/voice-runtime.json",
+                                    "runtimeRole":  "Defines the active local speech runtime, locked Piper asset paths, clone reference audio, and live clone output path.",
+                                    "verification":  [
+                                                         "application identity graph gate",
+                                                         "application integrity gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/voice-runtime.json",
+                                                     "agent-lee/voice/VOICE_LOCK.md"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::PIPELINE::PIPER_SPEECH",
+                                    "name":  "Locked Piper speech pipeline",
+                                    "classification":  "LOCAL_RUNTIME",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "PIPELINE",
+                                    "file":  "agent-lee/voice/Speak-AgentLeePiper.ps1",
+                                    "runtimeRole":  "Owns the active local Piper playback path for the locked HFC male voice.",
+                                    "verification":  [
+                                                         "application identity graph gate",
+                                                         "application integrity gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/Speak-AgentLeePiper.ps1",
+                                                     "agent-lee/voice/VOICE_LOCK.md"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_MODEL",
+                                    "name":  "Locked HFC male Piper model asset",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "ASSET",
+                                    "file":  "agent-lee/voice/voice-runtime.json",
+                                    "runtimeRole":  "Registers the production-owned Piper model dependency selected by voice runtime and voice lock.",
+                                    "outputs":  [
+                                                    "agent-lee/voice/models/en_US-hfc_male-medium.onnx"
+                                                ],
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/VOICE_LOCK.md",
+                                                     "agent-lee/voice/voice-runtime.json"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_CONFIG",
+                                    "name":  "Locked HFC male Piper config asset",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "ASSET",
+                                    "file":  "agent-lee/voice/voice-runtime.json",
+                                    "runtimeRole":  "Registers the production-owned Piper config dependency selected by voice runtime and voice lock.",
+                                    "outputs":  [
+                                                    "agent-lee/voice/models/en_US-hfc_male-medium.onnx.json"
+                                                ],
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/VOICE_LOCK.md",
+                                                     "agent-lee/voice/voice-runtime.json"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::ASSET::LIVE_CLONE_OUTPUT",
+                                    "name":  "Live clone output asset",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "ASSET",
+                                    "file":  "agent-lee/voice/voice-runtime.json",
+                                    "runtimeRole":  "Registers the active live clone output path that the runtime writes when local clone playback is enabled.",
+                                    "outputs":  [
+                                                    "agent-lee/voice/agent-lee-live-clone.wav"
+                                                ],
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/voice-runtime.json"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::ASSET::TEST_CLONE_OUTPUT",
+                                    "name":  "Test clone output asset",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "ASSET",
+                                    "file":  "agent-lee/vscode-extension/src/extension.ts",
+                                    "runtimeRole":  "Registers the dedicated test clone output path used by the extension voice clone preview and test flow.",
+                                    "outputs":  [
+                                                    "agent-lee/voice/agent-lee-test-clone.wav"
+                                                ],
+                                    "verification":  [
+                                                         "application identity graph gate",
+                                                         "application integrity gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+                                                 ],
+                                    "status":  "ACTIVE"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::CATALOG::AUDITION_REGISTRY",
+                                    "name":  "Voice audition registry",
+                                    "classification":  "CONFIGURATION",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "CATALOG",
+                                    "file":  "agent-lee/voice/voice-audition-catalog.json",
+                                    "runtimeRole":  "Records audition candidates outside the locked runtime path and must classify missing candidate assets through disabled-model quarantine.",
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/voice-audition-catalog.json",
+                                                     "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
+                                                 ],
+                                    "status":  "FALLBACK"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::QUARANTINE::DISABLED_MODELS",
+                                    "name":  "Disabled voice model quarantine",
+                                    "classification":  "QUARANTINE",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "QUARANTINE",
+                                    "file":  "agent-lee/voice/voice-audition-catalog.json",
+                                    "runtimeRole":  "Classifies disabled voice models as quarantined audition assets that must not be mistaken for the locked production runtime voice.",
+                                    "evidence":  [
+                                                     "agent-lee/voice/models-disabled/",
+                                                     "agent-lee/voice/voice-audition-catalog.json"
+                                                 ],
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "status":  "DELETE_PENDING"
+                                },
+                                {
+                                    "id":  "LEEWAY_APP::VOICE::GENERATED::CLONED_WAV_OUTPUTS",
+                                    "name":  "Generated cloned WAV outputs",
+                                    "classification":  "GENERATED_TRANSIENT",
+                                    "owner":  "LEEWAY",
+                                    "domain":  "VOICE",
+                                    "pipeline":  "GENERATED",
+                                    "file":  "agent-lee/voice/Speak-AgentLeeCloned.ps1",
+                                    "runtimeRole":  "Generates transient GUID-named clone WAV outputs that are candidates for future isolated cleanup but are not production-owned assets.",
+                                    "outputs":  [
+                                                    "agent-lee/voice/agent-lee-cloned-*.wav"
+                                                ],
+                                    "verification":  [
+                                                         "application identity graph gate"
+                                                     ],
+                                    "evidence":  [
+                                                     "agent-lee/voice/Speak-AgentLeeCloned.ps1"
+                                                 ],
+                                    "status":  "GENERATED"
                                 },
                                 {
                                     "id":  "LEEWAY_APP::VOICE::LAVR::LOCAL_RUNTIME",

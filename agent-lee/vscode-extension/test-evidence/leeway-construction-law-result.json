@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_CONSTRUCTION_LAW_GATE",
-    "generatedAt":  "2026-05-14T07:33:27.7887252-05:00",
+    "generatedAt":  "2026-05-14T07:41:17.9320725-05:00",
     "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
     "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
     "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
@@ -44,7 +44,7 @@
                    {
                        "name":  "identity graph gate remains green for construction law binding",
                        "pass":  true,
-                       "detail":  "Failed checks: 0; Registered nodes: 63",
+                       "detail":  "Failed checks: 0; Registered nodes: 73",
                        "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-identity-graph-result.json"
                    },
                    {
@@ -61,7 +61,7 @@
                    }
                ],
     "smokeTests":  {
-                       "generatedAt":  "2026-05-14T07:33:27.7175283-05:00",
+                       "generatedAt":  "2026-05-14T07:41:17.8537581-05:00",
                        "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
                        "skillZip":  "C:\\Users\\Leona\\.leeway-vscode\\skill.zip",
                        "runs":  [
@@ -72,8 +72,8 @@
                                         "output":  [
                                                        "{",
                                                        "  \"ok\": true,",
-                                                       "  \"registeredNodes\": 63,",
-                                                       "  \"registeredFiles\": 45,",
+                                                       "  \"registeredNodes\": 73,",
+                                                       "  \"registeredFiles\": 50,",
                                                        "  \"graph\": \"C:\\\\Users\\\\Leona\\\\.leeway-vscode\\\\agent-lee\\\\vscode-extension\\\\test-evidence\\\\leeway-application-identity-graph-result.json\"",
                                                        "}"
                                                    ]
@@ -505,6 +505,10 @@
                                                        "    \"classification\": \"generated\"",
                                                        "  },",
                                                        "  {",
+                                                       "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_073300.md\",",
+                                                       "    \"classification\": \"generated\"",
+                                                       "  },",
+                                                       "  {",
                                                        "    \"path\": \"agent-lee/receipts/lvis-integration-2026-05-10.md\",",
                                                        "    \"classification\": \"generated\"",
                                                        "  },",
@@ -926,10 +930,6 @@
                                                        "  },",
                                                        "  {",
                                                        "    \"path\": \"agent-lee/vscode-extension/README.md\",",
-                                                       "    \"classification\": \"unknown / do not delete\"",
-                                                       "  },",
-                                                       "  {",
-                                                       "    \"path\": \"agent-lee/vscode-extension/TEST_VERIFICATION_REPORT.md\",",
                                                        "    \"classification\": \"unknown / do not delete\"",
                                                        "  },",
                                                        "  {",
