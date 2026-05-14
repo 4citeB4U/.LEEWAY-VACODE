@@ -193,6 +193,9 @@ Workspace-level identity assets that should remain available to the teaching mat
 - `../../readme.md-image-header.png`
 - `../../readms.md-image-1.png`
 - `../../leeway-standards-button.png`
+
+Historical UI proof artifacts classified for deletion under LeeWay production cleanse:
+
 - `../../top right button .png`
 - `../../bottom button for agent lee .png`
 - `../../all buttons.png`
@@ -217,4 +220,3 @@ The document should stay strong enough to support the application, but clear eno
 ## Maintenance Rule
 
 When the app gains new models, new agent identities, new images, new security rules, or new validation flows, the standards file should be updated in the same pass so the teaching layer never drifts from the actual runtime.
-
