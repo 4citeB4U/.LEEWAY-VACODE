@@ -93,6 +93,37 @@ function Get-ExtensionCommandSurface {
   }
 }
 
+function Get-VsCodeRegisteredCommandSurface {
+  param([string]$SourceRoot)
+
+  $registered = New-Object System.Collections.Generic.HashSet[string]
+  $sourceFiles = Get-ChildItem -LiteralPath $SourceRoot -Recurse -File -Include *.ts,*.tsx,*.js,*.jsx
+  foreach ($file in $sourceFiles) {
+    $content = Get-Content -LiteralPath $file.FullName -Raw
+    foreach ($match in [regex]::Matches($content, 'registerCommand\(\s*"([^"]+)"', 'Singleline')) {
+      [void]$registered.Add($match.Groups[1].Value)
+    }
+  }
+
+  [pscustomobject]@{
+    registered = @($registered | Sort-Object)
+  }
+}
+
+function Get-ManifestCommandSurface {
+  param([string]$PackageJsonPath)
+
+  $packageJson = Get-Content -LiteralPath $PackageJsonPath -Raw | ConvertFrom-Json
+  $commands = @()
+  if ($packageJson.contributes -and $packageJson.contributes.commands) {
+    $commands = @($packageJson.contributes.commands | ForEach-Object { $_.command } | Where-Object { $_ } | Sort-Object -Unique)
+  }
+
+  [pscustomobject]@{
+    contributed = $commands
+  }
+}
+
 function Get-LavrEventSurface {
   param(
     [string[]]$Files
@@ -124,6 +155,20 @@ function Get-LavrEventSurface {
     emitted = @($emitted | Sort-Object)
     handled = @($handled | Sort-Object)
   }
+}
+
+function Get-RelativeWorkspacePath {
+  param(
+    [string]$WorkspaceRoot,
+    [string]$AbsolutePath
+  )
+
+  $normalizedRoot = [System.IO.Path]::GetFullPath($WorkspaceRoot).TrimEnd("\", "/")
+  $normalizedPath = [System.IO.Path]::GetFullPath($AbsolutePath)
+  if ($normalizedPath.StartsWith($normalizedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+    return $normalizedPath.Substring($normalizedRoot.Length).TrimStart("\", "/").Replace("\", "/")
+  }
+  return $normalizedPath.Replace("\", "/")
 }
 
 $resolvedExtensionDir = (Resolve-Path $ExtensionDir).Path
@@ -184,7 +229,7 @@ $checks.Add((New-IdentityCheck -Name "registered production files contain LeeWay
 
 $activeNodeFiles = @(
   $nodes |
-    Where-Object { $_.status -in @("ACTIVE", "FALLBACK", "TEST_ONLY") } |
+    Where-Object { $_.status -in @("ACTIVE", "FALLBACK", "TEST_ONLY", "DELETE_PENDING", "GENERATED") } |
     ForEach-Object { $_.file } |
     Sort-Object -Unique
 )
@@ -193,17 +238,24 @@ $checks.Add((New-IdentityCheck -Name "required file coverage is classified" -Pas
 
 $extensionSourcePath = Join-Path $resolvedExtensionDir "src\extension.ts"
 $commandSurface = Get-ExtensionCommandSurface -ExtensionSourcePath $extensionSourcePath
+$registeredCommandSurface = Get-VsCodeRegisteredCommandSurface -SourceRoot (Join-Path $resolvedExtensionDir "src")
+$manifestCommandSurface = Get-ManifestCommandSurface -PackageJsonPath (Join-Path $resolvedExtensionDir "package.json")
 
 $ownedEmittedCommands = @($nodes | ForEach-Object { @($_.commandsEmitted) } | Where-Object { $_ } | Sort-Object -Unique)
 $ownedHandledCommands = @($nodes | ForEach-Object { @($_.commandsHandled) } | Where-Object { $_ } | Sort-Object -Unique)
+$ownedRegisteredCommands = @($nodes | ForEach-Object { @($_.registeredCommands) } | Where-Object { $_ } | Sort-Object -Unique)
 
 $unownedWebviewToHost = @($commandSurface.webviewToHost | Where-Object { $_ -notin $ownedEmittedCommands })
 $unownedHostToWebview = @($commandSurface.hostToWebview | Where-Object { $_ -notin $ownedEmittedCommands })
 $unownedHandledCommands = @($commandSurface.handled | Where-Object { $_ -notin $ownedHandledCommands })
+$unownedRegisteredCommands = @($registeredCommandSurface.registered | Where-Object { $_ -notin $ownedRegisteredCommands })
+$unownedManifestCommands = @($manifestCommandSurface.contributed | Where-Object { $_ -notin $ownedRegisteredCommands })
 
 $checks.Add((New-IdentityCheck -Name "webview to host commands are owned by identity graph" -Pass ($unownedWebviewToHost.Count -eq 0) -Detail ("Unowned commands: " + $unownedWebviewToHost.Count)))
 $checks.Add((New-IdentityCheck -Name "host to webview commands are owned by identity graph" -Pass ($unownedHostToWebview.Count -eq 0) -Detail ("Unowned commands: " + $unownedHostToWebview.Count)))
 $checks.Add((New-IdentityCheck -Name "handled commands are owned by identity graph" -Pass ($unownedHandledCommands.Count -eq 0) -Detail ("Unowned handlers: " + $unownedHandledCommands.Count)))
+$checks.Add((New-IdentityCheck -Name "registered VS Code commands are owned by identity graph" -Pass ($unownedRegisteredCommands.Count -eq 0) -Detail ("Unowned registered commands: " + $unownedRegisteredCommands.Count)))
+$checks.Add((New-IdentityCheck -Name "manifest VS Code commands are owned by identity graph" -Pass ($unownedManifestCommands.Count -eq 0) -Detail ("Unowned manifest commands: " + $unownedManifestCommands.Count)))
 
 $identityAuditFiles = @(
   (Join-Path $resolvedExtensionDir "src\extension.ts"),
@@ -233,6 +285,80 @@ $missingEvidenceNodes = @(
 )
 $checks.Add((New-IdentityCheck -Name "identity graph evidence is registered" -Pass ($missingEvidenceNodes.Count -eq 0) -Detail ("Governance nodes missing graph evidence: " + $missingEvidenceNodes.Count)))
 
+$keySourcePrefixes = @(
+  "agent-lee/vscode-extension/src/core/",
+  "agent-lee/vscode-extension/src/plugins/",
+  "agent-lee/vscode-extension/src/tools/",
+  "agent-lee/vscode-extension/src/knowledge/",
+  "agent-lee/vscode-extension/src/persona/",
+  "agent-lee/vscode-extension/src/visual-intelligence/",
+  "agent-lee/vscode-extension/src/live-voice/",
+  "agent-lee/vscode-extension/src/performance/",
+  "agent-lee/vscode-extension/src/indexing/",
+  "agent-lee/vscode-extension/src/edit-buffer/",
+  "agent-lee/vscode-extension/src/session-orchestrator/",
+  "agent-lee/vscode-extension/src/execution-brain/",
+  "agent-lee/vscode-extension/src/workqueue/",
+  "agent-lee/vscode-extension/src/leeway-application/"
+)
+$coveragePrefixes = @(
+  $nodes |
+    ForEach-Object { @($_.ownedPathPrefixes) + @($_.file) } |
+    Where-Object { $_ } |
+    Sort-Object -Unique
+)
+$sourceFiles = @(Get-ChildItem -LiteralPath (Join-Path $resolvedExtensionDir "src") -Recurse -File | Where-Object {
+  $_.Extension -in @(".ts", ".tsx", ".js", ".jsx", ".json", ".md")
+})
+$uncoveredKeySourceFiles = New-Object System.Collections.Generic.List[string]
+foreach ($file in $sourceFiles) {
+  $relativePath = Get-RelativeWorkspacePath -WorkspaceRoot $resolvedWorkspaceRoot -AbsolutePath $file.FullName
+  if ($relativePath -like "*backup-*" -or $relativePath -like "*broken-*") {
+    continue
+  }
+  if (-not ($keySourcePrefixes | Where-Object { $relativePath.StartsWith($_) })) {
+    continue
+  }
+  $covered = $false
+  foreach ($prefix in $coveragePrefixes) {
+    if ($relativePath -eq $prefix -or $relativePath.StartsWith($prefix)) {
+      $covered = $true
+      break
+    }
+  }
+  if (-not $covered) {
+    $uncoveredKeySourceFiles.Add($relativePath)
+  }
+}
+$checks.Add((New-IdentityCheck -Name "key source directories are covered by identity graph" -Pass ($uncoveredKeySourceFiles.Count -eq 0) -Detail ("Uncovered files: " + $uncoveredKeySourceFiles.Count)))
+
+$distExtensionPath = Join-Path $resolvedExtensionDir "dist\extension.js"
+$distNode = $nodes | Where-Object { $_.file -eq "agent-lee/vscode-extension/dist/extension.js" } | Select-Object -First 1
+$distAmbiguityPass = $true
+$distAmbiguityDetail = "No historical dist start path present."
+if (Test-Path -LiteralPath $distExtensionPath) {
+  $distAmbiguityPass = $null -ne $distNode -and $distNode.classification -eq "QUARANTINE"
+  $distAmbiguityDetail = if ($distAmbiguityPass) {
+    "Historical dist start path exists and is quarantined."
+  } else {
+    "Historical dist start path exists without quarantine classification."
+  }
+}
+$checks.Add((New-IdentityCheck -Name "historical dist start path is quarantined" -Pass $distAmbiguityPass -Detail $distAmbiguityDetail))
+
+$fileIntelligencePath = Join-Path $resolvedExtensionDir "src\core\file-intelligence.ts"
+$repoIndexerPath = Join-Path $resolvedExtensionDir "src\knowledge\leewayRepoIndexer.ts"
+$fileIntelligenceContent = Get-Content -LiteralPath $fileIntelligencePath -Raw
+$repoIndexerContent = Get-Content -LiteralPath $repoIndexerPath -Raw
+$contextExclusions = @("reports", "knowledge", "memory", "logs")
+$missingContextExclusions = @(
+  $contextExclusions | Where-Object {
+    ($fileIntelligenceContent -notmatch [regex]::Escape($_)) -or
+    ($repoIndexerContent -notmatch [regex]::Escape($_))
+  }
+)
+$checks.Add((New-IdentityCheck -Name "context contamination exclusions are present" -Pass ($missingContextExclusions.Count -eq 0) -Detail ("Missing exclusions: " + $missingContextExclusions.Count)))
+
 $failedChecks = @($checks | Where-Object { -not $_.pass })
 $result = [pscustomobject]@{
   gate = "LEEWAY_APPLICATION_IDENTITY_GRAPH_GATE"
@@ -258,6 +384,10 @@ $result = [pscustomobject]@{
     unownedWebviewToHost = $unownedWebviewToHost
     unownedHostToWebview = $unownedHostToWebview
     unownedHandled = $unownedHandledCommands
+    registered = $registeredCommandSurface.registered
+    manifest = $manifestCommandSurface.contributed
+    unownedRegistered = $unownedRegisteredCommands
+    unownedManifest = $unownedManifestCommands
   }
   eventSurface = [pscustomobject]@{
     emitted = $eventSurface.emitted
@@ -269,6 +399,7 @@ $result = [pscustomobject]@{
     missingFiles = @($missingFiles)
     headerMissing = @($headerMissing)
     unclassifiedRequiredFiles = @($unclassifiedRequiredFiles)
+    uncoveredKeySourceFiles = @($uncoveredKeySourceFiles)
   }
 }
 
