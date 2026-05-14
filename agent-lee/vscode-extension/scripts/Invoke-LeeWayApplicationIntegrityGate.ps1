@@ -212,6 +212,7 @@ $reportPath = Join-Path $testEvidenceDir "leeway-application-integrity-result.js
 $receiptDir = Join-Path $WorkspaceRoot "agent-lee\receipts"
 $receiptPath = Join-Path $receiptDir ("leeway_application_integrity_gate_" + (Get-Date -Format "yyyy-MM-dd_HHmmss") + ".md")
 $doctorScriptPath = Join-Path $WorkspaceRoot "agent-lee\scripts\Invoke-AgentLeeDoctor.ps1"
+$identityGraphScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayApplicationIdentityGraphGate.ps1"
 $doctorOutputRoot = Join-Path $WorkspaceRoot "reports\Doctor"
 $vsixPath = Join-Path $resolvedExtensionDir ("{0}-{1}.vsix" -f $packageJson.name, $packageJson.version)
 $vsixScanRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("leeway-vsix-scan-" + [guid]::NewGuid().ToString("N"))
@@ -298,6 +299,32 @@ $commandAuditPath = Join-Path $testEvidenceDir "leeway-application-integrity-com
 $commandAudit | ConvertTo-Json -Depth 6 | Out-File -LiteralPath $commandAuditPath -Encoding utf8
 $checks.Add((New-GateCheck -Name "command emitted-vs-handled audit" -Pass $commandAudit.pass -Detail ("Missing handlers: " + $commandAudit.missing.Count) -EvidencePath $commandAuditPath))
 
+$identityGraphResultPath = Join-Path $testEvidenceDir "leeway-application-identity-graph-result.json"
+$identityGraphRun = Invoke-GateCommand `
+  -Name "identity graph gate" `
+  -FilePath "powershell.exe" `
+  -ArgumentList @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $identityGraphScriptPath,
+    "-ExtensionDir", $resolvedExtensionDir,
+    "-WorkspaceRoot", $WorkspaceRoot,
+    "-EvidencePath", $identityGraphResultPath
+  ) `
+  -WorkingDirectory $resolvedExtensionDir `
+  -EvidencePath (Join-Path $testEvidenceDir "leeway-application-integrity-identity-graph.log")
+$commandEvidence.identityGraphLog = $identityGraphRun.check.evidencePath
+$identityGraphResult = Get-JsonFileSafely -Path $identityGraphResultPath
+$identityGraphPass = $false
+$identityGraphDetail = "Identity graph result not found."
+if ($identityGraphResult) {
+  $identityGraphPass = ($identityGraphRun.exitCode -eq 0) -and [bool]$identityGraphResult.passed
+  $identityGraphDetail = "Failed checks: $($identityGraphResult.summary.failedChecks); Registered nodes: $($identityGraphResult.summary.registeredNodes); Registered files: $($identityGraphResult.summary.registeredFiles)"
+} elseif ($identityGraphRun.output.Count -gt 0) {
+  $identityGraphDetail = ($identityGraphRun.output -join [Environment]::NewLine)
+}
+$checks.Add((New-GateCheck -Name "application identity graph gate" -Pass $identityGraphPass -Detail $identityGraphDetail -EvidencePath $identityGraphResultPath))
+
 $existingDoctorDirs = @()
 if (Test-Path -LiteralPath $doctorOutputRoot) {
   $existingDoctorDirs = @(Get-ChildItem -LiteralPath $doctorOutputRoot -Directory | Select-Object -ExpandProperty FullName)
@@ -372,6 +399,7 @@ $report = [pscustomobject]@{
     playbackResult = $playbackResultPath
     doctorReport = $doctorReportJsonPath
     commandAudit = $commandAuditPath
+    identityGraph = $identityGraphResultPath
   }
   harnessResults = [pscustomobject]@{
     runtimeSmoke = $runtimeSmokeResult
@@ -380,6 +408,7 @@ $report = [pscustomobject]@{
   }
   doctor = $doctorReport
   commandAudit = $commandAudit
+  identityGraph = $identityGraphResult
 }
 
 $report | ConvertTo-Json -Depth 12 | Out-File -LiteralPath $reportPath -Encoding utf8
