@@ -1,0 +1,159 @@
+{
+  "date": "2026-05-14T10:27:32.450Z",
+  "checks": [
+    {
+      "name": "LAVR browser fallback selected + mic commit path",
+      "pass": true,
+      "details": {
+        "initOk": true,
+        "providerId": "leeway-agent-voice-browser-fallback",
+        "sessionConnected": true,
+        "postedCommit": true
+      }
+    },
+    {
+      "name": "LAVR local runtime selected + bridge + turn flow",
+      "pass": true,
+      "details": {
+        "initOk": true,
+        "providerId": "leeway-agent-voice-local",
+        "bridgeStartPosted": true,
+        "sessionConnected": true,
+        "userTurnCommitted": true,
+        "postedCommit": true
+      }
+    },
+    {
+      "name": "LAVR runtime switch browser-fallback -> local without corruption",
+      "pass": true,
+      "details": {
+        "firstProvider": "leeway-agent-voice-browser-fallback",
+        "secondProvider": "leeway-agent-voice-local",
+        "secondInitOk": true
+      }
+    },
+    {
+      "name": "LAVR tool bus LAVR_TOOL_COMPLETED roundtrip",
+      "pass": true,
+      "details": {
+        "receivedCount": 1,
+        "first": {
+          "callId": "call-1",
+          "result": {
+            "ok": true,
+            "source": "smoke"
+          }
+        }
+      }
+    },
+    {
+      "name": "LAVR interrupt gate emits single leewayVoiceInterruptRequested",
+      "pass": true,
+      "details": {
+        "bargeInCount": 1
+      }
+    },
+    {
+      "name": "LAVR duplicate final suppression keeps exactly one commit",
+      "pass": true,
+      "details": {
+        "commitCount": 1,
+        "firstCommit": {
+          "command": "leewayVoiceTurnCommit",
+          "text": "same final text",
+          "lavrTurnId": "lavr-turn-1",
+          "lavrUtteranceId": "lavr-utt-1",
+          "lavrSessionId": "lavr-session-smoke"
+        }
+      }
+    },
+    {
+      "name": "LAVR interim-only turn is cancelled without commit",
+      "pass": true,
+      "details": {
+        "commitCount": 0,
+        "hasCancelledEvent": true
+      }
+    },
+    {
+      "name": "LAVR stale commit timer is cancelled on turn reset",
+      "pass": true,
+      "details": {
+        "commitCount": 0
+      }
+    },
+    {
+      "name": "LAVR assistant-active speech requests exactly one interrupt",
+      "pass": true,
+      "details": {
+        "interruptCommandCount": 1,
+        "interruptEventCount": 1,
+        "firstInterruptEvent": {
+          "command": "leewayVoiceEvent",
+          "event": {
+            "type": "LAVR_INTERRUPT_REQUESTED",
+            "lavrTurnId": "lavr-turn-1",
+            "lavrUtteranceId": "lavr-utt-1",
+            "lavrInterruptId": "lavr-int-1",
+            "reason": "user_barge_in"
+          }
+        }
+      }
+    },
+    {
+      "name": "LAVR host router contains LAVR_TOOL_REQUESTED + LAVR_TOOL_COMPLETED handlers",
+      "pass": true,
+      "details": {
+        "hasToolCallHandler": true,
+        "hasToolResultHandler": true
+      }
+    },
+    {
+      "name": "LAVR lifecycle includes stable request/turn/session IDs",
+      "pass": true,
+      "details": {
+        "hasLavrToolRequestId": true,
+        "hasLavrTurnId": true,
+        "hasLavrSessionId": true
+      }
+    },
+    {
+      "name": "LAVR failure path posts terminal failed result",
+      "pass": true,
+      "details": {
+        "hasTerminalStatusField": true,
+        "hasFailedStatus": true,
+        "hasFailedFinalizeCall": true
+      }
+    },
+    {
+      "name": "LAVR duplicate request/result suppression present",
+      "pass": true,
+      "details": {
+        "suppressesDuplicateRequests": true,
+        "suppressesDuplicateResults": true,
+        "webviewTerminalSet": true
+      }
+    },
+    {
+      "name": "LAVR timeout path posts terminal timed_out result",
+      "pass": true,
+      "details": {
+        "hasTimeoutConstant": true,
+        "hasTimedOutStatus": true,
+        "hasTimeoutErrorMessage": true
+      }
+    },
+    {
+      "name": "LAVR interruption cancels pending requests with terminal cancelled result",
+      "pass": true,
+      "details": {
+        "hasCancelPendingHook": true,
+        "hasCancelledStatus": true,
+        "hasInterruptHook": true
+      }
+    }
+  ],
+  "passed": 15,
+  "failed": 0
+}

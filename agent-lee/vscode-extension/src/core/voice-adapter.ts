@@ -15,7 +15,6 @@ import { describeFileError, writeTextWithRetries } from "./file-ops";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const CONFIG_FILE = path.join(ROOT, "agent-lee", "voice", "voice-runtime.json");
-const PIPER_SCRIPT = path.join(ROOT, "agent-lee", "voice", "Speak-AgentLeePiper.ps1");
 const CLONED_SCRIPT = path.join(ROOT, "agent-lee", "voice", "Speak-AgentLeeCloned.ps1");
 
 export type VoiceEngine = "piper-local" | "f5-clone-local";
@@ -24,7 +23,7 @@ export type VoiceRuntimeConfig = {
   engine: VoiceEngine;
   preferVoiceServer?: boolean;
   voiceWsUrl?: string;
-  fallbackEngine: "windows-sapi" | "piper-local";
+  fallbackEngine: "none" | "windows-sapi" | "piper-local";
   personaSpeechMode: string;
   interruptionPolicy: string;
   piperExecutable: string;
@@ -42,6 +41,13 @@ export type VoiceRuntimeConfig = {
   cloneReferenceAudioPath?: string;
   cloneReferenceText?: string;
   cloneOutputPath?: string;
+  cloneSpeedRatio?: number;
+  tuning?: {
+    sampleTrimRatio?: number;
+    playbackRateRatio?: number;
+    pitchRatio?: number;
+    toneRatio?: number;
+  };
   ffmpegPath?: string;
 };
 
@@ -53,7 +59,14 @@ export type VoiceStatus = {
   speaking: boolean;
 };
 
+export type VoicePlaybackCallbacks = {
+  onSegmentStarted?: () => void;
+  onSegmentCompleted?: () => void;
+};
+
 let currentSpeech: ChildProcess | null = null;
+let voiceQueue: Promise<void> = Promise.resolve();
+let activeVoiceGeneration = 0;
 
 function readConfig(): VoiceRuntimeConfig {
   return JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8")) as VoiceRuntimeConfig;
@@ -73,13 +86,26 @@ function cloneVoiceReady(config: VoiceRuntimeConfig | null) {
   );
 }
 
-function piperVoiceReady(config: VoiceRuntimeConfig | null) {
-  return Boolean(
-    config &&
-    fs.existsSync(PIPER_SCRIPT) &&
-    fs.existsSync(config.piperExecutable) &&
-    fs.existsSync(config.piperModelPath)
-  );
+function assertClonedVoiceReady(config: VoiceRuntimeConfig | null) {
+  if (!config) throw new Error("Cloned voice runtime is missing.");
+  if (config.engine !== "f5-clone-local") {
+    throw new Error("Cloned voice runtime is required. Refusing to use a non-cloned voice engine.");
+  }
+  if (!fs.existsSync(CLONED_SCRIPT)) {
+    throw new Error(`Voice runtime script is missing: ${CLONED_SCRIPT}`);
+  }
+  if (!config.clonePythonPath || !fs.existsSync(config.clonePythonPath)) {
+    throw new Error("Cloned voice Python runtime is missing.");
+  }
+  if (!config.cloneScriptPath || !fs.existsSync(config.cloneScriptPath)) {
+    throw new Error("Cloned voice synthesis script is missing.");
+  }
+  if (!config.cloneReferenceAudioPath || !fs.existsSync(config.cloneReferenceAudioPath)) {
+    throw new Error("Cloned voice reference audio is missing.");
+  }
+  if (!String(config.cloneReferenceText || "").trim()) {
+    throw new Error("Cloned voice reference transcript is missing.");
+  }
 }
 
 function runVoiceScript(targetScript: string, text: string, onError?: (message: string) => void) {
@@ -105,9 +131,56 @@ function runVoiceScript(targetScript: string, text: string, onError?: (message: 
   return true;
 }
 
+function enforceClonedVoice(config: VoiceRuntimeConfig | null): VoiceRuntimeConfig | null {
+  if (!config) return null;
+  return {
+    ...config,
+    engine: "f5-clone-local",
+    preferVoiceServer: true,
+    fallbackEngine: "none"
+  };
+}
+
+function enqueueClonedVoice(
+  text: string,
+  onError?: (message: string) => void,
+  callbacks?: VoicePlaybackCallbacks
+) {
+  const generation = activeVoiceGeneration;
+  voiceQueue = voiceQueue.then(() => new Promise<void>((resolve) => {
+    if (generation !== activeVoiceGeneration) {
+      resolve();
+      return;
+    }
+
+    callbacks?.onSegmentStarted?.();
+    currentSpeech = execFile(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        CLONED_SCRIPT,
+        "-Text",
+        text,
+        "-ConfigPath",
+        CONFIG_FILE
+      ],
+      (error) => {
+        currentSpeech = null;
+        if (error) onError?.(error.message);
+        callbacks?.onSegmentCompleted?.();
+        resolve();
+      }
+    );
+  }));
+  return true;
+}
+
 export function loadVoiceRuntime() {
   try {
-    return readConfig();
+    return enforceClonedVoice(readConfig());
   } catch {
     return null;
   }
@@ -115,30 +188,23 @@ export function loadVoiceRuntime() {
 
 export function getVoiceStatus(): VoiceStatus {
   const config = loadVoiceRuntime();
-  const ready = config?.engine === "f5-clone-local"
-    ? cloneVoiceReady(config)
-    : piperVoiceReady(config);
+  const ready = cloneVoiceReady(config);
 
   return {
-    engine: config?.engine || "windows-sapi",
-    model: config?.engine === "f5-clone-local"
-      ? (config?.selectedVoiceLabel || path.basename(config?.cloneReferenceAudioPath || "cloned-reference"))
-      : config?.preferVoiceServer
-      ? `${config?.personaSpeechMode || "voice"} via ${config?.voiceWsUrl || "voice-server"}`
-      : config?.piperModelPath
-        ? `${path.basename(config.piperModelPath)}${config?.selectedSpeakerId ? ` [speaker ${config.selectedSpeakerId}]` : ""}`
-        : "system",
+    engine: config?.engine || "f5-clone-local",
+    model: config?.selectedVoiceLabel || path.basename(config?.cloneReferenceAudioPath || "cloned-reference"),
     ready,
-    fallback: config?.fallbackEngine || "windows-sapi",
+    fallback: config?.fallbackEngine || "none",
     speaking: Boolean(currentSpeech)
   };
 }
 
 export function stopVoicePlayback() {
+  activeVoiceGeneration += 1;
+  voiceQueue = Promise.resolve();
   if (currentSpeech) {
     const pid = currentSpeech.pid;
     try {
-      // Kill entire process tree on Windows so Piper/SAPI child processes also stop
       if (pid && process.platform === "win32") {
         try { execSync(`taskkill /F /T /PID ${pid}`, { stdio: "ignore" }); } catch {}
       } else {
@@ -149,36 +215,42 @@ export function stopVoicePlayback() {
   }
 }
 
-export function speakWithVoice(text: string, onError?: (message: string) => void) {
-  stopVoicePlayback();
-  const config = loadVoiceRuntime();
-  if (!config) {
-    onError?.("Voice runtime config or Piper script is missing.");
+export function speakWithVoice(
+  text: string,
+  onError?: (message: string) => void,
+  callbacks?: VoicePlaybackCallbacks
+) {
+  try {
+    const config = loadVoiceRuntime();
+    assertClonedVoiceReady(config);
+    return enqueueClonedVoice(text, onError, callbacks);
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : String(error);
+    onError?.(message);
     return false;
   }
-
-  const targetScript = config.engine === "f5-clone-local" ? CLONED_SCRIPT : PIPER_SCRIPT;
-  if (!fs.existsSync(targetScript)) {
-    onError?.(`Voice runtime script is missing: ${targetScript}`);
-    return false;
-  }
-
-  return runVoiceScript(targetScript, text, onError);
 }
 
-export function speakWithClonedVoice(text: string, onError?: (message: string) => void) {
-  stopVoicePlayback();
-  const config = loadVoiceRuntime();
-  if (!cloneVoiceReady(config)) {
-    onError?.("Cloned voice runtime is not configured yet.");
+export function speakWithClonedVoice(
+  text: string,
+  onError?: (message: string) => void,
+  callbacks?: VoicePlaybackCallbacks
+) {
+  try {
+    const config = loadVoiceRuntime();
+    assertClonedVoiceReady(config);
+    return enqueueClonedVoice(text, onError, callbacks);
+  } catch (error: any) {
+    const message = error instanceof Error ? error.message : String(error);
+    onError?.(message);
     return false;
   }
-  return runVoiceScript(CLONED_SCRIPT, text, onError);
 }
 
 export function saveVoiceRuntime(config: VoiceRuntimeConfig) {
   try {
-    writeTextWithRetries(CONFIG_FILE, JSON.stringify(config, null, 2), "Agent Lee voice runtime update.");
+    const normalized = enforceClonedVoice(config);
+    writeTextWithRetries(CONFIG_FILE, JSON.stringify(normalized, null, 2), "Agent Lee voice runtime update.");
     return true;
   } catch (error) {
     console.warn(`[Agent Lee] Voice runtime persistence failed: ${describeFileError(error)}`);

@@ -417,6 +417,11 @@ if (-not $rendered) {
   $rendered = Invoke-DirectPiperSynthesis -SpeechText $clean -Config $config -WavPath $wavPath
 }
 
+if (-not $rendered) {
+  Remove-Item -LiteralPath $wavPath -Force -ErrorAction SilentlyContinue
+  throw "Piper synthesis failed. Refusing fallback to other TTS engines."
+}
+
 if ($rendered) {
   [void](Apply-WavTuning -Path $wavPath -Config $config)
 }
@@ -425,16 +430,5 @@ if ($rendered -and (Play-WavFile -Path $wavPath)) {
   Remove-Item -LiteralPath $wavPath -Force -ErrorAction SilentlyContinue
   exit 0
 }
-
-Add-Type -AssemblyName System.Speech
-try {
-  $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-  if ($null -ne $synth) {
-    $synth.Rate = -1
-    $synth.Volume = 95
-    $synth.Speak($clean)
-  }
-} catch {
-}
-
 Remove-Item -LiteralPath $wavPath -Force -ErrorAction SilentlyContinue
+throw "Piper playback failed. Refusing fallback to other TTS engines."

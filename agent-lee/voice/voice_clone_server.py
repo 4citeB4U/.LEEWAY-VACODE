@@ -27,6 +27,7 @@ class SynthesizeRequest(BaseModel):
     ref_audio: str
     ref_text: str
     output_path: str | None = None
+  speed: float = 1.0
 
 
 def build_app(tts: F5TTS) -> FastAPI:
@@ -53,6 +54,7 @@ def build_app(tts: F5TTS) -> FastAPI:
           ref_file=request.ref_audio,
           ref_text=request.ref_text,
           gen_text=request.text,
+          speed=request.speed,
       )
       sf.write(output_path, wav, sr)
       return {"output_path": output_path, "sample_rate": sr}

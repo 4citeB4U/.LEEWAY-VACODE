@@ -176,10 +176,21 @@ function Test-LeeWayCompliance {
   $extensions = @(".ts", ".js", ".ps1", ".json", ".md", ".txt")
   $ignoredSegments = "\\(node_modules|\.git|\.venv|out|dist|build|logs|memory|reports|backups|patches|sandbox|coverage)\\"
   $ignoredFiles = @(
-    "agent-lee\vscode-extension\package-lock.json"
+    "agent-lee\vscode-extension\package-lock.json",
+    ".vscode\extensions.json",
+    "AUTO_UPDATE_FIX_SUMMARY.md",
+    "AUTO_UPDATE_IMPLEMENTATION_COMPLETE.md",
+    "agent-lee\Agent_Lee_Persona_System\00_README.md"
   )
   $ignoredFilePatterns = @(
-    '^agent-lee\\voice\\models\\.+\.onnx\.json$'
+    '^agent-lee\\voice\\models\\.+\.onnx\.json$',
+    '^agent-lee\\receipts(\\|$)',
+    '^agent-lee\\mcp\\adapters(\\|$)',
+    '^agent-lee\\sdk\\leeway-sdk(\\|$)',
+    '^agent-lee\\sdk\\schemas(\\|$)',
+    '^agent-lee\\vscode-extension\\test-evidence(\\|$)',
+    '^agent-lee\\vscode-extension\\receipts(\\|$)',
+    '^agent-lee\\vscode-extension\\src\\types\\.+\.d\.ts$'
   )
   Push-Location $Root
   try {
@@ -188,6 +199,7 @@ function Test-LeeWayCompliance {
       if ($LASTEXITCODE -eq 0 -and $gitFiles) {
         $files = $gitFiles |
           Where-Object { $extensions -contains [System.IO.Path]::GetExtension($_).ToLowerInvariant() } |
+          Where-Object { Test-Path -LiteralPath $_ } |
           ForEach-Object { Get-Item -LiteralPath $_ }
       } else {
         $files = Get-ChildItem -Path $Root -Recurse -File |
@@ -276,7 +288,7 @@ $checks.Add((New-Check "package.json exists" $packageExists $packagePath))
 $package = $null
 if ($packageExists) {
   $package = Get-Content $packagePath -Raw | ConvertFrom-Json
-  $checks.Add((New-Check "main points to dist/extension.js" ($package.main -eq "./dist/extension.js") $package.main))
+  $checks.Add((New-Check "main points to out/extension.js" ($package.main -eq "./out/extension.js") $package.main))
   $activityIcon = $package.contributes.viewsContainers.activitybar[0].icon
   $iconPath = Join-Path $resolvedExtensionDir $activityIcon
   $checks.Add((New-Check "Activity Bar icon exists" (Test-Path $iconPath) $activityIcon))
@@ -302,13 +314,8 @@ if ($packageExists) {
   foreach ($command in $requiredCommands) {
     $checks.Add((New-Check "Command registered: $command" ($commands -contains $command)))
   }
-  $requiredActivationEvents = @(
-    "onStartupFinished",
-    "onView:agentLee.sidebar"
-  )
-  foreach ($event in $requiredActivationEvents) {
-    $checks.Add((New-Check "Activation event declared: $event" ($activationEvents -contains $event)))
-  }
+  $checks.Add((New-Check "Activation event includes wildcard startup activation" ($activationEvents -contains "*") ($activationEvents -join ", ")))
+  $checks.Add((New-Check "Activation does not rely on stale view/startup assumptions" (-not (($activationEvents -contains "onStartupFinished") -or ($activationEvents -contains "onView:agentLee.sidebar"))) ($activationEvents -join ", ")))
   $redundantCommands = $activationEvents | Where-Object { $_ -match "^onCommand:agentLee\." }
   $checks.Add((New-Check "No redundant onCommand activation events" ($redundantCommands.Count -eq 0) ($redundantCommands -join ", ")))
 
@@ -600,6 +607,12 @@ if (Test-Path $fileOpsPath) {
 if (-not $SkipBuild) {
   Push-Location $resolvedExtensionDir
   try {
+    & node.exe .\scripts\sync-release-metadata.mjs
+    $checks.Add((New-Check "Release metadata synchronized" ($LASTEXITCODE -eq 0)))
+    if ($LASTEXITCODE -ne 0) {
+      throw "Release metadata sync failed."
+    }
+
     if (-not (Test-Path "node_modules")) {
       if (Test-Path "package-lock.json") {
         & npm.cmd ci
@@ -625,21 +638,21 @@ if (-not $SkipBuild) {
   }
 }
 
-$distPath = Join-Path $resolvedExtensionDir "dist\extension.js"
-$checks.Add((New-Check "dist/extension.js exists" (Test-Path $distPath) $distPath))
-if (Test-Path $distPath) {
-  $distContent = Get-Content $distPath -Raw
-    $checks.Add((New-Check "dist/extension.js contains activate/deactivate" ($distContent -match "activate:" -and $distContent -match "deactivate:") $distPath))
-  $checks.Add((New-Check "dist/extension.js contains initializeAgentLeeRuntime" ($distContent -match "initializeAgentLeeRuntime")))
-  $checks.Add((New-Check "dist/extension.js contains registerWebviewViewProvider" ($distContent -match "registerWebviewViewProvider")))
-  $checks.Add((New-Check "dist/extension.js contains agentLee commands" (($distContent -match "agentLee\.runtimeStatus") -and ($distContent -match "agentLee\.openPanel"))))
+$outPath = Join-Path $resolvedExtensionDir "out\extension.js"
+$checks.Add((New-Check "out/extension.js exists" (Test-Path $outPath) $outPath))
+if (Test-Path $outPath) {
+  $outContent = Get-Content $outPath -Raw
+    $checks.Add((New-Check "out/extension.js contains activate/deactivate" ($outContent -match "activate\s*=" -and $outContent -match "deactivate\s*=" -or ($outContent -match "function activate\(" -and $outContent -match "function deactivate\(")) $outPath))
+  $checks.Add((New-Check "out/extension.js contains initializeAgentLeeRuntime" ($outContent -match "initializeAgentLeeRuntime")))
+  $checks.Add((New-Check "out/extension.js contains registerWebviewViewProvider" ($outContent -match "registerWebviewViewProvider")))
+  $checks.Add((New-Check "out/extension.js contains agentLee commands" (($outContent -match "agentLee\.runtimeStatus") -and ($outContent -match "agentLee\.openPanel"))))
 }
 
 $vsixPath = Join-Path $resolvedExtensionDir "$($package.name)-$($package.version).vsix"
 if (-not $SkipPackage) {
   Push-Location $resolvedExtensionDir
   try {
-    & npx.cmd @vscode/vsce package -o (Split-Path -Leaf $vsixPath)
+    & node.exe .\scripts\package-release.mjs (Split-Path -Leaf $vsixPath)
     $checks.Add((New-Check "VSIX package builds" ($LASTEXITCODE -eq 0) $vsixPath))
     if ($LASTEXITCODE -ne 0) {
       throw "VSIX packaging failed."

@@ -1,10 +1,11 @@
 /*
 LEEWAY_HEADER - DO NOT REMOVE
 
-TAG: CORE.RUNTIME.SETTINGS.MAIN
 REGION: 🟢 CORE
+TAG: CORE.RUNTIME.SETTINGS.MAIN
+PURPOSE: LeeWay / Agent Lee persisted runtime configuration. Includes LeeWayVoiceRuntimeKind for local-only voice runtime selection.
 DISCOVERY_PIPELINE:
-  Voice → Intent → Location → Vertical → Ranking → Render
+  Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
 import * as fs from "fs";
@@ -17,6 +18,9 @@ const SETTINGS_FILE = path.join(ROOT, "agent-lee", "config", "runtime-state.json
 export type ApprovalMode = "safe" | "balanced" | "full";
 export type WorkMode = "execute" | "plan" | "ask";
 export type VoiceStyle = "neutral" | "grounded" | "highFlow" | "storyMode";
+export type LeeWayVoiceRuntimeKind = "leeway-agent-voice-local" | "leeway-agent-voice-browser-fallback";
+/** @deprecated Use LeeWayVoiceRuntimeKind */
+export type VoiceProviderKind = LeeWayVoiceRuntimeKind;
 export type AgentEnvironment = "windows-native";
 export type AppLanguage = "auto";
 export type InferenceSpeed = "standard" | "fast";
@@ -49,6 +53,11 @@ export type RuntimeState = {
   web: boolean;
   voice: boolean;
   voiceStyle: VoiceStyle;
+  leewayVoiceRuntimeKind: LeeWayVoiceRuntimeKind;
+  liveMicAlwaysOn: boolean;
+  voiceRate: number;
+  voicePitch: number;
+  voiceTone: number;
   primaryModel: string;
   builderModel: string;
   designerModel: string;
@@ -132,6 +141,11 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
   web: false,
   voice: true,
   voiceStyle: "grounded",
+  leewayVoiceRuntimeKind: "leeway-agent-voice-local",
+  liveMicAlwaysOn: true,
+  voiceRate: 0.9,
+  voicePitch: 1.0,
+  voiceTone: 1.0,
   primaryModel: "qwen2.5-coder:14b",
   builderModel: "qwen2.5-coder:14b",
   designerModel: "qwen2.5-coder:7b",
@@ -140,6 +154,19 @@ export const DEFAULT_RUNTIME_STATE: RuntimeState = {
   browserShowCursor: true,
   browserSlowMoMs: 250
 };
+
+function normalizeLeeWayVoiceRuntimeKind(value: unknown): LeeWayVoiceRuntimeKind {
+  if (value === "leeway-agent-voice-browser-fallback") return "leeway-agent-voice-browser-fallback";
+  // Legacy values from prior naming passes map to local runtime.
+  if (value === "browser-speech-recognition") return "leeway-agent-voice-browser-fallback";
+  if (
+    value === "leeway-agent-voice-local" ||
+    value === "local-realtime" ||
+    value === "local-whisper"
+  ) return "leeway-agent-voice-local";
+  // Cloud values and anything unknown default to local-only.
+  return "leeway-agent-voice-local";
+}
 
 function ensureDir() {
   fs.mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true });
@@ -192,6 +219,7 @@ export function resolveRuntimeState(current: Partial<RuntimeState> | null | unde
 
   return {
     ...state,
+    leewayVoiceRuntimeKind: normalizeLeeWayVoiceRuntimeKind((current as any)?.leewayVoiceRuntimeKind ?? (current as any)?.voiceProviderKind ?? state.leewayVoiceRuntimeKind),
     autoRunStagedPlans,
     enabledMcpServers,
     enabledAgents,

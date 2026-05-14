@@ -1,8 +1,9 @@
 /*
-LEEWAY HEADER - DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
-REGION: AI
-TAG: AI.LIVEVOICE.TYPES.MAIN
+REGION: VOICE_RUNTIME
+TAG: CORE.AGENT_LEE.LEEWAY_AGENT_VOICE_RUNTIME.TYPES
+PURPOSE: LeeWay Agent Voice Runtime live event types and speech contract for Agent Lee.
 DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 */
 
@@ -44,4 +45,34 @@ export interface AgentLeeSpeechRequest {
     | "error"
     | "summary";
   interruptible: boolean;
+}
+
+export type LeeWayVoiceRuntimeEventType =
+  | "LAVR_SESSION_STARTED"
+  | "LAVR_SESSION_CLOSED"
+  | "LAVR_FALLBACK_BRIDGE_REQUESTED"
+  | "LAVR_USER_AUDIO_DELTA"
+  | "LAVR_USER_SPEECH_STARTED"
+  | "LAVR_USER_SPEECH_STOPPED"
+  | "LAVR_TURN_COMMITTED"
+  | "LAVR_ASSISTANT_RESPONSE_STARTED"
+  | "LAVR_ASSISTANT_RESPONSE_DONE"
+  | "LAVR_INTERRUPT_REQUESTED"
+  | "LAVR_TOOL_REQUESTED"
+  | "LAVR_TOOL_COMPLETED"
+  | "LAVR_ERROR";
+/** @deprecated Use LeeWayVoiceRuntimeEventType */
+export type AgentLeeRealtimeVoiceEventType = LeeWayVoiceRuntimeEventType;
+
+export interface LeeWayVoiceRuntimeLiveEvent {
+  type: LeeWayVoiceRuntimeEventType;
+  timestamp?: number;
+  transcript?: string;
+  source?: string;
+  reason?: string;
+  message?: string;
+  name?: string;
+  args?: unknown;
+  callId?: string;
+  result?: unknown;
 }

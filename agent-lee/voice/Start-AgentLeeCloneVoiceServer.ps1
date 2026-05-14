@@ -24,6 +24,16 @@ $pythonExe = [string]$config.clonePythonPath
 $serverScript = [string]$config.cloneServerScriptPath
 $device = if ($config.cloneDevice) { [string]$config.cloneDevice } else { "cpu" }
 
+$tokenFromConfig = if ($config.hfToken) { [string]$config.hfToken } else { "" }
+$tokenFromUserEnv = [Environment]::GetEnvironmentVariable("HF_TOKEN", "User")
+if (-not [string]::IsNullOrWhiteSpace($tokenFromConfig)) {
+  $env:HF_TOKEN = $tokenFromConfig
+  $env:HUGGING_FACE_HUB_TOKEN = $tokenFromConfig
+} elseif (-not [string]::IsNullOrWhiteSpace($tokenFromUserEnv) -and [string]::IsNullOrWhiteSpace($env:HF_TOKEN)) {
+  $env:HF_TOKEN = $tokenFromUserEnv
+  $env:HUGGING_FACE_HUB_TOKEN = $tokenFromUserEnv
+}
+
 if (-not (Test-Path $pythonExe)) {
   throw "Clone voice Python runtime was not found at $pythonExe"
 }

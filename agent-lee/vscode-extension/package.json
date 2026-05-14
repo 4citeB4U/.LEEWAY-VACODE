@@ -2,7 +2,7 @@
     "name":  "agent-lee-leeway-coding-system",
     "displayName":  "Agent Lee LeeWay Coding System",
     "description":  "Agent Lee with hard-wired workspace and external folder intelligence, Ollama model selection, approval modes, web mode, chat history, memory, law engine, and voice.",
-    "version":  "1.2.2",
+    "version":  "1.2.3",
     "publisher":  "leeway",
     "icon":  "media/leeway-standards-button.png",
     "repository":  {
@@ -421,9 +421,12 @@
                                      ]
                     },
     "scripts":  {
-                    "compile":  "tsc -p ./ \u0026\u0026 npm run bundle",
+                    "sync-release-metadata":  "node ./scripts/sync-release-metadata.mjs",
+                    "clean:out":  "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\"",
+                    "compile":  "npm run clean:out \u0026\u0026 tsc -p ./ \u0026\u0026 npm run bundle",
                     "bundle":  "node ./scripts/bundle-extension.mjs",
-                    "package":  "npm run compile \u0026\u0026 vsce package"
+                    "package":  "npm run sync-release-metadata \u0026\u0026 npm run compile \u0026\u0026 node ./scripts/package-release.mjs",
+                    "LEEWAY_APPLICATION_INTEGRITY_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayApplicationIntegrityGate.ps1"
                 },
     "devDependencies":  {
                             "@types/node":  "^20.0.0",
