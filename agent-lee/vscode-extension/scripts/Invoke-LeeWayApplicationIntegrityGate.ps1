@@ -213,6 +213,7 @@ $receiptDir = Join-Path $WorkspaceRoot "agent-lee\receipts"
 $receiptPath = Join-Path $receiptDir ("leeway_application_integrity_gate_" + (Get-Date -Format "yyyy-MM-dd_HHmmss") + ".md")
 $doctorScriptPath = Join-Path $WorkspaceRoot "agent-lee\scripts\Invoke-AgentLeeDoctor.ps1"
 $identityGraphScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayApplicationIdentityGraphGate.ps1"
+$constructionLawScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayConstructionLawGate.ps1"
 $doctorOutputRoot = Join-Path $WorkspaceRoot "reports\Doctor"
 $vsixPath = Join-Path $resolvedExtensionDir ("{0}-{1}.vsix" -f $packageJson.name, $packageJson.version)
 $vsixScanRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("leeway-vsix-scan-" + [guid]::NewGuid().ToString("N"))
@@ -325,6 +326,32 @@ if ($identityGraphResult) {
 }
 $checks.Add((New-GateCheck -Name "application identity graph gate" -Pass $identityGraphPass -Detail $identityGraphDetail -EvidencePath $identityGraphResultPath))
 
+$constructionLawResultPath = Join-Path $testEvidenceDir "leeway-construction-law-result.json"
+$constructionLawRun = Invoke-GateCommand `
+  -Name "construction law gate" `
+  -FilePath "powershell.exe" `
+  -ArgumentList @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $constructionLawScriptPath,
+    "-ExtensionDir", $resolvedExtensionDir,
+    "-WorkspaceRoot", $WorkspaceRoot,
+    "-EvidencePath", $constructionLawResultPath
+  ) `
+  -WorkingDirectory $resolvedExtensionDir `
+  -EvidencePath (Join-Path $testEvidenceDir "leeway-application-integrity-construction-law.log")
+$commandEvidence.constructionLawLog = $constructionLawRun.check.evidencePath
+$constructionLawResult = Get-JsonFileSafely -Path $constructionLawResultPath
+$constructionLawPass = $false
+$constructionLawDetail = "Construction law result not found."
+if ($constructionLawResult) {
+  $constructionLawPass = ($constructionLawRun.exitCode -eq 0) -and [bool]$constructionLawResult.passed
+  $constructionLawDetail = "Failed checks: $($constructionLawResult.summary.failedChecks); Total checks: $($constructionLawResult.summary.totalChecks)"
+} elseif ($constructionLawRun.output.Count -gt 0) {
+  $constructionLawDetail = ($constructionLawRun.output -join [Environment]::NewLine)
+}
+$checks.Add((New-GateCheck -Name "construction law gate" -Pass $constructionLawPass -Detail $constructionLawDetail -EvidencePath $constructionLawResultPath))
+
 $existingDoctorDirs = @()
 if (Test-Path -LiteralPath $doctorOutputRoot) {
   $existingDoctorDirs = @(Get-ChildItem -LiteralPath $doctorOutputRoot -Directory | Select-Object -ExpandProperty FullName)
@@ -400,6 +427,7 @@ $report = [pscustomobject]@{
     doctorReport = $doctorReportJsonPath
     commandAudit = $commandAuditPath
     identityGraph = $identityGraphResultPath
+    constructionLaw = $constructionLawResultPath
   }
   harnessResults = [pscustomobject]@{
     runtimeSmoke = $runtimeSmokeResult
@@ -409,6 +437,7 @@ $report = [pscustomobject]@{
   doctor = $doctorReport
   commandAudit = $commandAudit
   identityGraph = $identityGraphResult
+  constructionLaw = $constructionLawResult
 }
 
 $report | ConvertTo-Json -Depth 12 | Out-File -LiteralPath $reportPath -Encoding utf8

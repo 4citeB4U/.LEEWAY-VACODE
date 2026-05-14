@@ -57,7 +57,7 @@ export interface LeeWayApplicationIdentityNode {
   status: LeeWayApplicationNodeStatus;
 }
 
-export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-14.pass2";
+export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-14.construction-law";
 
 const WEBVIEW_TO_HOST_COMMANDS = [
   "activateClonedVoice",
@@ -372,7 +372,14 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::WORKSPACE::INTELLIGENCE::ROOT",
   "LEEWAY_APP::MODEL_HIVE::ROUTER::MODEL_SELECTION",
   "LEEWAY_APP::ENGINEERING_LOOP::ROOT",
+  "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::APPLICATION_STANDARDS_SKILL",
   "LEEWAY_APP::GOVERNANCE::LAW_ENGINE::ROOT",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::CODEX",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::CHATGPT",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::AUTOCOMPLETE",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::MCP_AGENT",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::LOCAL_MODEL_HIVE",
+  "LEEWAY_APP::AGENT::CODE_GENERATION::ENGINEERING_LOOP",
   "LEEWAY_APP::PERSONA::BRIDGE::RUNTIME_PROMPT",
   "LEEWAY_APP::CAPABILITY::CATALOG::BUILDER",
   "LEEWAY_APP::BROWSER::VALIDATOR::ROOT",
@@ -388,6 +395,7 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::PACKAGE::VSIX::LEAKAGE_SCAN",
   "LEEWAY_APP::PACKAGE::QUARANTINE::DIST_EXTENSION_JS",
   "LEEWAY_APP::GOVERNANCE::INTEGRITY_GATE::ROOT",
+  "LEEWAY_APP::GATE::CONSTRUCTION_LAW",
   "LEEWAY_APP::GATE::APPLICATION_IDENTITY_GRAPH",
   "LEEWAY_APP::GOVERNANCE::DOCTOR::BASELINE",
   "LEEWAY_APP::GOVERNANCE::COMPLIANCE::LEEWAY_HEADER",
@@ -679,6 +687,22 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::LOCAL_MODEL_HIVE",
+    name: "Local model hive code generation binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: "agent-lee/vscode-extension/src/core/model-hive.ts",
+    runtimeRole: "Binds local model output to LeeWay identity, classification, and verification law before generated code is accepted.",
+    verification: ["construction law gate", "application identity graph gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::MODEL_HIVE::GOVERNANCE::MODEL_GOVERNANCE",
     name: "Model governance",
     classification: "GOVERNANCE_GATE",
@@ -713,6 +737,22 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::ENGINEERING_LOOP",
+    name: "Engineering loop code generation binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: "agent-lee/vscode-extension/src/core/agent-engineering-loop.ts",
+    runtimeRole: "Requires stage, apply, verify, and receipt flow to remain bound to LeeWay identity graph and integrity law.",
+    verification: ["construction law gate", "application integrity gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::ENGINEERING_LOOP::EDIT_BUFFER::COMMANDS",
     name: "Edit buffer command set",
     classification: "COMMAND_ROUTE",
@@ -724,6 +764,30 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     registeredCommands: [...EDIT_BUFFER_VSCODE_COMMANDS],
     verification: ["application identity graph gate"],
     evidence: ["agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::APPLICATION_STANDARDS_SKILL",
+    name: "LeeWay application standards construction law",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "CONSTRUCTION_LAW",
+    file: "agent-lee/governance/law/leeway-agent-code-generation-law.md",
+    runtimeRole: "Enforces LeeWay construction law for agents, autocomplete, repair flows, generated code, commands, events, pipelines, receipts, and cleanup plans.",
+    outputs: ["law-bound code generation", "identity-first repair", "gate-bound completion"],
+    verification: ["construction law gate", "application integrity gate"],
+    evidence: [
+      "skill.zip",
+      "agent-lee/governance/law/leeway-application-construction-law.md",
+      "agent-lee/governance/law/leeway-identity-graph-law.md",
+      "agent-lee/governance/law/leeway-production-cleanse-law.md",
+      "agent-lee/governance/law/leeway-self-healing-repair-law.md",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-skill-smoke-test.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+    ],
     status: "ACTIVE"
   },
   {
@@ -755,6 +819,70 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     evidence: [
       "reports/Doctor/**/agent-lee-doctor.json",
       "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::CODEX",
+    name: "Codex code generation law binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: ".codex/instructions.md",
+    runtimeRole: "Binds Codex-generated work in this repository to LeeWay identity, classification, receipts, and gates from the first draft.",
+    verification: ["construction law gate"],
+    evidence: [
+      "skill.zip",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::CHATGPT",
+    name: "ChatGPT-style agent law binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: "AGENTS.md",
+    runtimeRole: "Binds repo-facing agent behavior to LeeWay construction law before code, cleanup, or repair is considered complete.",
+    verification: ["construction law gate"],
+    evidence: [
+      "skill.zip",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::AUTOCOMPLETE",
+    name: "Autocomplete law binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: "agent-lee/governance/law/leeway-agent-code-generation-law.md",
+    runtimeRole: "Requires autocomplete-produced code to inherit LeeWay identity, file classification, and gate closure rules.",
+    verification: ["construction law gate"],
+    evidence: [
+      "skill.zip",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::AGENT::CODE_GENERATION::MCP_AGENT",
+    name: "MCP agent law binding",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "AGENT",
+    pipeline: "CODE_GENERATION",
+    file: "agent-lee/governance/law/leeway-agent-code-generation-law.md",
+    runtimeRole: "Binds MCP-routed and plugin-routed agent output to LeeWay identity graph and integrity-gate requirements.",
+    verification: ["construction law gate"],
+    evidence: [
+      "skill.zip",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json"
     ],
     status: "ACTIVE"
   },
@@ -1164,7 +1292,24 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     evidence: [
       "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
       "agent-lee/receipts/leeway_application_integrity_gate_*.md"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GATE::CONSTRUCTION_LAW",
+    name: "LeeWay construction law gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GATE",
+    pipeline: "CONSTRUCTION_LAW",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayConstructionLawGate.ps1",
+    runtimeRole: "Verifies the skill layer, repo law layer, instruction surfaces, code-generation bindings, and smoke-test evidence for LeeWay construction law.",
+    verification: ["construction law gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-skill-smoke-test.json"
     ],
     status: "ACTIVE"
   },

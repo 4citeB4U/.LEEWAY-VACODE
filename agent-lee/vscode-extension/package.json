@@ -426,6 +426,7 @@
                     "compile":  "npm run clean:out \u0026\u0026 tsc -p ./ \u0026\u0026 npm run bundle",
                     "bundle":  "node ./scripts/bundle-extension.mjs",
                     "package":  "npm run sync-release-metadata \u0026\u0026 npm run compile \u0026\u0026 node ./scripts/package-release.mjs",
+                    "LEEWAY_CONSTRUCTION_LAW_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayConstructionLawGate.ps1",
                     "LEEWAY_APPLICATION_INTEGRITY_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayApplicationIntegrityGate.ps1"
                 },
     "devDependencies":  {
