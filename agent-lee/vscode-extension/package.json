@@ -427,6 +427,8 @@
                     "bundle":  "node ./scripts/bundle-extension.mjs",
                     "package":  "npm run sync-release-metadata \u0026\u0026 npm run compile \u0026\u0026 node ./scripts/package-release.mjs",
                     "LEEWAY_CONSTRUCTION_LAW_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayConstructionLawGate.ps1",
+                    "LEEWAY_IDENTITY_MESH_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayIdentityMeshGate.ps1",
+                    "LEEWAY_TRACER_PACK_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayTracerPackGate.ps1",
                     "LEEWAY_APPLICATION_INTEGRITY_GATE":  "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/Invoke-LeeWayApplicationIntegrityGate.ps1"
                 },
     "devDependencies":  {

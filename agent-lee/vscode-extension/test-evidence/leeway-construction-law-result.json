@@ -1,13 +1,13 @@
 ﻿{
     "gate":  "LEEWAY_CONSTRUCTION_LAW_GATE",
-    "generatedAt":  "2026-05-14T07:50:34.4522817-05:00",
+    "generatedAt":  "2026-05-14T23:08:07.6558904-05:00",
     "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
     "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
     "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
     "skillZip":  "C:\\Users\\Leona\\.leeway-vscode\\skill.zip",
     "passed":  true,
     "summary":  {
-                    "totalChecks":  8,
+                    "totalChecks":  12,
                     "failedChecks":  0
                 },
     "checks":  [
@@ -30,13 +30,37 @@
                        "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-identity-graph-result.json"
                    },
                    {
+                       "name":  "eight sovereign enforcement layers have sub-ID anatomy",
+                       "pass":  true,
+                       "detail":  "Layers: 8; Empty layers: 0; Missing sub-ID records: 0",
+                       "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-identity-mesh-result.json"
+                   },
+                   {
                        "name":  "repo governance law mirrors exist",
                        "pass":  true,
                        "detail":  "Missing repo law files: 0",
                        "evidencePath":  ""
                    },
                    {
-                       "name":  "instruction surfaces reference LeeWay construction law",
+                       "name":  "SKILL.md references learned behavior before implementation",
+                       "pass":  true,
+                       "detail":  "Skill must require pre-code LeeWay behavior and reference the learned-behavior document.",
+                       "evidencePath":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards\\SKILL.md"
+                   },
+                   {
+                       "name":  "learned behavior reference exists",
+                       "pass":  true,
+                       "detail":  "references/leeway-agent-learned-behavior.md",
+                       "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\references\\leeway-agent-learned-behavior.md"
+                   },
+                   {
+                       "name":  "repo law contains learned construction behavior",
+                       "pass":  true,
+                       "detail":  "Repo law must bind code-writing agents to LeeWay identity from creation time.",
+                       "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\governance\\law\\leeway-agent-code-generation-law.md"
+                   },
+                   {
+                       "name":  "instruction surfaces contain LeeWay construction precondition",
                        "pass":  true,
                        "detail":  "Missing or incomplete instruction files: 0",
                        "evidencePath":  ""
@@ -44,7 +68,7 @@
                    {
                        "name":  "identity graph gate remains green for construction law binding",
                        "pass":  true,
-                       "detail":  "Failed checks: 0; Registered nodes: 73",
+                       "detail":  "Failed checks: 0; Registered nodes: 83",
                        "evidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-application-identity-graph-result.json"
                    },
                    {
@@ -61,7 +85,7 @@
                    }
                ],
     "smokeTests":  {
-                       "generatedAt":  "2026-05-14T07:50:34.3783983-05:00",
+                       "generatedAt":  "2026-05-14T23:08:07.5897052-05:00",
                        "skillRoot":  "C:\\Users\\Leona\\.codex\\skills\\leeway-application-standards",
                        "skillZip":  "C:\\Users\\Leona\\.leeway-vscode\\skill.zip",
                        "runs":  [
@@ -72,8 +96,8 @@
                                         "output":  [
                                                        "{",
                                                        "  \"ok\": true,",
-                                                       "  \"registeredNodes\": 73,",
-                                                       "  \"registeredFiles\": 50,",
+                                                       "  \"registeredNodes\": 83,",
+                                                       "  \"registeredFiles\": 57,",
                                                        "  \"graph\": \"C:\\\\Users\\\\Leona\\\\.leeway-vscode\\\\agent-lee\\\\vscode-extension\\\\test-evidence\\\\leeway-application-identity-graph-result.json\"",
                                                        "}"
                                                    ]
@@ -514,6 +538,10 @@
                                                        "  },",
                                                        "  {",
                                                        "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_074657.md\",",
+                                                       "    \"classification\": \"generated\"",
+                                                       "  },",
+                                                       "  {",
+                                                       "    \"path\": \"agent-lee/receipts/leeway_application_integrity_gate_2026-05-14_075006.md\",",
                                                        "    \"classification\": \"generated\"",
                                                        "  },",
                                                        "  {",

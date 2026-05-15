@@ -214,6 +214,8 @@ $receiptPath = Join-Path $receiptDir ("leeway_application_integrity_gate_" + (Ge
 $doctorScriptPath = Join-Path $WorkspaceRoot "agent-lee\scripts\Invoke-AgentLeeDoctor.ps1"
 $identityGraphScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayApplicationIdentityGraphGate.ps1"
 $constructionLawScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayConstructionLawGate.ps1"
+$identityMeshScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayIdentityMeshGate.ps1"
+$tracerPackScriptPath = Join-Path $resolvedExtensionDir "scripts\Invoke-LeeWayTracerPackGate.ps1"
 $doctorOutputRoot = Join-Path $WorkspaceRoot "reports\Doctor"
 $vsixPath = Join-Path $resolvedExtensionDir ("{0}-{1}.vsix" -f $packageJson.name, $packageJson.version)
 $vsixScanRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("leeway-vsix-scan-" + [guid]::NewGuid().ToString("N"))
@@ -352,6 +354,58 @@ if ($constructionLawResult) {
 }
 $checks.Add((New-GateCheck -Name "construction law gate" -Pass $constructionLawPass -Detail $constructionLawDetail -EvidencePath $constructionLawResultPath))
 
+$identityMeshResultPath = Join-Path $testEvidenceDir "leeway-identity-mesh-result.json"
+$identityMeshRun = Invoke-GateCommand `
+  -Name "identity mesh gate" `
+  -FilePath "powershell.exe" `
+  -ArgumentList @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $identityMeshScriptPath,
+    "-ExtensionDir", $resolvedExtensionDir,
+    "-WorkspaceRoot", $WorkspaceRoot,
+    "-EvidencePath", $identityMeshResultPath
+  ) `
+  -WorkingDirectory $resolvedExtensionDir `
+  -EvidencePath (Join-Path $testEvidenceDir "leeway-application-integrity-identity-mesh.log")
+$commandEvidence.identityMeshLog = $identityMeshRun.check.evidencePath
+$identityMeshResult = Get-JsonFileSafely -Path $identityMeshResultPath
+$identityMeshPass = $false
+$identityMeshDetail = "Identity mesh result not found."
+if ($identityMeshResult) {
+  $identityMeshPass = ($identityMeshRun.exitCode -eq 0) -and [bool]$identityMeshResult.passed
+  $identityMeshDetail = "Failed checks: $($identityMeshResult.summary.failedChecks); Registered records: $($identityMeshResult.summary.registeredRecords); Sovereign layers: $($identityMeshResult.summary.sovereignLayers)"
+} elseif ($identityMeshRun.output.Count -gt 0) {
+  $identityMeshDetail = ($identityMeshRun.output -join [Environment]::NewLine)
+}
+$checks.Add((New-GateCheck -Name "identity mesh gate" -Pass $identityMeshPass -Detail $identityMeshDetail -EvidencePath $identityMeshResultPath))
+
+$tracerPackResultPath = Join-Path $testEvidenceDir "leeway-tracer-pack-result.json"
+$tracerPackRun = Invoke-GateCommand `
+  -Name "tracer pack gate" `
+  -FilePath "powershell.exe" `
+  -ArgumentList @(
+    "-NoProfile",
+    "-ExecutionPolicy", "Bypass",
+    "-File", $tracerPackScriptPath,
+    "-ExtensionDir", $resolvedExtensionDir,
+    "-WorkspaceRoot", $WorkspaceRoot,
+    "-EvidencePath", $tracerPackResultPath
+  ) `
+  -WorkingDirectory $resolvedExtensionDir `
+  -EvidencePath (Join-Path $testEvidenceDir "leeway-application-integrity-tracer-pack.log")
+$commandEvidence.tracerPackLog = $tracerPackRun.check.evidencePath
+$tracerPackResult = Get-JsonFileSafely -Path $tracerPackResultPath
+$tracerPackPass = $false
+$tracerPackDetail = "Tracer pack result not found."
+if ($tracerPackResult) {
+  $tracerPackPass = ($tracerPackRun.exitCode -eq 0) -and [bool]$tracerPackResult.passed
+  $tracerPackDetail = "Failed checks: $($tracerPackResult.summary.failedChecks); Tracer IDs: $($tracerPackResult.summary.tracerPackRequiredIds)"
+} elseif ($tracerPackRun.output.Count -gt 0) {
+  $tracerPackDetail = ($tracerPackRun.output -join [Environment]::NewLine)
+}
+$checks.Add((New-GateCheck -Name "tracer pack gate" -Pass $tracerPackPass -Detail $tracerPackDetail -EvidencePath $tracerPackResultPath))
+
 $existingDoctorDirs = @()
 if (Test-Path -LiteralPath $doctorOutputRoot) {
   $existingDoctorDirs = @(Get-ChildItem -LiteralPath $doctorOutputRoot -Directory | Select-Object -ExpandProperty FullName)
@@ -428,6 +482,8 @@ $report = [pscustomobject]@{
     commandAudit = $commandAuditPath
     identityGraph = $identityGraphResultPath
     constructionLaw = $constructionLawResultPath
+    identityMesh = $identityMeshResultPath
+    tracerPack = $tracerPackResultPath
   }
   harnessResults = [pscustomobject]@{
     runtimeSmoke = $runtimeSmokeResult
@@ -438,6 +494,8 @@ $report = [pscustomobject]@{
   commandAudit = $commandAudit
   identityGraph = $identityGraphResult
   constructionLaw = $constructionLawResult
+  identityMesh = $identityMeshResult
+  tracerPack = $tracerPackResult
 }
 
 $report | ConvertTo-Json -Depth 12 | Out-File -LiteralPath $reportPath -Encoding utf8

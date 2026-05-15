@@ -57,7 +57,7 @@ export interface LeeWayApplicationIdentityNode {
   status: LeeWayApplicationNodeStatus;
 }
 
-export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-14.voice-ownership";
+export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-14.tracer-pack-pass-1";
 
 const WEBVIEW_TO_HOST_COMMANDS = [
   "activateClonedVoice",
@@ -373,6 +373,14 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::MODEL_HIVE::ROUTER::MODEL_SELECTION",
   "LEEWAY_APP::ENGINEERING_LOOP::ROOT",
   "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::APPLICATION_STANDARDS_SKILL",
+  "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::LEARNED_BEHAVIOR_ENFORCEMENT",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_MESH::REGISTRY",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::ROOT",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::UNTRUSTED_INGRESS",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::QUARANTINE_RECORD",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::REJECTION_RECEIPT",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::PUBLIC_SAFE_REPORT",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::HUMAN_REVIEW_GATE",
   "LEEWAY_APP::GOVERNANCE::LAW_ENGINE::ROOT",
   "LEEWAY_APP::AGENT::CODE_GENERATION::CODEX",
   "LEEWAY_APP::AGENT::CODE_GENERATION::CHATGPT",
@@ -406,6 +414,8 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::PACKAGE::QUARANTINE::DIST_EXTENSION_JS",
   "LEEWAY_APP::GOVERNANCE::INTEGRITY_GATE::ROOT",
   "LEEWAY_APP::GATE::CONSTRUCTION_LAW",
+  "LEEWAY_APP::GATE::IDENTITY_MESH",
+  "LEEWAY_APP::GATE::TRACER_PACK",
   "LEEWAY_APP::GATE::APPLICATION_IDENTITY_GRAPH",
   "LEEWAY_APP::GOVERNANCE::DOCTOR::BASELINE",
   "LEEWAY_APP::GOVERNANCE::COMPLIANCE::LEEWAY_HEADER",
@@ -797,6 +807,144 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
       "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::LEARNED_BEHAVIOR_ENFORCEMENT",
+    name: "LeeWay learned behavior enforcement",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "CONSTRUCTION_LAW",
+    file: "references/leeway-agent-learned-behavior.md",
+    runtimeRole: "Defines the standing behavior that requires all code-writing agents to begin from LeeWay identity instead of retrofitting governance after implementation.",
+    inputs: [
+      "LeeWay construction law",
+      "LeeWay application standards skill",
+      "repo agent instructions"
+    ],
+    outputs: [
+      "identity-first code generation",
+      "duplicate-path quarantine preference",
+      "gate-bound completion behavior"
+    ],
+    verification: ["construction law gate", "application identity graph gate", "application integrity gate"],
+    evidence: [
+      "skill.zip",
+      "references/leeway-agent-learned-behavior.md",
+      "agent-lee/governance/law/leeway-agent-code-generation-law.md",
+      "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_MESH::REGISTRY",
+    name: "LeeWay sovereign identity mesh registry",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_MESH",
+    file: "agent-lee/vscode-extension/src/leeway-application/leewayIdentityMesh.ts",
+    runtimeRole: "Defines LeeWay ID families, identity records, sovereign layer anatomy, and tracer pack IDs for actor, prompt, intent, transaction, authority, gate, evidence, and receipt traceability.",
+    ownedPathPrefixes: [
+      "agent-lee/vscode-extension/src/leeway-application/"
+    ],
+    outputs: [
+      "LEEWAY_IDENTITY_MESH_GATE",
+      "LEEWAY_TRACER_PACK_GATE",
+      "leeway-identity-mesh-result.json"
+    ],
+    verification: ["identity mesh gate", "construction law gate", "application integrity gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-identity-mesh-result.json",
+      "agent-lee/governance/law/leeway-identity-mesh-law.md"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::ROOT",
+    name: "LeeWay Tracer Pack root",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/governance/law/leeway-tracer-pack-law.md",
+    runtimeRole: "Requires every LeeWay action, rejection, quarantine, conversion, or agent induction to be reconstructable from a tracer pack.",
+    verification: ["tracer pack gate", "application integrity gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-tracer-pack-result.json",
+      "agent-lee/governance/law/leeway-tracer-pack-law.md"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::UNTRUSTED_INGRESS",
+    name: "Untrusted LLM ingress tracer",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/vscode-extension/src/leeway-application/leewayIdentityMesh.ts",
+    runtimeRole: "Captures untrusted LLM source, actor ID, prompt ID, intent ID, transaction ID, authority ID, gate decision, evidence ID, and receipt ID.",
+    inputs: ["external LLM output", "inbound prompt"],
+    outputs: ["LeeWay tracer pack", "human review status"],
+    verification: ["identity mesh gate", "tracer pack gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-tracer-pack-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::QUARANTINE_RECORD",
+    name: "Tracer Pack quarantine record",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/vscode-extension/src/leeway-application/leewayIdentityMesh.ts",
+    runtimeRole: "Requires rejected or untrusted actions to preserve quarantine identity, evidence, and receipt references.",
+    verification: ["identity mesh gate", "tracer pack gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-identity-mesh-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::REJECTION_RECEIPT",
+    name: "Tracer Pack rejection receipt",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/governance/law/leeway-tracer-pack-law.md",
+    runtimeRole: "Requires rejected actions to preserve receipt IDs that can reconstruct the violated policy and rejecting gate.",
+    verification: ["tracer pack gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-tracer-pack-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::PUBLIC_SAFE_REPORT",
+    name: "Public-safe tracer report template",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/governance/templates/leeway-public-safe-tracer-report-template.md",
+    runtimeRole: "Defines the public-safe disclosure shape for corruption, rejection, quarantine, or untrusted ingress without leaking private data.",
+    verification: ["tracer pack gate"],
+    evidence: ["agent-lee/governance/templates/leeway-public-safe-tracer-report-template.md"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::TRACER_PACK::HUMAN_REVIEW_GATE",
+    name: "Tracer Pack human review gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/governance/law/leeway-actor-authority-law.md",
+    runtimeRole: "Prevents automatic public disclosure or dangerous action without human review and approval.",
+    verification: ["tracer pack gate", "application integrity gate"],
+    evidence: [
+      "agent-lee/governance/law/leeway-actor-authority-law.md",
+      "agent-lee/vscode-extension/test-evidence/leeway-tracer-pack-result.json"
     ],
     status: "ACTIVE"
   },
@@ -1477,6 +1625,32 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
       "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-construction-law-skill-smoke-test.json"
     ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GATE::IDENTITY_MESH",
+    name: "LeeWay identity mesh gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GATE",
+    pipeline: "IDENTITY_MESH",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayIdentityMeshGate.ps1",
+    runtimeRole: "Verifies LeeWay ID families, identity records, sovereign layer anatomy, and tracer pack ID coverage.",
+    verification: ["identity mesh gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-identity-mesh-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GATE::TRACER_PACK",
+    name: "LeeWay tracer pack gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GATE",
+    pipeline: "TRACER_PACK",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayTracerPackGate.ps1",
+    runtimeRole: "Verifies tracer pack law, skill standard, TRACE IDs, ingress requirements, quarantine receipt requirements, public-safe reporting, and integrity-gate wiring.",
+    verification: ["tracer pack gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-tracer-pack-result.json"],
     status: "ACTIVE"
   },
   {

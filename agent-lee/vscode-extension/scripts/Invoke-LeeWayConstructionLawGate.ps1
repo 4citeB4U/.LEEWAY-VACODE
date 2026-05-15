@@ -70,6 +70,31 @@ process.stdout.write(JSON.stringify({
   return ($json | ConvertFrom-Json)
 }
 
+function Get-IdentityMeshData {
+  param([string]$ExtensionRoot)
+
+  $compiledModulePath = Join-Path $ExtensionRoot "out\leeway-application\leewayIdentityMesh.js"
+  if (-not (Test-Path -LiteralPath $compiledModulePath)) {
+    throw "Compiled identity mesh module not found: $compiledModulePath"
+  }
+
+  $nodeScript = @"
+const mod = require(process.argv[1]);
+process.stdout.write(JSON.stringify({
+  families: mod.LEEWAY_ID_FAMILIES,
+  sovereignLayers: mod.LEEWAY_SOVEREIGN_LAYER_ANATOMY,
+  records: mod.LEEWAY_IDENTITY_MESH_RECORDS
+}));
+"@
+
+  $json = & node.exe -e $nodeScript $compiledModulePath
+  if ($LASTEXITCODE -ne 0) {
+    throw "Failed to read compiled identity mesh module."
+  }
+
+  return ($json | ConvertFrom-Json)
+}
+
 function Expand-ZipForValidation {
   param(
     [string]$ZipPath,
@@ -158,6 +183,9 @@ $requiredSkillFiles = @(
   "SKILL.md",
   "agents/openai.yaml",
   "references/leeway-application-integrity-gate-standard.md",
+  "references/leeway-agent-learned-behavior.md",
+  "references/leeway-identity-mesh-standard.md",
+  "references/leeway-tracer-pack-standard.md",
   "references/leeway-creation-law.md",
   "references/leeway-identity-graph-standard.md",
   "references/leeway-naming-taxonomy.md",
@@ -174,18 +202,26 @@ $requiredRepoLawFiles = @(
   "agent-lee/governance/law/leeway-identity-graph-law.md",
   "agent-lee/governance/law/leeway-production-cleanse-law.md",
   "agent-lee/governance/law/leeway-self-healing-repair-law.md",
-  "agent-lee/governance/law/leeway-agent-code-generation-law.md"
+  "agent-lee/governance/law/leeway-agent-code-generation-law.md",
+  "agent-lee/governance/law/leeway-identity-mesh-law.md",
+  "agent-lee/governance/law/leeway-prompt-transaction-law.md",
+  "agent-lee/governance/law/leeway-actor-authority-law.md",
+  "agent-lee/governance/law/leeway-tracer-pack-law.md"
 )
 
 $instructionFiles = @(
   "AGENTS.md",
-  ".codex/instructions.md",
-  "agent-lee/governance/law/leeway-agent-code-generation-law.md"
+  ".codex/instructions.md"
 )
 
 $requiredConstructionNodeIds = @(
   "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::APPLICATION_STANDARDS_SKILL",
+  "LEEWAY_APP::GOVERNANCE::CONSTRUCTION_LAW::LEARNED_BEHAVIOR_ENFORCEMENT",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_MESH::REGISTRY",
+  "LEEWAY_APP::GOVERNANCE::TRACER_PACK::ROOT",
   "LEEWAY_APP::GATE::CONSTRUCTION_LAW",
+  "LEEWAY_APP::GATE::IDENTITY_MESH",
+  "LEEWAY_APP::GATE::TRACER_PACK",
   "LEEWAY_APP::AGENT::CODE_GENERATION::CODEX",
   "LEEWAY_APP::AGENT::CODE_GENERATION::CHATGPT",
   "LEEWAY_APP::AGENT::CODE_GENERATION::AUTOCOMPLETE",
@@ -193,6 +229,8 @@ $requiredConstructionNodeIds = @(
   "LEEWAY_APP::AGENT::CODE_GENERATION::LOCAL_MODEL_HIVE",
   "LEEWAY_APP::AGENT::CODE_GENERATION::ENGINEERING_LOOP"
 )
+
+$repoLearnedBehaviorReference = "references/leeway-agent-learned-behavior.md"
 
 $checks = New-Object System.Collections.Generic.List[object]
 
@@ -233,6 +271,21 @@ $graphNodeIds = @($graphData.nodes | ForEach-Object { $_.id })
 $missingConstructionNodes = @($requiredConstructionNodeIds | Where-Object { $_ -notin $graphNodeIds })
 $checks.Add((New-ConstructionLawCheck -Name "construction law surfaces are registered in the identity graph" -Pass ($missingConstructionNodes.Count -eq 0) -Detail ("Missing nodes: " + $missingConstructionNodes.Count) -EvidencePath $identityGraphResultPath))
 
+$meshData = Get-IdentityMeshData -ExtensionRoot $resolvedExtensionDir
+$meshRecordIds = @($meshData.records | ForEach-Object { $_.id })
+$sovereignLayers = @($meshData.sovereignLayers)
+$emptySovereignLayers = @($sovereignLayers | Where-Object { [string]::IsNullOrWhiteSpace([string]$_.layerId) -or @($_.subIds).Count -eq 0 })
+$missingSovereignSubIds = New-Object System.Collections.Generic.List[string]
+foreach ($layer in $sovereignLayers) {
+  foreach ($subId in @($layer.subIds)) {
+    if ($subId -notin $meshRecordIds) {
+      $missingSovereignSubIds.Add([string]$subId)
+    }
+  }
+}
+$sovereignAnatomyPass = ($sovereignLayers.Count -eq 8) -and ($emptySovereignLayers.Count -eq 0) -and ($missingSovereignSubIds.Count -eq 0)
+$checks.Add((New-ConstructionLawCheck -Name "eight sovereign enforcement layers have sub-ID anatomy" -Pass $sovereignAnatomyPass -Detail ("Layers: $($sovereignLayers.Count); Empty layers: $($emptySovereignLayers.Count); Missing sub-ID records: $($missingSovereignSubIds.Count)") -EvidencePath (Join-Path $resolvedExtensionDir "test-evidence\leeway-identity-mesh-result.json")))
+
 $missingLawFiles = New-Object System.Collections.Generic.List[string]
 foreach ($relativePath in $requiredRepoLawFiles) {
   $absolutePath = Join-Path $resolvedWorkspaceRoot $relativePath
@@ -242,6 +295,40 @@ foreach ($relativePath in $requiredRepoLawFiles) {
 }
 $checks.Add((New-ConstructionLawCheck -Name "repo governance law mirrors exist" -Pass ($missingLawFiles.Count -eq 0) -Detail ("Missing repo law files: " + $missingLawFiles.Count)))
 
+$skillDefinitionPath = Join-Path $skillRoot "SKILL.md"
+$skillDefinitionContent = if (Test-Path -LiteralPath $skillDefinitionPath) {
+  Get-Content -LiteralPath $skillDefinitionPath -Raw
+} else {
+  ""
+}
+$skillLearnedBehaviorPass = (
+  $skillDefinitionContent -match "apply this skill before proposing code"
+) -and (
+  $skillDefinitionContent -match "references/leeway-agent-learned-behavior\.md"
+) -and (
+  $skillDefinitionContent -match "references/leeway-identity-mesh-standard\.md"
+) -and (
+  $skillDefinitionContent -match "references/leeway-tracer-pack-standard\.md"
+)
+$checks.Add((New-ConstructionLawCheck -Name "SKILL.md references learned behavior before implementation" -Pass $skillLearnedBehaviorPass -Detail "Skill must require pre-code LeeWay behavior and reference the learned-behavior document." -EvidencePath $skillDefinitionPath))
+
+$repoLearnedBehaviorPath = Join-Path $resolvedWorkspaceRoot $repoLearnedBehaviorReference
+$repoLearnedBehaviorPass = Test-Path -LiteralPath $repoLearnedBehaviorPath
+$checks.Add((New-ConstructionLawCheck -Name "learned behavior reference exists" -Pass $repoLearnedBehaviorPass -Detail $repoLearnedBehaviorReference -EvidencePath $repoLearnedBehaviorPath))
+
+$repoLawPath = Join-Path $resolvedWorkspaceRoot "agent-lee/governance/law/leeway-agent-code-generation-law.md"
+$repoLawContent = if (Test-Path -LiteralPath $repoLawPath) {
+  Get-Content -LiteralPath $repoLawPath -Raw
+} else {
+  ""
+}
+$repoLawLearnedBehaviorPass = (
+  $repoLawContent -match "## Learned Construction Behavior"
+) -and (
+  $repoLawContent -match "begin from LeeWay identity"
+)
+$checks.Add((New-ConstructionLawCheck -Name "repo law contains learned construction behavior" -Pass $repoLawLearnedBehaviorPass -Detail "Repo law must bind code-writing agents to LeeWay identity from creation time." -EvidencePath $repoLawPath))
+
 $instructionMissing = New-Object System.Collections.Generic.List[string]
 foreach ($relativePath in $instructionFiles) {
   $absolutePath = Join-Path $resolvedWorkspaceRoot $relativePath
@@ -250,11 +337,13 @@ foreach ($relativePath in $instructionFiles) {
     continue
   }
   $content = Get-Content -LiteralPath $absolutePath -Raw
-  if ($content -notmatch "LeeWay Application Standards" -or $content -notmatch "LeeWay construction law") {
+  $hasConstructionReference = ($content -match "LeeWay Application Standards") -and ($content -match "LeeWay construction law")
+  $hasPrecondition = $content -match "Before writing code in this repository, identify the LeeWay node, pipeline, classification, owner, and verification path"
+  if (-not ($hasConstructionReference -and $hasPrecondition)) {
     $instructionMissing.Add($relativePath)
   }
 }
-$checks.Add((New-ConstructionLawCheck -Name "instruction surfaces reference LeeWay construction law" -Pass ($instructionMissing.Count -eq 0) -Detail ("Missing or incomplete instruction files: " + $instructionMissing.Count)))
+$checks.Add((New-ConstructionLawCheck -Name "instruction surfaces contain LeeWay construction precondition" -Pass ($instructionMissing.Count -eq 0) -Detail ("Missing or incomplete instruction files: " + $instructionMissing.Count)))
 
 $identityGraphResult = Get-JsonFileSafely -Path $identityGraphResultPath
 $identityGraphPass = $false
