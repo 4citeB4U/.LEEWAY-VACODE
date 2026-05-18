@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_ASSET_REGISTRY_CHECK",
-    "generatedAt":  "2026-05-17T23:41:41.0577119-05:00",
+    "generatedAt":  "2026-05-18T00:09:15.9174170-05:00",
     "status":  "PASS",
     "registryPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\core\\branding\\leewayAssetRegistry.ts",
     "packageIconPath":  "media/leeway-standards-logo.png",

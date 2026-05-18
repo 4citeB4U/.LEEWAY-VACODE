@@ -15,7 +15,7 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 - Exact active live runtime version: `1.2.11`
 - Current source/package/installed version: `1.2.11`
 - Split-brain remains: `No`
-- Previous contradictory PASS receipts corrected: `Partially`
+- Previous contradictory PASS receipts corrected: `Yes`
 - Final verdict: `FAIL`
 
 ## Layer Report
@@ -26,7 +26,7 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 | 2. Package truth | `PASS` | `leeway-extension-release-package-result.json` | none at package layer | keep VSIX rebuilt from current source |
 | 3. Installed truth | `PASS` | `leeway-installed-extension-check-result.json` | none at installed layer | keep installed hash aligned with current build |
 | 4. Live host truth | `PASS` | `leeway-active-runtime-attestation-result.json`, `leeway-live-host-refresh-result.json` | none at live-host attestation layer | keep reload and diagnose path truthful |
-| 5. Evidence consistency | `FAIL` | `leeway-evidence-consistency-result.json` | contradictions remain across README live proof and proof-label vocabulary | reconcile or supersede stale receipts and labels |
+| 5. Evidence consistency | `PASS` | `leeway-evidence-consistency-result.json` | none at the evidence-consistency layer | keep scoped proof labels truthful |
 | 6. Identity graph | `PASS` | `leeway-application-identity-graph-result.json` | none at identity graph layer | keep ownership coverage complete |
 | 7. Asset registry | `PASS` | `leeway-asset-registry-check-result.json` | live proof still separate | keep all surfaces routed through registry vocabulary |
 | 8. Activity Bar icon | `PASS` | asset registry check + package metadata | live runtime still not fully current | prove current live host renders current install |
@@ -66,8 +66,6 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 
 ## Next Actions For Non-PASS Layers
 
-- Evidence consistency:
-  retire or supersede stale PASS receipts and fix the remaining proof-label contradictions.
 - Live visual validation:
   capture a clean current pass for command-open behavior and README preview availability.
 - README media:

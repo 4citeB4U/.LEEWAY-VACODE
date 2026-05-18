@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_RUNTIME_INCIDENT_CLOSURE",
-    "generatedAt":  "2026-05-17T23:44:07.3449472-05:00",
+    "generatedAt":  "2026-05-18T00:11:42.7842166-05:00",
     "finalVerdict":  "FAIL",
     "steps":  [
                   {
@@ -12,8 +12,8 @@
                   {
                       "name":  "evidence consistency check",
                       "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayEvidenceConsistencyCheck.ps1",
-                      "exitCode":  1,
-                      "pass":  false
+                      "exitCode":  0,
+                      "pass":  true
                   },
                   {
                       "name":  "installed extension check",
@@ -84,12 +84,11 @@
               ],
     "splitBrainDetected":  false,
     "staleRuntimeDetected":  false,
-    "evidenceConsistencyStatus":  "FAIL",
+    "evidenceConsistencyStatus":  "PASS",
     "partialAllowed":  [
                            "human-audible voice proof check"
                        ],
     "failedCritical":  [
-                           "evidence consistency check",
                            "live visual check"
                        ]
 }

@@ -42,7 +42,7 @@ No individual surface may claim final `PASS` while the incident still contains c
 | 15. Prompt speed truth | `PASS` | source-governed fast lane exists |
 | 16. Right-side surface truth | `PARTIAL` | best-effort truth implemented, live proof incomplete |
 | 17. Auto-update/distribution truth | `PASS` | manual local VSIX classified honestly |
-| 18. Evidence/receipt truth | `FAIL` | contradiction cleanup still incomplete across live README and proof labels |
+| 18. Evidence/receipt truth | `PASS` | current receipts and scoped proof labels agree with the latest evidence |
 | 19. Identity graph truth | `PASS` | graph gate passes with no failed checks |
 | 20. LeeWay law compliance truth | `PARTIAL` | many gates pass, closure gate still fails |
 
@@ -72,7 +72,7 @@ This incident closes only when:
 ## Current disposition
 
 - Closure verdict today: `FAIL`
-- Primary blocker: live visual validation and README live proof still fail.
-- Secondary blocker: evidence consistency remains red.
+- Primary blocker: live visual validation still fails.
+- Secondary blocker: README live proof still fails because the live README preview does not render the expected images.
 - Tertiary blocker: human-audible voice is still only partial.
 

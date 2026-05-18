@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T04:43:33.620Z",
+  "generatedAt": "2026-05-18T05:11:08.788Z",
   "totals": {
     "passed": 5,
     "total": 5
@@ -29,15 +29,15 @@
   "events": [
     {
       "eventType": "LAVR_PLAYBACK_STARTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-oy2jco",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-4xg90l",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-1"
     },
     {
       "eventType": "LAVR_PLAYBACK_SEGMENT_QUEUED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-oy2jco",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-4xg90l",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-1",
       "lavrAudioSegmentId": "lavr-seg-1",
@@ -46,8 +46,8 @@
     },
     {
       "eventType": "LAVR_PLAYBACK_COMPLETED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-oy2jco",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-4xg90l",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-1",
       "queuedSegments": 1,
@@ -55,15 +55,15 @@
     },
     {
       "eventType": "LAVR_PLAYBACK_STARTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2"
     },
     {
       "eventType": "LAVR_PLAYBACK_SEGMENT_QUEUED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2",
       "lavrAudioSegmentId": "lavr-seg-2",
@@ -72,32 +72,32 @@
     },
     {
       "eventType": "LAVR_PLAYBACK_STOP_REQUESTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2",
       "reason": "voice_barge_in_interrupt"
     },
     {
       "eventType": "LAVR_PLAYBACK_CANCELLED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2",
       "reason": "voice_barge_in_interrupt"
     },
     {
       "eventType": "LAVR_PLAYBACK_DUPLICATE_STOP_SUPPRESSED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2",
       "reason": "duplicate_cancel_attempt"
     },
     {
       "eventType": "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-pkc1b5",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-n825xl",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-2",
       "lavrAudioSegmentId": "lavr-seg-2",
@@ -105,38 +105,38 @@
     },
     {
       "eventType": "LAVR_PLAYBACK_STARTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-0a51mx",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-pp89g4",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-3"
     },
     {
       "eventType": "LAVR_PLAYBACK_STOP_REQUESTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-0a51mx",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-pp89g4",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-3",
       "reason": "replaced_by_new_playback"
     },
     {
       "eventType": "LAVR_PLAYBACK_CANCELLED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-0a51mx",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-pp89g4",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-3",
       "reason": "replaced_by_new_playback"
     },
     {
       "eventType": "LAVR_PLAYBACK_STARTED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-u6m6ae",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-0u329i",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-ov0a27",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-iwgy5w",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-4"
     },
     {
       "eventType": "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
-      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
-      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrPlaybackId": "lavr-pb-mpaqxm9g-0a51mx",
+      "lavrSpeechOutputId": "lavr-sout-mpaqxm9g-pp89g4",
       "lavrSessionId": "lavr-session-test",
       "lavrTurnId": "lavr-turn-3",
       "lavrAudioSegmentId": "lavr-seg-old-turn",
