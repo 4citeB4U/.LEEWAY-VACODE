@@ -24,6 +24,11 @@ $outputPath = Join-Path $resolvedExtensionDir $OutputName
 Write-Host "Compiling extension in $resolvedExtensionDir" -ForegroundColor Cyan
 Push-Location $resolvedExtensionDir
 try {
+  & node.exe .\scripts\sync-release-metadata.mjs
+  if ($LASTEXITCODE -ne 0) {
+    throw "Release metadata sync failed."
+  }
+
   if (-not (Test-Path "node_modules")) {
     if (Test-Path "package-lock.json") {
       & npm.cmd ci
@@ -44,7 +49,7 @@ try {
     throw "Compile finished, but dist\extension.js was not created."
   }
 
-  & npx.cmd @vscode/vsce package --no-rewrite-relative-links -o $OutputName
+  & node.exe .\scripts\package-release.mjs $OutputName
   if ($LASTEXITCODE -ne 0) {
     throw "VSIX packaging failed."
   }

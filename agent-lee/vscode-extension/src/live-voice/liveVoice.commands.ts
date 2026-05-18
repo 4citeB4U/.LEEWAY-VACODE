@@ -1,5 +1,5 @@
 /*
-LEEWAY HEADER - DO NOT REMOVE
+LEEWAY_HEADER - DO NOT REMOVE
 
 REGION: CORE
 TAG: CORE.LIVEVOICE.COMMANDS.MAIN
@@ -62,7 +62,17 @@ export function registerAgentLeeLiveVoiceCommands(
     vscode.commands.registerCommand(
       "agentLee.liveVoice.handleTranscript",
       async (text: string) => {
-        await controller.handleTranscript(text);
+        const handled = await vscode.commands.executeCommand<boolean>("agentLee.voiceBridge.handleTranscript", {
+          type: "VOICE_TRANSCRIPT",
+          transcriptId: "",
+          text,
+          isFinal: true,
+          timestamp: new Date().toISOString(),
+          source: "local-transcript"
+        });
+        if (!handled) {
+          await controller.handleTranscript(text);
+        }
       }
     )
   );
@@ -80,10 +90,12 @@ export function registerAgentLeeLiveVoiceCommands(
     vscode.commands.registerCommand(
       "agentLee.liveVoice.startTranscriptBridge",
       async () => {
-        await transcriptBridge.start();
-        await speak(
-          `Agent Lee transcript bridge is live. Send transcripts to ${transcriptBridge.getUrl()}.`
-        );
+        const alreadyRunning = await transcriptBridge.start();
+        return {
+          alreadyRunning,
+          started: !alreadyRunning,
+          url: transcriptBridge.getUrl()
+        };
       }
     )
   );
@@ -93,7 +105,10 @@ export function registerAgentLeeLiveVoiceCommands(
       "agentLee.liveVoice.stopTranscriptBridge",
       async () => {
         await transcriptBridge.stop();
-        await speak("Agent Lee transcript bridge is stopped.");
+        return {
+          stopped: true,
+          url: transcriptBridge.getUrl()
+        };
       }
     )
   );

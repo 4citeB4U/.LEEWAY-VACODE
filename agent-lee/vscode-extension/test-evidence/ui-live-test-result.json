@@ -1,0 +1,52 @@
+{
+  "initialPosted": [
+    {
+      "command": "agentLeeUiReady"
+    }
+  ],
+  "settingsOpen": true,
+  "settingsClosed": true,
+  "historyOpen": true,
+  "buttonMetrics": {
+    "topStandardsBtn": {
+      "width": 44,
+      "height": 44
+    },
+    "topRightBrandingBtn": {
+      "width": 44,
+      "height": 44
+    }
+  },
+  "postedMessages": [
+    {
+      "command": "agentLeeUiReady"
+    },
+    {
+      "command": "newConversation"
+    },
+    {
+      "command": "setState",
+      "key": "workMode",
+      "value": "ask"
+    },
+    {
+      "command": "setState",
+      "key": "requireCtrlEnter",
+      "value": true
+    },
+    {
+      "command": "setState",
+      "key": "followupBehavior",
+      "value": "queue"
+    },
+    {
+      "command": "sendMessage",
+      "text": "UI probe from live browser harness",
+      "attachments": []
+    }
+  ],
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-restored-2026-05-07"
+  ]
+}

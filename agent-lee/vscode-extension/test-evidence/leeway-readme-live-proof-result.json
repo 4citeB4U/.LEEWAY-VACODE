@@ -1,0 +1,18 @@
+﻿{
+    "gate":  "LEEWAY_README_LIVE_PROOF",
+    "generatedAt":  "2026-05-17T23:43:21.8578753-05:00",
+    "finalVerdict":  "FAIL",
+    "sourceStatus":  "PASS",
+    "packageStatus":  "PASS",
+    "installedStatus":  "PASS",
+    "liveRenderStatus":  "FAIL",
+    "versionExpected":  "1.2.11",
+    "versionPresent":  true,
+    "imageOrder":  {
+                       "logoIndex":  322,
+                       "headerIndex":  1604,
+                       "systemFlowIndex":  4526,
+                       "correctOrder":  true
+                   },
+    "liveEvidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-extension-live-visual-validation-result.json"
+}

@@ -1,0 +1,95 @@
+﻿{
+    "gate":  "LEEWAY_RUNTIME_INCIDENT_CLOSURE",
+    "generatedAt":  "2026-05-17T23:44:07.3449472-05:00",
+    "finalVerdict":  "FAIL",
+    "steps":  [
+                  {
+                      "name":  "active runtime attestation",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayActiveRuntimeAttestation.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "evidence consistency check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayEvidenceConsistencyCheck.ps1",
+                      "exitCode":  1,
+                      "pass":  false
+                  },
+                  {
+                      "name":  "installed extension check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayInstalledExtensionCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "identity graph gate",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayApplicationIdentityGraphGate.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "asset registry check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayAssetRegistryCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "live visual check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayExtensionLiveVisualValidation.ps1",
+                      "exitCode":  1,
+                      "pass":  false
+                  },
+                  {
+                      "name":  "README live proof",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayReadmeLiveProof.ps1",
+                      "exitCode":  1,
+                      "pass":  false
+                  },
+                  {
+                      "name":  "command runtime health check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayExtensionRuntimeCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "simple prompt fast-lane check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWaySimplePromptFastLaneCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "voice route check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayApplicationIntegrityGate.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "transcript bridge check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayVoiceBridgeCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "human-audible voice proof check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayVoiceLiveValidation.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  },
+                  {
+                      "name":  "update channel truth check",
+                      "script":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\scripts\\Invoke-LeeWayUpdateChannelTruthCheck.ps1",
+                      "exitCode":  0,
+                      "pass":  true
+                  }
+              ],
+    "splitBrainDetected":  false,
+    "staleRuntimeDetected":  false,
+    "evidenceConsistencyStatus":  "FAIL",
+    "partialAllowed":  [
+                           "human-audible voice proof check"
+                       ],
+    "failedCritical":  [
+                           "evidence consistency check",
+                           "live visual check"
+                       ]
+}

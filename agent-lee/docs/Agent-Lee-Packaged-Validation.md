@@ -54,7 +54,7 @@ If you want a human-guided validation instead of the scripted command-palette fl
 4. Open the Agent Lee activity-bar icon.
 5. Confirm the history dropdown loads.
 6. Click `New Chat`.
-7. Confirm the voice status shows the Piper engine and the male model.
+7. Confirm the voice status shows a LeeWay clone route, not a foreign speech engine.
 8. Confirm the hive status row loads.
 9. Ask a coding question.
 10. Confirm chat memory is appended as one conversation thread.

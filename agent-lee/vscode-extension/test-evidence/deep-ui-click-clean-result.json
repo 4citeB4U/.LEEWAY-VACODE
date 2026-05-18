@@ -1,0 +1,174 @@
+{
+  "installedRoot": "C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3",
+  "sourceRoot": "C:/Users/Leona/.leeway-vscode/agent-lee/vscode-extension",
+  "checks": [
+    {
+      "name": "boot posts agentLeeUiReady",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings top button opens settings",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings close button closes modal",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "history top button opens history",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "new chat posts newConversation",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "paperclip posts pickAttachments",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "mic button handles unavailable speech recognition visibly",
+      "ok": false,
+      "error": ""
+    },
+    {
+      "name": "mute button posts muteVoice",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "work mode select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "approval select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "primary model select posts setState and refreshRuntime",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "send posts sendMessage and renders user text",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "configuration settings nav switches section",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings work mode select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings auto update toggle posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings Update Now posts updateAgentLeeNow",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "general settings nav switches section",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "require ctrl enter toggle posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "followup queue button posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "code review detached button posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "voice settings nav switches section",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "voice default play posts voiceAlTestDefault",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "voice catalog cloned voice play posts voiceAlTestVoice",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "mcp settings nav renders MCP rows",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "agents settings nav renders agent rows",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "workers settings nav renders worker rows",
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "counts": {
+    "totalButtons": 274,
+    "inlineOnclickButtons": 257,
+    "selects": 14,
+    "checkboxes": 49,
+    "postedMessageCount": 17,
+    "postedCommands": [
+      "agentLeeUiReady",
+      "muteVoice",
+      "newConversation",
+      "pickAttachments",
+      "refreshRuntime",
+      "sendMessage",
+      "setState",
+      "updateAgentLeeNow",
+      "voiceAlTestDefault",
+      "voiceAlTestVoice"
+    ]
+  },
+  "metrics": {
+    "topStandardsBtn": {
+      "width": 44,
+      "height": 44
+    },
+    "topRightBrandingBtn": {
+      "width": 44,
+      "height": 44
+    }
+  },
+  "catalogCounts": {
+    "mcpRows": 25,
+    "agentRows": 10,
+    "workerRows": 10
+  },
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-restored-2026-05-07"
+  ]
+}

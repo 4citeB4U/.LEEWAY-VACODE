@@ -1,0 +1,146 @@
+{
+  "generatedAt": "2026-05-18T04:43:33.620Z",
+  "totals": {
+    "passed": 5,
+    "total": 5
+  },
+  "checks": [
+    {
+      "name": "normal playback completion",
+      "pass": true
+    },
+    {
+      "name": "barge-in cancellation accepted exactly once",
+      "pass": true
+    },
+    {
+      "name": "duplicate cancel suppression",
+      "pass": true
+    },
+    {
+      "name": "stale segment suppression after cancel",
+      "pass": true
+    },
+    {
+      "name": "new-turn playback boundary reset",
+      "pass": true
+    }
+  ],
+  "events": [
+    {
+      "eventType": "LAVR_PLAYBACK_STARTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-1"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_SEGMENT_QUEUED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-1",
+      "lavrAudioSegmentId": "lavr-seg-1",
+      "queuedSegments": 1,
+      "completedSegments": 0
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_COMPLETED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-m7p3a3",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-j8i3lg",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-1",
+      "queuedSegments": 1,
+      "completedSegments": 1
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STARTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_SEGMENT_QUEUED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2",
+      "lavrAudioSegmentId": "lavr-seg-2",
+      "queuedSegments": 1,
+      "completedSegments": 0
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STOP_REQUESTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2",
+      "reason": "voice_barge_in_interrupt"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_CANCELLED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2",
+      "reason": "voice_barge_in_interrupt"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_DUPLICATE_STOP_SUPPRESSED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2",
+      "reason": "duplicate_cancel_attempt"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-yu4c5s",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-dvxb6e",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-2",
+      "lavrAudioSegmentId": "lavr-seg-2",
+      "reason": "segment_complete_for_inactive_playback"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STARTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-3"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STOP_REQUESTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-3",
+      "reason": "replaced_by_new_playback"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_CANCELLED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-3",
+      "reason": "replaced_by_new_playback"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STARTED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-u6m6ae",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-0u329i",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-4"
+    },
+    {
+      "eventType": "LAVR_PLAYBACK_STALE_SEGMENT_SUPPRESSED",
+      "lavrPlaybackId": "lavr-pb-mpapy54k-pt51z7",
+      "lavrSpeechOutputId": "lavr-sout-mpapy54k-mzb2e2",
+      "lavrSessionId": "lavr-session-test",
+      "lavrTurnId": "lavr-turn-3",
+      "lavrAudioSegmentId": "lavr-seg-old-turn",
+      "reason": "queue_segment_for_inactive_playback"
+    }
+  ]
+}

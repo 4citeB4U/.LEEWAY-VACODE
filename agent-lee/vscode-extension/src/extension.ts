@@ -56,8 +56,26 @@ import {
 import { buildDeveloperProfileSummary, loadDeveloperProfile, rememberDeveloperSignal } from "./core/developer-profile";
 import { getMemoryStatus, storeAgentMemory } from "./core/memory";
 import { buildModelHiveStatus } from "./core/model-hive";
-import { getVoiceStatus, loadVoiceRuntime, saveVoiceRuntime, speakWithClonedVoice, speakWithVoice, stopVoicePlayback, type VoiceRuntimeConfig } from "./core/voice-adapter";
+import { getVoiceStatus, loadVoiceRuntime, saveVoiceRuntime, speakWithClonedVoice, speakWithVoice, stopVoicePlayback, type LeeWayVoiceLifecycleEvent, type LeeWayVoiceLifecycleEventType, type VoiceRuntimeConfig } from "./core/voice-adapter";
+import { detectOneWordSpeechFailure, planLeewayLiveVoiceSegments } from "./core/leeway-live-voice-route-manager";
 import { loadRuntimeSettings, RuntimeState, saveRuntimeSettings, ApprovalMode, resolveRuntimeState, DEFAULT_RUNTIME_STATE } from "./core/runtime-settings";
+import {
+  buildLeeWayVoiceIdentity,
+  buildOwnerFacingVoiceStatus,
+  classifyVoiceReview,
+  containsBlockedStatusPhrase,
+  createVoiceEventId,
+  KNOWN_STATUS_CHAT_BLOCKLIST,
+  LeeWayVoiceAuthorityState,
+  LeeWayVoiceBridgeMessage,
+  LeeWayVoiceBridgeRuntimeState,
+  LeeWayVoiceDeduplicator,
+  LeeWayVoiceEventSource,
+  LeeWayVoiceReviewState,
+  makeVoiceReviewState,
+  sourceLabelForVoiceEvent
+} from "./core/voice/leewayVoiceTruth";
+import { LavrPlaybackGate, type LavrPlaybackRecord } from "./leeway-agent-voice-runtime/lavrPlaybackGate";
 import { appendFileWithRetries, describeFileError, writeJsonWithRetries, writeTextWithRetries } from "./core/file-ops";
 import { assessWorkerIdentity } from "./core/zero-trust";
 import { DEFAULT_AGENT_CATALOG, DEFAULT_MCP_SERVER_CATALOG, DEFAULT_PLUGIN_CATALOG, DEFAULT_WORKER_CATALOG } from "./core/settings-catalog";
@@ -74,12 +92,13 @@ import { editBufferStore } from "./edit-buffer/editBuffer.store";
 import { prepareCodexLevelContext } from "./knowledge/prepareCodexLevelContext";
 import { AgentLeePluginRouter } from "./plugins/agentLeePluginRouter";
 import { mapUserTextToPluginCall } from "./plugins/pluginIntentMapper";
-import { getPluginById } from "./plugins/plugin.registry";
+import { getPluginById, normalizePluginId } from "./plugins/plugin.registry";
 import type { PluginCallInput, PluginCallResult } from "./plugins/plugin.types";
 import { analyzeImage } from "./tools/image-tool";
 import { sendExecutionPlanToEditBuffer } from "./execution-brain/executionToEditBuffer.adapter";
 import { sendVerificationRepairsToEditBuffer } from "./execution-brain/verificationRepairToEditBuffer.adapter";
 import { registerAgentLeeLiveVoiceCommands } from "./live-voice/liveVoice.commands";
+import { voiceProviderFactoryClientScript } from "./live-voice/voiceProviderFactory";
 import { registerAgentLeeCodingSessionCommands } from "./session-orchestrator/codingSession.commands";
 import { registerAgentLeePerformanceCommands } from "./performance/performance.commands";
 import { registerAgentLeeCoreRuntimeServices } from "./performance/runtimeServices";
@@ -90,6 +109,23 @@ import { logEvent } from "./tools/logger";
 import { openLvisPanel } from "./visual-intelligence/visualPanel";
 import { getLvisSystemStatus } from "./visual-intelligence/visualRuntime";
 import { writeLvisReceipt } from "./visual-intelligence/visualReceipts";
+import { buildLiveHostSelfAttestation, getLiveHostAttestationPath } from "./core/extensionRuntimeTruth";
+import {
+  AGENT_LEE_UI_GENERATION_ID,
+  CHAT_WEBVIEW_RUNTIME_ID,
+  README_RUNTIME_ID,
+  STATUS_BAR_RUNTIME_ID,
+  VOICE_RUNTIME_ID,
+  LEEWAY_UI_SURFACE_OPEN_FAILED,
+  LEEWAY_UI_SURFACE_PRIMARY_SIDEBAR_OPENED,
+  LEEWAY_UI_SURFACE_RIGHT_PANEL_OPENED,
+  LEEWAY_UI_SURFACE_RIGHT_SIDE_UNSUPPORTED_FALLBACK
+} from "./core/runtimeIdentity";
+import {
+  getLeewayAssetDefinition,
+  getLeewayAssetRelativePath,
+  resolveLeewayAssetWebviewUri
+} from "./core/branding/leewayAssetRegistry";
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
 const MANAGED_EXTENSION_DIR = path.join(ROOT, "agent-lee", "vscode-extension");
@@ -105,7 +141,7 @@ const MAX_VOICE_CATALOG_ENTRIES = 10;
 const AGENT_LEE_VIEW_CONTAINER_ID = "agentLee";
 const AGENT_LEE_SIDEBAR_VIEW_ID = "agentLee.sidebar";
 const AGENT_LEE_OPEN_PANEL_COMMAND = "agentLee.openPanel";
-const AGENT_LEE_UI_VERSION = "chat-ui-restored-voice-sync-2026-05-11-v1.2.1";
+const AGENT_LEE_UI_VERSION = AGENT_LEE_UI_GENERATION_ID;
 
 fs.mkdirSync(LOG_DIR, { recursive: true });
 fs.mkdirSync(PENDING_EDIT_DIR, { recursive: true });
@@ -118,22 +154,34 @@ function resolveDefaultFfmpegPath() {
   return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 }
 
+function applyRuntimeVoiceTuning(config: VoiceRuntimeConfig, state: RuntimeState) {
+  const voiceRate = clampNumber(state.voiceRate, 0.6, 1.4, 0.9);
+  const voiceVolume = clampNumber(state.voiceVolume, 0, 1.5, 1.0);
+  const voicePitch = clampNumber(state.voicePitch, 0.7, 1.3, 1.0);
+  const voiceTone = clampNumber(state.voiceTone, 0.7, 1.3, 1.0);
+  config.cloneSpeedRatio = voiceRate;
+  config.cloneVolumeRatio = voiceVolume;
+  config.tuning = {
+    ...(config.tuning || {}),
+    playbackRateRatio: voiceRate,
+    pitchRatio: voicePitch,
+    toneRatio: voiceTone
+  };
+}
+
 function buildBundledCloneVoiceConfig(current?: VoiceRuntimeConfig | null): VoiceRuntimeConfig {
   return {
     ...(current || {}),
-    engine: "f5-clone-local",
-    fallbackEngine: current?.fallbackEngine || "piper-local",
+    engine: current?.engine || "f5-clone-local",
+    fallbackEngine: "none",
     personaSpeechMode: current?.personaSpeechMode || "Grounded_Operator",
     interruptionPolicy: current?.interruptionPolicy || "kill-current-and-replace",
     voiceWsUrl: current?.voiceWsUrl || "ws://localhost:8765/ws",
-    preferVoiceServer: current?.preferVoiceServer || false,
-    piperExecutable: current?.piperExecutable || path.join(ROOT, "agent-lee", "voice", "piper_bin", "piper.exe"),
-    piperModelPath: current?.piperModelPath || path.join(ROOT, "agent-lee", "voice", "models", "en_US-hfc_male-medium.onnx"),
-    piperConfigPath: current?.piperConfigPath || path.join(ROOT, "agent-lee", "voice", "models", "en_US-hfc_male-medium.onnx.json"),
+    preferVoiceServer: current?.preferVoiceServer ?? true,
     sampleRate: current?.sampleRate || 22050,
-    selectedVoiceId: "developer-reference-voice",
-    selectedVoiceLabel: "Developer Cloned Voice",
-    selectedSpeakerId: "",
+    selectedVoiceId: current?.selectedVoiceId || "agent-lee-default",
+    selectedVoiceLabel: current?.selectedVoiceLabel || "Agent Lee Default Voice",
+    selectedSpeakerId: current?.selectedSpeakerId || "",
     clonePythonPath: current?.clonePythonPath || path.join(ROOT, "agent-lee", "voice", "voice-cloning-env", "Scripts", "python.exe"),
     cloneScriptPath: current?.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"),
     cloneServerScriptPath: current?.cloneServerScriptPath || path.join(ROOT, "agent-lee", "voice", "voice_clone_server.py"),
@@ -142,12 +190,22 @@ function buildBundledCloneVoiceConfig(current?: VoiceRuntimeConfig | null): Voic
     cloneReferenceAudioPath: current?.cloneReferenceAudioPath || DEFAULT_DEVELOPER_REFERENCE_AUDIO,
     cloneReferenceText: current?.cloneReferenceText || DEFAULT_DEVELOPER_REFERENCE_TEXT,
     cloneOutputPath: current?.cloneOutputPath || path.join(ROOT, "agent-lee", "voice", "agent-lee-live-clone.wav"),
+    cloneSpeedRatio: clampNumber(current?.cloneSpeedRatio, 0.6, 1.4, 0.9),
+    cloneVolumeRatio: clampNumber(current?.cloneVolumeRatio, 0, 1.5, 1.0),
+    tuning: {
+      sampleTrimRatio: clampNumber(current?.tuning?.sampleTrimRatio, 0.5, 1.5, 1.0),
+      playbackRateRatio: clampNumber(current?.tuning?.playbackRateRatio, 0.6, 1.4, 0.9),
+      pitchRatio: clampNumber(current?.tuning?.pitchRatio, 0.7, 1.3, 1.0),
+      toneRatio: clampNumber(current?.tuning?.toneRatio, 0.7, 1.3, 1.0)
+    },
     ffmpegPath: current?.ffmpegPath || resolveDefaultFfmpegPath()
   };
 }
 
 function getVoiceRuntimeConfig() {
-  return buildBundledCloneVoiceConfig(loadVoiceRuntime());
+  const config = buildBundledCloneVoiceConfig(loadVoiceRuntime());
+  applyRuntimeVoiceTuning(config, runtimeState);
+  return config;
 }
 
 function persistVoiceRuntimeConfig(config: VoiceRuntimeConfig) {
@@ -196,7 +254,50 @@ function runCommandCapture(command: string, args: string[], options?: { cwd?: st
   });
 }
 
+function playWavSync(wavPath: string) {
+  const escaped = String(wavPath || "").replace(/'/g, "''");
+  return runCommandCapture("powershell.exe", [
+    "-NoProfile",
+    "-Command",
+    `$p=New-Object System.Media.SoundPlayer '${escaped}'; $p.PlaySync()`
+  ]);
+}
+
 let runtimeState: RuntimeState = loadRuntimeSettings();
+type LeeWayVoiceUiCommand =
+  | "leewayVoiceTestRequested"
+  | "leewayVoiceStopRequested"
+  | "leewayVoiceMuteToggled"
+  | "leewayVoiceSettingsChanged"
+  | "leewayVoiceSpeakRequested";
+type LeeWayVoiceLifecycleTerminalState = "idle" | "speaking" | "completed" | "failed" | "stopped" | "muted";
+type LeeWayVoiceEvidenceState = {
+  audibleOutputProof: string;
+  currentRouteId: string;
+  currentStatus: string;
+  firstAudioLatencyMs: number | null;
+  lastArtifactPath: string;
+  lastAudioBytes: number;
+  lastError: string;
+  lastEventType: string;
+  lifecycleEvents: LeeWayVoiceLifecycleEvent[];
+  multiSegmentPlaybackCompleted: boolean;
+  plannedSegments: number;
+  playedSegments: number;
+  status: LeeWayVoiceLifecycleTerminalState;
+  truthLimitation: string;
+};
+const LEEWAY_VOICE_STATE_IDENTITY_KEYS = [
+  { key: "voiceEnabled" },
+  { key: "voiceMuted" },
+  { key: "voiceAutoSpeak" },
+  { key: "voiceAutoSendFinalTranscript" },
+  { key: "voiceRate" },
+  { key: "voiceVolume" },
+  { key: "voiceInterruptOnUserSpeech" },
+  { key: "voiceLastError" },
+  { key: "voiceCurrentStatus" }
+] as const;
 const approvedExternalRoots = new Set<string>();
 let capabilityCatalog = buildCapabilityCatalog();
 type PendingAttachment = {
@@ -205,6 +306,12 @@ type PendingAttachment = {
   kind: "image" | "audio" | "file";
 };
 type TodoStatus = "pending" | "in_progress" | "completed" | "blocked";
+type AgentLeePromptClass =
+  | "simple_greeting"
+  | "general_question"
+  | "workspace_aware_question"
+  | "mutation_request"
+  | "governance_sensitive_request";
 type TaskTodo = {
   id: string;
   title: string;
@@ -258,8 +365,25 @@ type PendingPluginApproval = {
   pluginName: string;
   riskLevel: string;
 };
+type LavrTerminalStatus = "completed" | "failed" | "cancelled" | "timed_out";
+type LavrToolLifecycleState = {
+  requestId: string;
+  callId: string;
+  lavrSessionId: string;
+  lavrTurnId: string;
+  status: "pending" | LavrTerminalStatus;
+  createdAt: number;
+  executionStartedAt?: number;
+  finishedAt?: number;
+  pluginId?: string;
+  action?: string;
+  resultSignature?: string;
+  providerAcceptedResult: boolean;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
+};
 const activeWebviews = new Set<vscode.Webview>();
 let agentLeeOutputChannel: vscode.OutputChannel | null = null;
+let agentLeePanel: vscode.WebviewPanel | null = null;
 let currentTaskState: ActiveTaskState = emptyTaskState();
 let parkedTaskState: ActiveTaskState | null = null;
 let currentAbortController: AbortController | null = null;
@@ -268,6 +392,70 @@ let narratedReadCount = 0;
 let queuedFollowUps: { text: string; attachments: PendingAttachment[] }[] = [];
 let pendingPluginApproval: PendingPluginApproval | null = null;
 let runtimeStatusBarItem: vscode.StatusBarItem | null = null;
+let extensionActivationTimestamp = "";
+const LAVR_TOOL_TIMEOUT_MS = 15_000;
+const lavrToolByRequestId = new Map<string, LavrToolLifecycleState>();
+const lavrRequestByCallId = new Map<string, string>();
+let lavrHostTurnCounter = 0;
+const lavrHostSessionId = `lavr-session-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+let lavrLastObservedTurnId = "";
+const voiceTruthLimitation = "Dynamic harnesses and terminal automation can prove route invocation, generated audio artifacts, lifecycle events, and installed-runtime attestation, but they cannot confirm that a human heard the OS audio in a live VS Code window.";
+const voiceEvidenceState: LeeWayVoiceEvidenceState = {
+  audibleOutputProof: "No LeeWay live voice playback proof recorded yet.",
+  currentRouteId: "",
+  currentStatus: runtimeState.voiceCurrentStatus || "LeeWay live voice route is standing by.",
+  firstAudioLatencyMs: null,
+  lastArtifactPath: "",
+  lastAudioBytes: 0,
+  lastError: runtimeState.voiceLastError || "",
+  lastEventType: "",
+  lifecycleEvents: [],
+  multiSegmentPlaybackCompleted: false,
+  plannedSegments: 0,
+  playedSegments: 0,
+  status: runtimeState.voice ? "idle" : "muted",
+  truthLimitation: voiceTruthLimitation
+};
+const voiceDeduplicator = new LeeWayVoiceDeduplicator({ duplicateWindowMs: 5000 });
+let voiceReviewState: LeeWayVoiceReviewState | null = null;
+let voiceBridgeRuntimeState: LeeWayVoiceBridgeRuntimeState = {
+  runtimeId: createVoiceEventId("voice-runtime"),
+  bridgeId: "leeway.voice.local-transcript-bridge",
+  status: "offline",
+  browserSpeechAvailable: false,
+  localTranscriptAvailable: false,
+  endpointUrl: "http://127.0.0.1:7671/transcript",
+  lastHeartbeatAt: "",
+  lastTranscriptAt: "",
+  lastError: "",
+  loopDetected: false,
+  duplicateSuppressionCount: 0,
+  runtimeSourceMode: "SOURCE_UNKNOWN",
+  telemetryStreamId: "stream.voice.bridge",
+  auditCategory: "voice.bridge.intake",
+  lawReferences: [
+    "LAW-0021 Voice Bridge Message Separation",
+    "LeeWay Voice Authority Rule",
+    "Proposal Before Mutation"
+  ],
+  authorityState: "LEEWAY_VOICE_UNAVAILABLE",
+  listeningSource: "NONE",
+  lastHeardText: "",
+  lastSentText: "",
+  typedInputAvailable: true,
+  staleRuntime: false,
+  nextActionHint: "Use typed input or start LeeWay Voice when the runtime is ready."
+};
+const lavrPlaybackGate = new LavrPlaybackGate({
+  onLifecycle: (record: LavrPlaybackRecord) => {
+    const eventName = record.eventType.toLowerCase();
+    recordAgentLeeRuntimeReceipt({
+      event: `lavr.playback.${eventName}`,
+      ...record
+    });
+    logEvent("lavr-playback-lifecycle", "Agent Lee", `LAVR playback lifecycle: ${record.eventType}`, record);
+  }
+});
 const pluginRouter = new AgentLeePluginRouter();
 const PROTECTED_AGENT_IDS = new Set(
   DEFAULT_AGENT_CATALOG
@@ -406,18 +594,346 @@ function emptyTaskState(): ActiveTaskState {
   };
 }
 
-
-
 function buildLeeWayHeader(filePath: string) {
   const generated = makeHeader(filePath);
   return generated
-    .replace("REGION: ?? UTIL", "REGION: Ã°Å¸Å¸Â¢ CORE")
+    .replace("REGION: ?? UTIL", "REGION: ├â┬░├à┬╕├à┬╕├é┬ó CORE")
     .replace("TAG: UTIL.LOCAL.", "TAG: CORE.RUNTIME.")
     .replace(
       /DISCOVERY_PIPELINE:\s*\n\s*Voice -> Intent -> Location -> Vertical -> Ranking -> Render/,
-      "DISCOVERY_PIPELINE:\nVoice Ã¢â€ â€™ Intent Ã¢â€ â€™ Location Ã¢â€ â€™ Vertical Ã¢â€ â€™ Ranking Ã¢â€ â€™ Render"
+      "DISCOVERY_PIPELINE:\nVoice ├â┬ó├óΓé¼┬á├óΓé¼Γäó Intent ├â┬ó├óΓé¼┬á├óΓé¼Γäó Location ├â┬ó├óΓé¼┬á├óΓé¼Γäó Vertical ├â┬ó├óΓé¼┬á├óΓé¼Γäó Ranking ├â┬ó├óΓé¼┬á├óΓé¼Γäó Render"
     );
 }
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number) {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function syncVoiceRuntimeStateShape() {
+  runtimeState.voiceEnabled = Boolean(runtimeState.voiceEnabled ?? runtimeState.voice);
+  runtimeState.voiceMuted = Boolean(runtimeState.voiceMuted);
+  runtimeState.voiceAutoSpeak = runtimeState.voiceAutoSpeak !== false;
+  runtimeState.voiceAutoSendFinalTranscript = runtimeState.voiceAutoSendFinalTranscript === true;
+  runtimeState.voiceInterruptOnUserSpeech = runtimeState.voiceInterruptOnUserSpeech !== false;
+  runtimeState.voiceRate = clampNumber(runtimeState.voiceRate, 0.6, 1.4, 0.9);
+  runtimeState.voiceVolume = clampNumber(runtimeState.voiceVolume, 0, 1.5, 1.0);
+  runtimeState.voicePitch = clampNumber(runtimeState.voicePitch, 0.7, 1.3, 1.0);
+  runtimeState.voiceTone = clampNumber(runtimeState.voiceTone, 0.7, 1.3, 1.0);
+  runtimeState.voiceCurrentStatus = String(runtimeState.voiceCurrentStatus || voiceEvidenceState.currentStatus || "LeeWay live voice route is standing by.");
+  runtimeState.voiceLastError = String(runtimeState.voiceLastError || voiceEvidenceState.lastError || "");
+  runtimeState.voice = !!runtimeState.voiceEnabled && !runtimeState.voiceMuted;
+}
+
+function trimVoiceLifecycleEvents(events: LeeWayVoiceLifecycleEvent[]) {
+  return events.slice(-24);
+}
+
+function buildVoiceStatusSummary() {
+  const routeId = voiceEvidenceState.currentRouteId || String((getVoiceStatus() as any)?.routeId || "leeway.voice.text.emergency");
+  const firstAudio = voiceEvidenceState.firstAudioLatencyMs;
+  const segmentLabel = `${voiceEvidenceState.playedSegments}/${voiceEvidenceState.plannedSegments || voiceEvidenceState.playedSegments || 0}`;
+  const errorSuffix = runtimeState.voiceLastError ? ` Error: ${runtimeState.voiceLastError}` : "";
+  return `${runtimeState.voice ? "Voice ready" : runtimeState.voiceMuted ? "Voice muted" : "Voice disabled"} | route=${routeId} | first-audio=${firstAudio === null ? "pending" : `${firstAudio}ms`} | segments=${segmentLabel}.${errorSuffix}`.trim();
+}
+
+function recordVoiceUiCommand(command: LeeWayVoiceUiCommand, payload?: Record<string, unknown>) {
+  recordAgentLeeRuntimeReceipt({
+    event: "leeway.voice.command",
+    command,
+    ...payload
+  });
+}
+
+function buildVoiceUiState() {
+  return {
+    enabled: runtimeState.voiceEnabled,
+    muted: runtimeState.voiceMuted,
+    active: runtimeState.voice,
+    autoSpeak: runtimeState.voiceAutoSpeak,
+    speechRate: runtimeState.voiceRate,
+    volume: runtimeState.voiceVolume,
+    interruptOnUserSpeech: runtimeState.voiceInterruptOnUserSpeech,
+    lastError: runtimeState.voiceLastError,
+    currentStatus: runtimeState.voiceCurrentStatus,
+    routeId: voiceEvidenceState.currentRouteId || String((getVoiceStatus() as any)?.routeId || ""),
+    firstAudioLatencyMs: voiceEvidenceState.firstAudioLatencyMs,
+    multiSegmentPlayback: {
+      plannedSegments: voiceEvidenceState.plannedSegments,
+      playedSegments: voiceEvidenceState.playedSegments,
+      completed: voiceEvidenceState.multiSegmentPlaybackCompleted
+    },
+    audibleOutputProof: voiceEvidenceState.audibleOutputProof,
+    lastArtifactPath: voiceEvidenceState.lastArtifactPath,
+    lastAudioBytes: voiceEvidenceState.lastAudioBytes,
+    lastEventType: voiceEvidenceState.lastEventType,
+    truthLimitation: voiceEvidenceState.truthLimitation,
+    lifecycleEvents: trimVoiceLifecycleEvents(voiceEvidenceState.lifecycleEvents),
+    autoSendFinalTranscript: runtimeState.voiceAutoSendFinalTranscript === true,
+    voiceBridge: voiceBridgeRuntimeState,
+    voiceReview: voiceReviewState
+  };
+}
+
+function currentVoiceAuthorityState(source: LeeWayVoiceEventSource, degraded = false): LeeWayVoiceAuthorityState {
+  if (voiceBridgeRuntimeState.loopDetected) return "VOICE_STATUS_LOOP_DETECTED";
+  if (voiceBridgeRuntimeState.staleRuntime) return "STALE_EXTENSION_RUNTIME";
+  if (source === "LEEWAY_VOICE") return degraded ? "LEEWAY_VOICE_DEGRADED" : "LEEWAY_VOICE_READY";
+  if (source === "LOCAL_TRANSCRIPT_BRIDGE") return degraded ? "LOCAL_TRANSCRIPT_BRIDGE_DEGRADED" : "LOCAL_TRANSCRIPT_BRIDGE_READY";
+  if (source === "BROWSER_SPEECH_FALLBACK") return degraded ? "BROWSER_SPEECH_UNAVAILABLE" : "BROWSER_SPEECH_AVAILABLE";
+  return degraded ? "LEEWAY_VOICE_DEGRADED" : "LEEWAY_VOICE_UNAVAILABLE";
+}
+
+function updateVoiceBridgeRuntimeState(
+  updates: Partial<LeeWayVoiceBridgeRuntimeState>,
+  options?: { broadcast?: boolean }
+) {
+  voiceBridgeRuntimeState = {
+    ...voiceBridgeRuntimeState,
+    ...updates
+  };
+  if (options?.broadcast !== false) {
+    broadcast({
+      command: "leewayVoiceBridgeStatusChanged",
+      voiceBridge: voiceBridgeRuntimeState
+    });
+  }
+}
+
+function broadcastVoiceReviewState() {
+  broadcast({
+    command: "leewayVoiceReviewChanged",
+    review: voiceReviewState
+  });
+}
+
+function clearVoiceReviewState() {
+  voiceReviewState = null;
+  broadcastVoiceReviewState();
+}
+
+function setVoiceReviewState(review: LeeWayVoiceReviewState) {
+  voiceReviewState = review;
+  broadcastVoiceReviewState();
+}
+
+function updateVoiceBridgeStatusMessage(source: LeeWayVoiceEventSource) {
+  const ownerFacing = buildOwnerFacingVoiceStatus({
+    authorityState: voiceBridgeRuntimeState.authorityState,
+    source,
+    loopDetected: voiceBridgeRuntimeState.loopDetected,
+    staleRuntime: voiceBridgeRuntimeState.staleRuntime,
+    microphonePermissionRequired: voiceBridgeRuntimeState.authorityState === "MIC_PERMISSION_REQUIRED"
+  });
+  updateVoiceRuntimeStatus(ownerFacing, {
+    error: voiceBridgeRuntimeState.lastError || "",
+    eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+  });
+}
+
+function recordVoiceBridgeStatus(status: LeeWayVoiceBridgeMessage & { type: "VOICE_STATUS" | "VOICE_ERROR" }, source: LeeWayVoiceEventSource) {
+  if (status.type === "VOICE_STATUS") {
+    const accepted = voiceDeduplicator.acceptStatus(status.status, status.message, status.source);
+    updateVoiceBridgeRuntimeState({
+      status: accepted.loopDetected ? "loop-detected" : status.status === "ERROR" ? "error" : "online",
+      localTranscriptAvailable: status.status === "LOCAL_TRANSCRIPT_AVAILABLE" || voiceBridgeRuntimeState.localTranscriptAvailable,
+      browserSpeechAvailable: status.status === "BROWSER_SPEECH_AVAILABLE" || voiceBridgeRuntimeState.browserSpeechAvailable,
+      authorityState: accepted.loopDetected ? "VOICE_STATUS_LOOP_DETECTED" : currentVoiceAuthorityState(source, false),
+      loopDetected: accepted.loopDetected,
+      duplicateSuppressionCount: accepted.duplicateSuppressionCount,
+      lastHeartbeatAt: status.timestamp,
+      lastError: status.status === "ERROR" ? status.message : voiceBridgeRuntimeState.lastError,
+      listeningSource: source
+    });
+    updateVoiceBridgeStatusMessage(source);
+    return accepted.accepted;
+  }
+
+  updateVoiceBridgeRuntimeState({
+    status: "error",
+    lastError: status.message,
+    authorityState: currentVoiceAuthorityState(source, true),
+    listeningSource: source
+  });
+  updateVoiceBridgeStatusMessage(source);
+  return true;
+}
+
+function captureVoiceTranscriptForReview(args: {
+  text: string;
+  source: LeeWayVoiceEventSource;
+  transcriptId?: string;
+  timestamp?: string;
+  confidence?: number;
+  webview?: vscode.Webview | null;
+}) {
+  const text = String(args.text || "").trim();
+  if (!text) return false;
+  if (containsBlockedStatusPhrase(text)) {
+    recordVoiceBridgeStatus({
+      type: "VOICE_STATUS",
+      status: "VOICE_STATUS_LOOP_DETECTED",
+      message: text,
+      timestamp: args.timestamp || new Date().toISOString(),
+      source: "runtime-health"
+    }, args.source);
+    return false;
+  }
+
+  const accepted = voiceDeduplicator.acceptTranscript(
+    String(args.transcriptId || ""),
+    text,
+    new Date(args.timestamp || new Date().toISOString()).getTime()
+  );
+  updateVoiceBridgeRuntimeState({
+    duplicateSuppressionCount: accepted.duplicateSuppressionCount,
+    lastTranscriptAt: args.timestamp || new Date().toISOString(),
+    lastHeardText: text,
+    localTranscriptAvailable: args.source === "LOCAL_TRANSCRIPT_BRIDGE" || voiceBridgeRuntimeState.localTranscriptAvailable,
+    browserSpeechAvailable: args.source === "BROWSER_SPEECH_FALLBACK" || voiceBridgeRuntimeState.browserSpeechAvailable,
+    listeningSource: args.source,
+    authorityState: currentVoiceAuthorityState(args.source, false),
+    status: "online"
+  });
+  if (!accepted.accepted) {
+    recordVoiceBridgeStatus({
+      type: "VOICE_STATUS",
+      status: "VOICE_STATUS_LOOP_DETECTED",
+      message: "Voice bridge status loop detected. Status messages are being suppressed and will not enter chat.",
+      timestamp: args.timestamp || new Date().toISOString(),
+      source: "runtime-health"
+    }, args.source);
+    return false;
+  }
+
+  const review = makeVoiceReviewState({
+    text,
+    source: args.source,
+    authorityState: currentVoiceAuthorityState(args.source, false),
+    voiceSessionId: String(args.transcriptId || createVoiceEventId("voice-session")),
+    confidence: args.confidence,
+    transcriptId: args.transcriptId,
+    timestamp: args.timestamp
+  });
+  setVoiceReviewState(review);
+  updateVoiceBridgeRuntimeState({
+    nextActionHint: review.nextAction === "Create proposal"
+      ? "Review the heard request and create a governed proposal."
+      : "Review the heard request and choose when to send it.",
+    lastHeardText: review.heardText
+  });
+  currentTaskState.status = `Voice captured for review from ${sourceLabelForVoiceEvent(args.source)}.`;
+  postTaskState();
+  args.webview?.postMessage({
+    command: "status",
+    text: `I heard: "${review.heardText}". Review it before sending.`
+  });
+  return true;
+}
+
+function broadcastVoiceRuntimeState(eventType = "LEEWAY_VOICE_STATUS_CHANGED") {
+  syncVoiceRuntimeStateShape();
+  broadcast({
+    command: "leewayVoiceStatusChanged",
+    eventType,
+    voiceState: buildVoiceUiState()
+  });
+}
+
+function updateVoiceRuntimeStatus(
+  status: string,
+  options?: {
+    error?: string;
+    routeId?: string;
+    persist?: boolean;
+    eventType?: LeeWayVoiceLifecycleEventType;
+    artifactPath?: string;
+    audioBytes?: number;
+    firstAudioLatencyMs?: number | null;
+  }
+) {
+  if (options?.routeId) {
+    voiceEvidenceState.currentRouteId = options.routeId;
+  }
+  if (typeof options?.artifactPath === "string" && options.artifactPath) {
+    voiceEvidenceState.lastArtifactPath = options.artifactPath;
+  }
+  if (typeof options?.audioBytes === "number" && Number.isFinite(options.audioBytes)) {
+    voiceEvidenceState.lastAudioBytes = options.audioBytes;
+  }
+  if (options?.firstAudioLatencyMs !== undefined) {
+    voiceEvidenceState.firstAudioLatencyMs = options.firstAudioLatencyMs === null
+      ? null
+      : clampNumber(options.firstAudioLatencyMs, 0, 600000, 0);
+  }
+
+  voiceEvidenceState.currentStatus = status;
+  runtimeState.voiceCurrentStatus = status;
+  if (options?.error !== undefined) {
+    voiceEvidenceState.lastError = String(options.error || "");
+    runtimeState.voiceLastError = String(options.error || "");
+  }
+  if (options?.eventType) {
+    voiceEvidenceState.lastEventType = options.eventType;
+  }
+  voiceEvidenceState.audibleOutputProof = buildVoiceStatusSummary();
+  syncVoiceRuntimeStateShape();
+  if (options?.persist !== false) {
+    persistRuntime();
+  }
+  broadcastVoiceRuntimeState(options?.eventType || "LEEWAY_VOICE_STATUS_CHANGED");
+}
+
+function registerVoiceLifecycleEvent(event: LeeWayVoiceLifecycleEvent) {
+  voiceEvidenceState.lastEventType = event.eventType;
+  if (event.routeId) {
+    voiceEvidenceState.currentRouteId = event.routeId;
+  }
+  if (event.outputPath) {
+    voiceEvidenceState.lastArtifactPath = event.outputPath;
+  }
+  if (typeof event.audioBytes === "number" && Number.isFinite(event.audioBytes)) {
+    voiceEvidenceState.lastAudioBytes = event.audioBytes;
+  }
+  if (typeof event.firstAudioLatencyMs === "number" && Number.isFinite(event.firstAudioLatencyMs)) {
+    voiceEvidenceState.firstAudioLatencyMs = event.firstAudioLatencyMs;
+  }
+  if (event.eventType === "LEEWAY_VOICE_SEGMENT_PLAYED") {
+    voiceEvidenceState.playedSegments += 1;
+  }
+  if (event.eventType === "LEEWAY_VOICE_PLAYBACK_COMPLETED") {
+    voiceEvidenceState.multiSegmentPlaybackCompleted = voiceEvidenceState.playedSegments >= Math.max(1, voiceEvidenceState.plannedSegments);
+    voiceEvidenceState.status = "completed";
+  } else if (event.eventType === "LEEWAY_VOICE_PLAYBACK_FAILED") {
+    voiceEvidenceState.status = "failed";
+    voiceEvidenceState.lastError = String(event.detail || "LeeWay live voice playback failed.");
+  } else if (event.eventType === "LEEWAY_VOICE_PLAYBACK_STARTED" || event.eventType === "LEEWAY_VOICE_FIRST_AUDIO") {
+    voiceEvidenceState.status = "speaking";
+  }
+
+  voiceEvidenceState.lifecycleEvents = trimVoiceLifecycleEvents([
+    ...voiceEvidenceState.lifecycleEvents,
+    event
+  ]);
+
+  updateVoiceRuntimeStatus(
+    String(event.status || event.detail || buildVoiceStatusSummary()),
+    {
+      error: event.eventType === "LEEWAY_VOICE_PLAYBACK_FAILED" ? String(event.detail || "LeeWay live voice playback failed.") : runtimeState.voiceLastError,
+      routeId: event.routeId,
+      persist: false,
+      eventType: event.eventType,
+      artifactPath: event.outputPath,
+      audioBytes: event.audioBytes,
+      firstAudioLatencyMs: event.firstAudioLatencyMs
+    }
+  );
+}
+
+syncVoiceRuntimeStateShape();
 
 
 
@@ -604,9 +1120,15 @@ function isUiRuntimeDegraded(state = getAgentLeeRuntimeState()) {
 function getRuntimeProofSummary(state = getAgentLeeRuntimeState(), installedModels: string[] = []) {
   const degraded = isUiRuntimeDegraded(state);
   const preflight = !state.initializedAt;
+  const runtimeTruth = state.runtimeTruth;
+  const statusLabel = runtimeTruth?.installedRuntimeStatus === "stale"
+    ? "Stale"
+    : degraded
+      ? "Degraded"
+      : "Ready";
   return {
     title: "Agent Lee Runtime",
-    statusLabel: degraded ? "Degraded" : "Ready",
+    statusLabel,
     personaLabel: preflight || state.personaModuleLoaded ? "Loaded" : "Unavailable",
     doctorLabel: state.doctorStatus === "fail" ? "Fail" : "Pass",
     modelsLabel: preflight || installedModels.length || state.modelRoutesAvailable ? "Available" : "Unavailable",
@@ -624,7 +1146,23 @@ function getRuntimeProofSummary(state = getAgentLeeRuntimeState(), installedMode
       `Resolved root: ${state.resolvedRoot || state.runtimeRoot || "unresolved"}`,
       `Root source: ${state.rootSource}`,
       `Missing connectivity paths: ${state.missingConnectivityPaths.length ? state.missingConnectivityPaths.join(", ") : "none"}`,
-      `Receipt path: ${state.receiptPath}`
+      `Receipt path: ${state.receiptPath}`,
+      `Extension source mode: ${runtimeTruth?.sourceMode || "SOURCE_UNKNOWN"}`,
+      `Update channel: ${runtimeTruth?.updateChannel || "UPDATE_CHANNEL_UNKNOWN"}`,
+      `Installed runtime status: ${runtimeTruth?.installedRuntimeStatus || "unknown"}`,
+      `Current extension version: ${runtimeTruth?.packageVersion || "unknown"}`,
+      `Repo source version: ${runtimeTruth?.repoPackageVersion || "unknown"}`,
+      `Installed extension version: ${runtimeTruth?.installedVersion || "not_found"}`,
+      `Latest local VSIX version: ${runtimeTruth?.latestLocalVsixVersion || "not_found"}`,
+      `Commands registered: ${runtimeTruth?.commandsRegistered ?? false}`,
+      `Assets packaged: ${runtimeTruth?.assetsPackaged ?? false}`,
+      `README assets present: ${runtimeTruth?.readmeAssetsPresent ?? false}`,
+      `Adapter crash risk: ${runtimeTruth?.adapterCrashRisk ?? true}`,
+      `Automatic updates expected: ${runtimeTruth?.autoUpdateAvailable ?? false}`,
+      `Automatic update explanation: ${runtimeTruth?.autoUpdateExpectation || "unknown"}`,
+      `extensions.autoUpdate: ${runtimeTruth?.autoUpdateSetting || "unknown"}`,
+      `workspace extensions.autoUpdate: ${runtimeTruth?.autoUpdateWorkspaceSetting || "unknown"}`,
+      `Settings Sync ignores extensions.autoUpdate: ${runtimeTruth?.settingsSyncIgnored ?? false}`
     ]
   };
 }
@@ -647,12 +1185,60 @@ function buildRuntimeDegradedMessage(state = getAgentLeeRuntimeState()) {
 function updateRuntimeStatusBar(_state = getAgentLeeRuntimeState()) {
   if (!runtimeStatusBarItem) return;
   const degraded = isUiRuntimeDegraded(_state);
-  runtimeStatusBarItem.text = degraded ? "Agent Lee: Degraded" : "Agent Lee: Ready";
-  runtimeStatusBarItem.tooltip = degraded
-    ? "Agent Lee sovereign runtime is active but degraded. Click to open the right-side panel; run Agent Lee: Runtime Status for proof."
-    : "Agent Lee sovereign runtime is active. Click to open the right-side panel; run Agent Lee: Runtime Status for proof.";
-  runtimeStatusBarItem.command = AGENT_LEE_OPEN_PANEL_COMMAND;
+  const runtimeTruth = _state.runtimeTruth;
+  const runtimeSuffix = runtimeTruth?.installedRuntimeStatus === "stale"
+    ? "Stale"
+    : degraded
+      ? "Degraded"
+      : "Ready";
+  runtimeStatusBarItem.text = `Agent Lee: ${runtimeSuffix}`;
+  runtimeStatusBarItem.tooltip = [
+    `Agent Lee runtime status: ${runtimeSuffix}`,
+    `Update channel: ${runtimeTruth?.updateChannel || "UPDATE_CHANNEL_UNKNOWN"}`,
+    `Installed runtime status: ${runtimeTruth?.installedRuntimeStatus || "unknown"}`,
+    `Auto-update: ${runtimeTruth?.autoUpdateExpectation || "unknown"}`,
+    "Click to open the preferred right-side surface. Run Agent Lee: Diagnose Runtime for the full proof."
+  ].join("\n");
+  runtimeStatusBarItem.command = "agentLee.openRightSurface";
   runtimeStatusBarItem.show();
+}
+
+function buildCoreRuntimeCommandStatus() {
+  return {
+    openSidebar: true,
+    openRightSurface: true,
+    runtimeStatus: true,
+    diagnoseRuntime: true,
+    showInstalledVersion: true,
+    showUpdateChannel: true,
+    repairInstallation: true
+  };
+}
+
+function writeLiveHostSelfAttestation(context: vscode.ExtensionContext, state = getAgentLeeRuntimeState()) {
+  const runtimeTruth = state.runtimeTruth;
+  if (!runtimeTruth) return;
+  const attestation = buildLiveHostSelfAttestation(
+    context,
+    runtimeTruth,
+    extensionActivationTimestamp || state.initializedAt || new Date().toISOString(),
+    buildCoreRuntimeCommandStatus()
+  );
+  const attestationPath = getLiveHostAttestationPath(context);
+  writeJsonWithRetries(
+    attestationPath,
+    attestation,
+    "Live host self-attestation for the running Agent Lee extension host."
+  );
+  recordAgentLeeRuntimeReceipt({
+    event: "runtime.live-host-attestation.written",
+    attestationPath,
+    extensionPath: attestation.extensionPath,
+    packageVersion: attestation.packageVersion,
+    buildHash: attestation.buildHash,
+    uiGenerationId: attestation.uiGenerationId,
+    processId: attestation.processId
+  });
 }
 
 async function postVisibleRuntimeState(webview: vscode.Webview) {
@@ -1093,11 +1679,58 @@ function stripCodeForSpeech(text: string) {
     .slice(0, 900);
 }
 
+function splitSpeechIntoChunks(text: string, maxChunkLength = 220) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (!clean) return [] as string[];
+
+  const sentences = clean
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const chunks: string[] = [];
+  let current = "";
+
+  const pushCurrent = () => {
+    if (current.trim()) chunks.push(current.trim());
+    current = "";
+  };
+
+  for (const sentence of sentences) {
+    if (sentence.length > maxChunkLength) {
+      const words = sentence.split(/\s+/).filter(Boolean);
+      for (const word of words) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (candidate.length > maxChunkLength) {
+          pushCurrent();
+          current = word;
+        } else {
+          current = candidate;
+        }
+      }
+      continue;
+    }
+
+    const candidate = current ? `${current} ${sentence}` : sentence;
+    if (candidate.length > maxChunkLength) {
+      pushCurrent();
+      current = sentence;
+    } else {
+      current = candidate;
+    }
+  }
+
+  pushCurrent();
+  return chunks;
+}
+
 function scrubAgentLeeVoice(text: string) {
   return text
     .replace(/\b(i am|i'm)\s+agent lee\b[:, -]*/gi, "")
     .replace(/\bagent lee here\b[:, -]*/gi, "")
     .replace(/\bthis is agent lee\b[:, -]*/gi, "")
+    .replace(/^\s*next directive:\s*inspect,\s*patch,\s*verify\.?\s*$/gim, "")
+    .replace(/\bstate the target build\.?\b/gi, "Tell me what you want me to work on.")
     .replace(/^.*\bverifier model\b.*$/gim, "")
     .replace(/^.*\bbuilder model\b.*$/gim, "")
     .replace(/^.*\bdesigner\/ux model\b.*$/gim, "")
@@ -1120,6 +1753,10 @@ function normalizeAgentPerspective(text: string) {
     .replace(/\bAgent Lee\s+is\b/gi, "I am")
     .replace(/\bAgent Lee\s+has\b/gi, "I have")
     .replace(/\bAgent Lee\s+can\b/gi, "I can")
+    .replace(/\bAgent Lee\s+voice\s+paused\b/gi, "I paused the voice")
+    .replace(/\bAgent Lee\s+received\b/gi, "I received")
+    .replace(/\bAgent Lee\s+runtime\b/gi, "My runtime")
+    .replace(/\bAgent Lee\b/gi, "I")
     .replace(/\bThat is how the system becomes more than a tool\s*-\s*it becomes an operating layer\.?/gi, "")
     .replace(/\bThat is the difference between a tool and a living operating layer\.?/gi, "")
     .replace(/\n{3,}/g, "\n\n");
@@ -1159,6 +1796,14 @@ function normalizeConversationPrompt(prompt: string) {
     .trim();
 }
 
+function normalizeConversationPromptRaw(prompt: string) {
+  return String(prompt || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function isSelfIdentityQuestion(prompt: string) {
   const normalized = normalizeConversationPrompt(prompt);
   if (/\b(who are you|tell me about yourself|tell me something about yourself|introduce yourself|what can you do|what do you know about yourself|talk to me about yourself|tell me who you are)\b/i.test(normalized)) {
@@ -1171,25 +1816,42 @@ function isSelfIdentityQuestion(prompt: string) {
 }
 
 function isCasualGreeting(prompt: string) {
-  const normalized = normalizeConversationPrompt(prompt);
+  const normalized = normalizeConversationPromptRaw(prompt);
   if (!normalized) return false;
   return /^(hi|hello|hey|yo|sup|what'?s up|good (morning|afternoon|evening))( there)?[!.?, ]*$/.test(normalized);
 }
 
 function isCasualSmallTalk(prompt: string) {
-  const normalized = normalizeConversationPrompt(prompt);
+  const normalized = normalizeConversationPromptRaw(prompt);
   if (!normalized) return false;
   return /^(hi|hello|hey|yo|sup|what'?s up|good (morning|afternoon|evening)|thanks|thank you|ok|okay|cool|sounds good|got it|how are you|how you doing|what's good|whats good)[!.?, ]*$/.test(normalized);
 }
 
 function isCasualConversationPrompt(prompt: string) {
-  const normalized = normalizeConversationPrompt(prompt);
+  const normalized = normalizeConversationPromptRaw(prompt);
   if (!normalized) return false;
-  if (isSelfIdentityQuestion(normalized) || isCasualSmallTalk(normalized)) return true;
-  if (/\b(how are you|how you doing|what's good|whats good|talk to me|tell me something|what are you up to|what we building today|what are we building today)\b/i.test(normalized)) {
+  if (isSelfIdentityQuestion(prompt) || isCasualSmallTalk(prompt)) return true;
+  if (/\b(how are you|how you doing|what's good|whats good|what's going on|whats going on|what's happening|whats happening|what are you up to|what are you doing|talk to me|tell me something|what we building today|what are we building today)\b/i.test(normalized)) {
     return !/\b(file|files|repo|repository|bug|error|fix|patch|build|compile|test|command|terminal|plugin|mcp|server|agent vm|workspace)\b/i.test(normalized);
   }
   return false;
+}
+
+function classifyPromptForRuntime(prompt: string): AgentLeePromptClass {
+  const normalized = normalizeConversationPromptRaw(prompt);
+  if (!normalized || isCasualGreeting(prompt) || isCasualSmallTalk(prompt)) {
+    return "simple_greeting";
+  }
+  if (/(publish|marketplace|vsix|security|token|secret|credential|permission|admin|deploy|production|payment|destructive|delete extension)/i.test(normalized)) {
+    return "governance_sensitive_request";
+  }
+  if (/(edit|change|update|fix|repair|refactor|patch|install|remove|create|generate|write|run|compile|test|package|build|reload|ship|apply)/i.test(normalized)) {
+    return "mutation_request";
+  }
+  if (/(workspace|repo|repository|codebase|file|files|folder|extension|sidebar|readme|voice|runtime|activity bar|webview|command|package\.json|vs code)/i.test(normalized)) {
+    return "workspace_aware_question";
+  }
+  return "general_question";
 }
 
 function isRelationshipPrompt(prompt: string) {
@@ -1214,6 +1876,9 @@ function buildCasualReply(prompt: string) {
   }
   if (/^good evening/.test(normalized)) {
     return "Good evening. What's the energy tonight?";
+  }
+  if (/\b(what's going on|whats going on|what's happening|whats happening|what are you up to|what are you doing)\b/i.test(normalized)) {
+    return "I'm here and ready. Tell me what you want me to look at.";
   }
   return "I'm here with you. Talk to me.";
 }
@@ -1307,7 +1972,7 @@ function canExecuteApprovedPlan() {
 function buildIdentityAnswer() {
   const capabilityCount = capabilityCatalog.counts.total || 0;
   return [
-    `I'm Agent Lee. I work inside this workspace, keep track of the moving parts, and help turn messy problems into clean decisions.`,
+    `I work inside this workspace, keep track of the moving parts, and help turn messy problems into clean decisions.`,
     `Under the hood I've got ${capabilityCount} connected capabilities, but the part that matters to you is whether I can stay useful, calm, and real while we work.`,
     "So if you want to talk first, we can talk first."
   ].join("\n\n");
@@ -1358,6 +2023,7 @@ async function buildAttachmentContext(attachments: PendingAttachment[], installe
 }
 
 function speak(text: string) {
+  syncVoiceRuntimeStateShape();
   if (!runtimeState.voice) return;
   const stage = enforceStageLaw("voice", { speaker: "Agent Lee", directUserFacing: true });
   if (!stage.allowed) return;
@@ -1365,9 +2031,99 @@ function speak(text: string) {
   const speech = stripCodeForSpeech(text);
   if (!speech.trim()) return;
 
-  const started = speakWithVoice(speech, (message) => log("voice-error", { message }));
-  if (!started) {
-    log("voice-error", { message: "Voice runtime failed to start." });
+  const liveTurnMode = runtimeState.liveMicAlwaysOn !== false;
+  const leadSpeech = liveTurnMode
+    ? speech.replace(/\s+/g, " ").split(/(?<=[.!?])\s+/).slice(0, 2).join(" ").slice(0, 260)
+    : speech;
+  const voiceStatus = getVoiceStatus() as any;
+  const routeId = String(voiceStatus.routeId || "leeway.voice.text.emergency");
+  const segmentPlan = planLeewayLiveVoiceSegments(leadSpeech, routeId as any, liveTurnMode);
+  const activeChunks = segmentPlan.segments;
+  recordVoiceUiCommand("leewayVoiceSpeakRequested", {
+    routeId,
+    chunkCount: activeChunks.length,
+    liveTurnMode
+  });
+  voiceEvidenceState.currentRouteId = routeId;
+  voiceEvidenceState.plannedSegments = activeChunks.length;
+  voiceEvidenceState.playedSegments = 0;
+  voiceEvidenceState.multiSegmentPlaybackCompleted = false;
+  voiceEvidenceState.firstAudioLatencyMs = null;
+  voiceEvidenceState.lastError = "";
+  voiceEvidenceState.status = "speaking";
+  const oneWordFailure = detectOneWordSpeechFailure(leadSpeech, activeChunks);
+  if (oneWordFailure.failed) {
+    log("voice-error", { message: oneWordFailure.reason, routeId, expectedWords: oneWordFailure.expectedWords, emittedWords: oneWordFailure.emittedWords });
+    broadcast({ command: "voiceCloneStatus", text: oneWordFailure.reason });
+    updateVoiceRuntimeStatus(oneWordFailure.reason, {
+      error: oneWordFailure.reason,
+      routeId,
+      eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+    });
+  }
+  if (!activeChunks.length) {
+    const detail = voiceStatus.visibleStatus || segmentPlan.reason || "LeeWay live voice could not produce a route.";
+    log("voice-error", { message: detail, routeId });
+    broadcast({ command: "voiceCloneStatus", text: detail });
+    broadcast({ command: "status", text: detail });
+    void Promise.allSettled(Array.from(activeWebviews).map((webview) => postRuntimeInfo(webview, "voice route degraded")));
+    updateVoiceRuntimeStatus(detail, {
+      error: detail,
+      routeId,
+      eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+    });
+    return;
+  }
+  updateVoiceRuntimeStatus(`LeeWay live voice speaking through ${routeId}.`, {
+    routeId,
+    eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+  });
+  const playback = lavrPlaybackGate.startPlayback({
+    lavrSessionId: lavrHostSessionId,
+    lavrTurnId: currentLavrTurnId()
+  });
+
+  for (const chunk of activeChunks) {
+    const lavrAudioSegmentId = lavrPlaybackGate.queueSegment(playback.lavrPlaybackId);
+    if (!lavrAudioSegmentId) continue;
+
+    const started = speakWithVoice(
+      chunk,
+      (message) => {
+        log("voice-error", { message });
+        broadcast({ command: "voiceCloneStatus", text: message });
+        broadcast({ command: "status", text: message });
+        void Promise.allSettled(Array.from(activeWebviews).map((webview) => postRuntimeInfo(webview, "voice route error")));
+        lavrPlaybackGate.cancelPlayback(playback.lavrPlaybackId, "segment_error");
+        updateVoiceRuntimeStatus(message, {
+          error: message,
+          routeId,
+          eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+        });
+      },
+      {
+        onSegmentCompleted: () => {
+          lavrPlaybackGate.completeSegment(playback.lavrPlaybackId, lavrAudioSegmentId);
+          if (voiceEvidenceState.playedSegments >= Math.max(1, voiceEvidenceState.plannedSegments)) {
+            voiceEvidenceState.multiSegmentPlaybackCompleted = true;
+          }
+        },
+        onLifecycleEvent: (event) => {
+          registerVoiceLifecycleEvent(event);
+        }
+      }
+    );
+
+    if (!started) {
+      log("voice-error", { message: "Voice runtime failed to start." });
+      lavrPlaybackGate.cancelPlayback(playback.lavrPlaybackId, "voice_runtime_failed_to_start");
+      updateVoiceRuntimeStatus("Voice runtime failed to start.", {
+        error: "Voice runtime failed to start.",
+        routeId,
+        eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+      });
+      break;
+    }
   }
 }
 
@@ -1634,7 +2390,35 @@ function postAgentResponse(
     reportPath: options?.reportPath || "",
     activity: options?.activity || null
   });
-  if (options?.speak !== false) speak(rendered);
+  const isStatusActivity = options?.activity?.kind === "status";
+  const shouldSpeak = options?.speak !== false && !isStatusActivity && runtimeState.voiceAutoSpeak !== false;
+  if (shouldSpeak) speak(rendered);
+}
+
+function submitOutgoingVoiceMessage(
+  webview: vscode.Webview,
+  text: string,
+  review: LeeWayVoiceReviewState
+) {
+  recordAgentLeeRuntimeReceipt({
+    event: "voice.review.submitted",
+    transcriptId: review.transcriptId,
+    source: review.source,
+    sourceLabel: review.sourceLabel,
+    classification: review.classification,
+    risk: review.risk,
+    identity: review.identity,
+    text
+  });
+  currentTaskState.status = review.nextAction === "Create proposal"
+    ? "Voice request prepared as a governed proposal prompt."
+    : "Voice request prepared as a governed chat prompt.";
+  postTaskState();
+  webview.postMessage({
+    command: "submitVoiceReviewMessage",
+    text,
+    sourceLabel: review.sourceLabel
+  });
 }
 
 function flavoredStatusLine(kind:
@@ -1649,7 +2433,7 @@ function flavoredStatusLine(kind:
 ) {
   switch (kind) {
     case "loading":
-      return "Reading your message now.";
+      return "Classifying the request and loading only the context it needs.";
     case "queued":
       return "Follow-up queued. It will execute after the current pass.";
     case "steer":
@@ -1705,38 +2489,16 @@ function resolveManagedVsixCandidate(): ManagedVsixCandidate | null {
     const packageName = String(packageJson.name || "").trim();
     const packageVersion = String(packageJson.version || "").trim();
     if (!packageName) return null;
+    if (!packageVersion) return null;
 
-    const exactVsixPath = packageVersion
-      ? path.join(MANAGED_EXTENSION_DIR, `${packageName}-${packageVersion}.vsix`)
-      : "";
+    const exactVsixPath = path.join(MANAGED_EXTENSION_DIR, `${packageName}-${packageVersion}.vsix`);
     const exactStats = exactVsixPath && fs.existsSync(exactVsixPath) ? fs.statSync(exactVsixPath) : null;
-
-    let resolvedPath = exactVsixPath;
-    let resolvedStats = exactStats;
-
-    if (!resolvedStats) {
-      const fallback = fs.readdirSync(MANAGED_EXTENSION_DIR)
-        .filter((name) => name.startsWith(`${packageName}-`) && name.endsWith(".vsix"))
-        .map((name) => {
-          const candidatePath = path.join(MANAGED_EXTENSION_DIR, name);
-          return {
-            candidatePath,
-            stats: fs.statSync(candidatePath)
-          };
-        })
-        .sort((a, b) => b.stats.mtimeMs - a.stats.mtimeMs)[0];
-
-      if (!fallback) return null;
-      resolvedPath = fallback.candidatePath;
-      resolvedStats = fallback.stats;
-    }
-
-    if (!resolvedStats || !resolvedPath) return null;
+    if (!exactStats) return null;
     return {
       packageName,
       packageVersion,
-      vsixPath: resolvedPath,
-      signature: `${path.basename(resolvedPath)}:${resolvedStats.size}:${resolvedStats.mtimeMs}`
+      vsixPath: exactVsixPath,
+      signature: `${path.basename(exactVsixPath)}:${exactStats.size}:${exactStats.mtimeMs}`
     };
   } catch {
     return null;
@@ -1747,7 +2509,7 @@ async function installManagedVsix(context: vscode.ExtensionContext, reason: "sta
   const candidate = resolveManagedVsixCandidate();
   if (!candidate) {
     if (reason === "manual") {
-      showAgentLeeWarning("Agent Lee could not find a local VSIX to install.");
+      showAgentLeeWarning("Agent Lee could not find a VSIX that matches the current package.json version.");
     }
     return false;
   }
@@ -1762,30 +2524,38 @@ async function installManagedVsix(context: vscode.ExtensionContext, reason: "sta
     return false;
   }
 
-  if (!fs.existsSync(DEFAULT_VSCODE_CLI)) {
-    const message = `VS Code CLI was not found at ${DEFAULT_VSCODE_CLI}.`;
-    if (reason === "manual") {
-      showAgentLeeError(message);
-    } else {
-      console.warn(`[Agent Lee] ${message}`);
-    }
-    return false;
-  }
-
   try {
-    await runCommandCapture(DEFAULT_VSCODE_CLI, ["--install-extension", candidate.vsixPath, "--force"], {
+    await runCommandCapture("powershell.exe", [
+      "-NoProfile",
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      path.join(MANAGED_EXTENSION_DIR, "scripts", "Invoke-LeeWayExtensionInstallCurrent.ps1"),
+      "-ExtensionDir",
+      MANAGED_EXTENSION_DIR
+    ], {
       cwd: MANAGED_EXTENSION_DIR
     });
+
+    const installResultPath = path.join(MANAGED_EXTENSION_DIR, "test-evidence", "leeway-extension-install-current-result.json");
+    const installResult = fs.existsSync(installResultPath)
+      ? JSON.parse(fs.readFileSync(installResultPath, "utf8")) as { finalVerdict?: string; latestVsixVersion?: string }
+      : null;
+    if (!installResult || installResult.finalVerdict !== "PASS") {
+      throw new Error("Governed install-current pipeline did not produce a PASS verdict.");
+    }
+
     runtimeState.lastAppliedVsixSignature = candidate.signature;
     persistRuntime();
 
-    const message = `Installed Agent Lee ${candidate.packageVersion || "local"} from ${path.basename(candidate.vsixPath)}. Reloading VS Code now.`;
+    const installedVersion = installResult.latestVsixVersion || candidate.packageVersion || "local";
+    const message = `Installed Agent Lee ${installedVersion} from the governed install-current pipeline. Reloading VS Code now.`;
     if (agentLeeOutputChannel) {
       appendAgentLeeLine(agentLeeOutputChannel, message, { routeLabel: `extension.update.${reason}` });
       agentLeeOutputChannel.show(true);
     }
 
-    await vscode.window.showInformationMessage(agentLeeText(message, { routeLabel: `extension.update.${reason}` }));
+    showAgentLeeInfo(message, { routeLabel: `extension.update.${reason}` });
     await vscode.commands.executeCommand("workbench.action.reloadWindow");
     return true;
   } catch (error) {
@@ -2036,7 +2806,13 @@ async function openReadme(context: vscode.ExtensionContext) {
     return;
   }
 
-  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(readmePath));
+  const readmeUri = vscode.Uri.file(readmePath);
+  try {
+    await vscode.commands.executeCommand("markdown.showPreview", readmeUri);
+    return;
+  } catch {}
+
+  const document = await vscode.workspace.openTextDocument(readmeUri);
   await vscode.window.showTextDocument(document, { preview: false });
 }
 
@@ -2104,6 +2880,197 @@ async function attemptPluginRoute(
   return { pluginCall, result };
 }
 
+function nextLavrHostId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function currentLavrTurnId() {
+  if (!lavrLastObservedTurnId) {
+    lavrLastObservedTurnId = `lavr-turn-${++lavrHostTurnCounter}`;
+  }
+  return lavrLastObservedTurnId;
+}
+
+function stopLavrPlayback(reason: string, mode: "stop" | "cancel" = "stop") {
+  const activePlaybackId = lavrPlaybackGate.getActivePlaybackId();
+  if (activePlaybackId) {
+    if (mode === "cancel") {
+      lavrPlaybackGate.cancelPlayback(activePlaybackId, reason);
+    } else {
+      lavrPlaybackGate.requestStop(activePlaybackId, reason);
+    }
+  }
+  stopVoicePlayback();
+  voiceEvidenceState.status = mode === "cancel" ? "stopped" : runtimeState.voiceMuted ? "muted" : "stopped";
+  updateVoiceRuntimeStatus(
+    mode === "cancel"
+      ? `LeeWay live voice playback cancelled (${reason}).`
+      : `LeeWay live voice playback stopped (${reason}).`,
+    {
+      routeId: voiceEvidenceState.currentRouteId,
+      eventType: "LEEWAY_VOICE_STATUS_CHANGED",
+      error: runtimeState.voiceLastError
+    }
+  );
+}
+
+function normalizeLavrTerminalStatus(value: unknown): LavrTerminalStatus {
+  const raw = String(value || "").trim().toLowerCase();
+  if (raw === "completed" || raw === "failed" || raw === "cancelled" || raw === "timed_out") return raw;
+  return "failed";
+}
+
+function recordLavrToolLifecycle(event: string, payload: Record<string, unknown>) {
+  recordAgentLeeRuntimeReceipt({
+    event: `lavr.tool.${event}`,
+    ...payload
+  });
+  logEvent("lavr-tool-lifecycle", "Agent Lee", `LAVR tool lifecycle: ${event}`, payload);
+}
+
+function finalizeLavrToolRequest(
+  webview: vscode.Webview,
+  requestId: string,
+  terminalStatus: LavrTerminalStatus,
+  payload: {
+    ok?: boolean;
+    pluginId?: string;
+    action?: string;
+    summary?: string;
+    result?: unknown;
+    error?: string;
+    receiptId?: string;
+    requiresFollowUp?: boolean;
+  }
+) {
+  const state = lavrToolByRequestId.get(requestId);
+  if (!state) return false;
+  if (state.status !== "pending") {
+    recordLavrToolLifecycle("duplicate-result-suppressed", {
+      requestId,
+      callId: state.callId,
+      lavrSessionId: state.lavrSessionId,
+      lavrTurnId: state.lavrTurnId,
+      existingStatus: state.status,
+      attemptedStatus: terminalStatus
+    });
+    return false;
+  }
+
+  const signature = `${requestId}:${terminalStatus}:${String(payload.receiptId || "")}`;
+  if (state.resultSignature === signature) {
+    recordLavrToolLifecycle("duplicate-result-suppressed", {
+      requestId,
+      callId: state.callId,
+      lavrSessionId: state.lavrSessionId,
+      lavrTurnId: state.lavrTurnId,
+      reason: "same-result-signature"
+    });
+    return false;
+  }
+
+  if (state.timeoutHandle) {
+    clearTimeout(state.timeoutHandle);
+    state.timeoutHandle = null;
+  }
+
+  state.status = terminalStatus;
+  state.finishedAt = Date.now();
+  state.resultSignature = signature;
+  state.pluginId = payload.pluginId || state.pluginId;
+  state.action = payload.action || state.action;
+
+  webview.postMessage({
+    command: "leewayVoiceToolCompleted",
+    callId: state.callId,
+    lavrToolRequestId: state.requestId,
+    lavrTurnId: state.lavrTurnId,
+    lavrSessionId: state.lavrSessionId,
+    terminalStatus,
+    ok: payload.ok ?? terminalStatus === "completed",
+    pluginId: payload.pluginId || "",
+    action: payload.action || "",
+    summary: payload.summary || "",
+    result: payload.result,
+    error: payload.error,
+    receiptId: payload.receiptId || "",
+    requiresFollowUp: !!payload.requiresFollowUp
+  });
+
+  recordLavrToolLifecycle("result-returned", {
+    requestId: state.requestId,
+    callId: state.callId,
+    lavrSessionId: state.lavrSessionId,
+    lavrTurnId: state.lavrTurnId,
+    terminalStatus,
+    pluginId: state.pluginId || payload.pluginId || "",
+    action: state.action || payload.action || "",
+    receiptId: payload.receiptId || ""
+  });
+  return true;
+}
+
+function cancelPendingLavrToolRequests(webview: vscode.Webview, reason: string) {
+  for (const [requestId, state] of lavrToolByRequestId.entries()) {
+    if (state.status !== "pending") continue;
+    finalizeLavrToolRequest(webview, requestId, "cancelled", {
+      ok: false,
+      pluginId: state.pluginId || "",
+      action: state.action || "",
+      error: reason,
+      summary: "LAVR tool request cancelled."
+    });
+  }
+}
+
+function parseVoiceRealtimeToolCall(event: Record<string, unknown>, callId: string): PluginCallInput | null {
+  const rawName = String(event.name || "").trim();
+  const rawArgs = event.args;
+  const args = rawArgs && typeof rawArgs === "object" ? (rawArgs as Record<string, unknown>) : {};
+  const explicitPluginId = String(args.pluginId || "").trim();
+  const explicitAction = String(args.action || "").trim();
+
+  let pluginId = explicitPluginId;
+  let action = explicitAction;
+
+  if ((!pluginId || !action) && rawName) {
+    const dotIndex = rawName.indexOf(".");
+    const slashIndex = rawName.indexOf("/");
+    const splitIndex = dotIndex >= 0 ? dotIndex : slashIndex;
+    if (splitIndex > 0) {
+      pluginId = pluginId || rawName.slice(0, splitIndex);
+      action = action || rawName.slice(splitIndex + 1);
+    }
+  }
+
+  pluginId = normalizePluginId(String(pluginId || "").trim());
+  action = String(action || "").trim();
+  if (!pluginId || !action) {
+    return null;
+  }
+
+  const params: Record<string, unknown> = {
+    ...args,
+    callId,
+    lavrToolRequestId: String(event.lavrToolRequestId || callId || ""),
+    lavrTurnId: String(event.lavrTurnId || ""),
+    lavrSessionId: String(event.lavrSessionId || "")
+  };
+  delete params.pluginId;
+  delete params.action;
+
+  return {
+    pluginId,
+    action,
+    params,
+    userIntent: String(args.userIntent || rawName || `${pluginId}.${action}`),
+    sourceUnit: "leeway-agent-voice-runtime",
+    sourceType: "runtime",
+    capabilityProof: ["lavr-tool-request", "leeway-voice-event-bus"],
+    securityZone: "Z1"
+  };
+}
+
 async function guardedAsk(
   prompt: string,
   installedModels: string[],
@@ -2128,6 +3095,7 @@ async function guardedAsk(
 
   try {
     isExecutionRunning = true;
+    const promptClass = classifyPromptForRuntime(prompt);
     const capabilitySummary = `${formatCapabilitySummary(capabilityCatalog)}\n${buildSettingsCapabilityOverlay()}`;
     const developerProfileSummary = buildDeveloperProfileSummary(loadDeveloperProfile());
     const hive = buildModelHiveStatus(installedModels, {
@@ -2137,7 +3105,7 @@ async function guardedAsk(
     }, prompt);
 
     if (/^\s*(stop|silence|pause|cancel)\b/i.test(prompt)) {
-      stopVoicePlayback();
+      stopLavrPlayback("prompt_stop_command", "stop");
       return { text: "Agent Lee voice paused." };
     }
 
@@ -2158,8 +3126,12 @@ async function guardedAsk(
     }
 
     const target = overrides?.target || await resolvePromptContext(prompt);
+    const shouldLoadKnowledgeContext =
+      promptClass === "workspace_aware_question" ||
+      promptClass === "mutation_request" ||
+      promptClass === "governance_sensitive_request";
     const knowledgeContext =
-      target.workspaceRoot && !target.remoteContext
+      shouldLoadKnowledgeContext && target.workspaceRoot && !target.remoteContext
         ? prepareCodexLevelContext(
             target.workspaceRoot,
             prompt,
@@ -2201,6 +3173,7 @@ async function guardedAsk(
     recordAgentLeeRuntimeReceipt({
       event: "model.response.completed",
       model: runtimeState.primaryModel,
+      promptClass,
       promptLength: prompt.length,
       reportPath: result.reportPath || ""
     });
@@ -2223,24 +3196,13 @@ function formatConversationTitle(item: { title: string; updatedAt: string; recov
   return `${item.title}${suffix}`;
 }
 
-function getNonce() {
-  let text = "";
-  const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
-  return text;
-}
-
 function getHtml(webview: vscode.Webview, context: vscode.ExtensionContext) {
-  const nonce = getNonce();
-  const brandingIconUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, "media", "top-right-button-new.png")
-  );
-  const standardsBtnUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, "media", "leeway-standards-button.png")
-  );
-  const bottomBtnUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, "media", "bottom-button-for-agent-lee.png")
-  );
+  const chatAvatarUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::CHAT_HEADER_AVATAR");
+  const sidebarLogoUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::README_PRIMARY_LOGO");
+  const brandingIconUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::SIDEBAR_TOP_RIGHT_BUTTON");
+  const standardsBtnUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::LEEWAY_STANDARDS_BUTTON");
+  const standardsLogoUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::PACKAGE_ICON");
+  const bottomBtnUri = resolveLeewayAssetWebviewUri(webview, context.extensionUri, "LEEWAY_ASSET::SIDEBAR_BOTTOM_BUTTON");
   const testExtensionUri = webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, "media", "test-extension.ps1")
   );
@@ -2249,7 +3211,7 @@ function getHtml(webview: vscode.Webview, context: vscode.ExtensionContext) {
 <html>
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} https: data:; font-src ${webview.cspSource};">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'unsafe-eval'; img-src ${webview.cspSource} https: data:; font-src ${webview.cspSource};">
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--vscode-font-family);color:#f3f0ff;background:radial-gradient(circle at top,rgba(130,72,255,.12),transparent 28%),linear-gradient(180deg,#111117 0%,#0d0d12 100%);height:100vh;display:flex;flex-direction:column}
@@ -2257,7 +3219,8 @@ button,select,textarea{font-family:inherit}
 .app-shell{display:flex;flex-direction:column;height:100vh}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px 10px;border-bottom:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01))}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
-.brand-mark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg,rgba(181,133,255,.18),rgba(115,77,210,.08));border:1px solid rgba(181,133,255,.34);overflow:hidden;flex:none}
+.brand-mark{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(180deg,rgba(181,133,255,.18),rgba(115,77,210,.08));border:1px solid rgba(181,133,255,.34);overflow:hidden;flex:none;position:relative}
+.brand-mark.img-failed::after{content:"AL";position:absolute;inset:0;display:grid;place-items:center;color:#f3efff;font-weight:800;font-size:12px;letter-spacing:.08em}
 .brand-mark img{width:100%;height:100%;object-fit:cover;display:block}
 .brand-copy{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
 .brand-title{font-size:15px;font-weight:700;color:#f4efff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2444,6 +3407,19 @@ select option{background:#1b1628;color:#f4efff}
 .hidden{display:none}
 .composer{flex:none;padding:10px 12px 12px;background:linear-gradient(180deg,rgba(13,13,18,.4),rgba(13,13,18,.96) 24%,rgba(13,13,18,.99) 100%);border-top:1px solid rgba(255,255,255,.06)}
 .composer-shell{border:1px solid rgba(158,110,255,.30);border-radius:16px;background:linear-gradient(180deg,rgba(32,22,48,.82),rgba(18,17,26,.96));box-shadow:0 24px 52px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.04);padding:10px 12px}
+.voice-review-panel{margin:0 0 10px;border:1px solid rgba(122,195,255,.22);border-radius:14px;padding:12px;background:linear-gradient(180deg,rgba(19,31,44,.92),rgba(11,18,29,.96));display:flex;flex-direction:column;gap:10px}
+.voice-review-panel[hidden]{display:none}
+.voice-review-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.voice-review-title{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#eef6ff}
+.voice-review-copy{font-size:12px;color:#c4d2e4;line-height:1.5}
+.voice-review-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.voice-review-field{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px;background:rgba(255,255,255,.03)}
+.voice-review-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#97acc6}
+.voice-review-value{font-size:12px;color:#f3f8ff;line-height:1.45;margin-top:4px;word-break:break-word}
+.voice-review-actions{display:flex;gap:8px;flex-wrap:wrap}
+.voice-bridge-card{grid-column:1 / -1;border:1px solid rgba(122,195,255,.18);border-radius:14px;padding:12px;background:linear-gradient(180deg,rgba(14,24,37,.88),rgba(12,18,27,.96));display:flex;flex-direction:column;gap:10px}
+.voice-bridge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.voice-bridge-warning{font-size:12px;color:#ffd48a;line-height:1.5}
 textarea{width:100%;min-height:82px;resize:none;padding:8px 2px 4px;border:0;background:transparent;color:#f6f2ff;outline:none}
 textarea::placeholder{color:#8c859c}
 .composer-bottom{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-top:6px}
@@ -2512,27 +3488,30 @@ textarea::placeholder{color:#8c859c}
 .history-item-title{font-size:12px;color:#f4efe8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .history-item-meta{font-size:10px;color:#9a92ac;text-transform:uppercase;letter-spacing:.08em}
 .history-empty{padding:12px;border-radius:14px;border:1px dashed rgba(255,255,255,.12);color:#b8b1c8;font-size:12px}
-@media (max-width:700px){.meta-row{flex-direction:column;align-items:flex-start}.composer-bottom,.footer,.settings-row,.topbar,.settings-head,.hero-strip{flex-wrap:wrap}.composer-right{width:100%;justify-content:space-between}.model-compact,.access-compact{max-width:none}.conversation-title{max-width:220px}.workflow-grid{grid-template-columns:1fr}.workflow-preview{max-width:42%}.settings-layout{grid-template-columns:1fr}.settings-nav{overflow:auto}.hero-image{max-width:100%;width:100%}}
+@media (max-width:700px){.meta-row{flex-direction:column;align-items:flex-start}.composer-bottom,.footer,.settings-row,.topbar,.settings-head,.hero-strip,.voice-review-head,.voice-review-actions{flex-wrap:wrap}.composer-right{width:100%;justify-content:space-between}.model-compact,.access-compact{max-width:none}.conversation-title{max-width:220px}.workflow-grid,.voice-review-grid,.voice-bridge-grid{grid-template-columns:1fr}.workflow-preview{max-width:42%}.settings-layout{grid-template-columns:1fr}.settings-nav{overflow:auto}.hero-image{max-width:100%;width:100%}}
 .img-btn{background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .img-btn:hover{opacity:0.8}
+.img-btn.text-fallback{min-width:28px;min-height:28px;padding:0 8px;border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#f2ecff;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.img-btn.topbar-brand-btn{min-width:44px;min-height:44px;padding:4px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.img-btn.topbar-brand-btn img{height:34px !important;width:auto;display:block}
+.img-btn.topbar-brand-btn:hover{opacity:1;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.18)}
 </style>
 </head>
 <body>
 <div class="app-shell">
   <div class="topbar">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true"><img src="${standardsBtnUri}" alt="" /></div>
+      <div class="brand-mark" aria-hidden="true"><img src="${chatAvatarUri}" alt="Agent Lee chat avatar" onerror="this.style.display='none'; this.parentElement.classList.add('img-failed');" /></div>
       <div class="brand-copy">
         <div class="brand-title">Agent Lee Chat</div>
         <div class="conversation-title" id="conversationTitle">Current conversation</div>
       </div>
     </div>
     <div class="top-actions">
-      <button class="icon-btn" id="historyBtn" aria-label="Open chat history" title="Open chat history">History</button>
-      <button class="icon-btn" id="newChatBtn" aria-label="Start a new chat" title="Start a new chat">New Chat</button>
-      <button class="icon-btn" id="settingsBtn" aria-label="Open Agent Lee settings" title="Open Agent Lee settings">Settings</button>
-      <button class="img-btn" id="topStandardsBtn" title="LeeWay Standards"><img src="${standardsBtnUri}" alt="Standards" style="height:24px" /></button>
-      <button class="img-btn" id="topRightBrandingBtn" title="Agent Lee"><img src="${brandingIconUri}" alt="Agent Lee" style="height:24px" /></button>
+      <button class="icon-btn" id="historyBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::HISTORY_BUTTON" aria-label="Open chat history" title="Open chat history">History</button>
+      <button class="icon-btn" id="newChatBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::NEW_CHAT_BUTTON" aria-label="Start a new chat" title="Start a new chat">New Chat</button>
+      <button class="icon-btn" id="settingsBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::SETTINGS_BUTTON" aria-label="Open Agent Lee settings" title="Open Agent Lee settings">Settings</button>
+      <button class="img-btn topbar-brand-btn" id="topStandardsBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::TOP_STANDARDS_BUTTON" title="LeeWay Standards"><img src="${brandingIconUri}" alt="LeeWay" onerror="fallbackImageButton(this,'LW');" /></button>
     </div>
   </div>
   <div class="history-drawer" id="historyDrawer">
@@ -2541,7 +3520,7 @@ textarea::placeholder{color:#8c859c}
         <div class="settings-heading">Previous chats</div>
         <div class="settings-copy">Open an older thread any time. The panel still starts fresh by default.</div>
       </div>
-      <button class="ghost-btn" id="closeHistoryBtn" aria-label="Close chat history" title="Close chat history">Close</button>
+      <button class="ghost-btn" id="closeHistoryBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::CLOSE_HISTORY_BUTTON" aria-label="Close chat history" title="Close chat history">Close</button>
     </div>
     <div class="history-list" id="historyList"></div>
   </div>
@@ -2681,15 +3660,19 @@ textarea::placeholder{color:#8c859c}
                 <select id="primaryModelSettings" onchange="setPrimaryModel(this.value)"></select>
               </div>
               <div class="model-card">
-                <div class="model-label">Agent Lee updates</div>
+                <div class="model-label">Managed local VSIX sync</div>
                 <label class="settings-row" style="gap:8px;align-items:center">
                   <input type="checkbox" class="settings-toggle" id="autoUpdateEnabledToggle" onchange="setAutoUpdateEnabled(this.checked)" />
-                  <span class="muted">Install the newest local VSIX on startup</span>
+                  <span class="muted">Reinstall the newest local VSIX on startup</span>
+                </label>
+                <label class="settings-row" style="gap:8px;align-items:center;margin-top:10px">
+                  <input type="checkbox" class="settings-toggle" id="preferRightSideSurfaceToggle" onchange="setPreferRightSideSurface(this.checked)" />
+                  <span class="muted">Prefer the right-side chat surface by default</span>
                 </label>
                 <div class="settings-row" style="margin-top:10px">
                   <button class="ghost-btn" type="button" onclick="updateAgentLeeNow()">Update Now</button>
                 </div>
-                <div class="model-status" id="autoUpdateHint">Agent Lee will keep this local VS Code install in sync with the newest packaged VSIX.</div>
+                <div class="model-status" id="autoUpdateHint">This is not Marketplace auto-update. It is a managed local VSIX reinstall path for side-loaded builds.</div>
               </div>
             </div>
           </div>
@@ -2751,9 +3734,20 @@ textarea::placeholder{color:#8c859c}
               <div class="model-card">
                 <div class="model-label">Voice Output</div>
                 <div class="settings-row">
-                  <button class="ghost-btn" id="voiceBtn" onclick="toggleVoice()">Voice On</button>
-                  <button class="ghost-btn" onclick="stopVoice()">Stop Voice</button>
+                  <button class="ghost-btn" id="voiceEnabledBtn" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::VOICE_ENABLED" data-leeway-command="leewayVoiceSettingsChanged" data-leeway-setting-key="voiceEnabled" onclick="setVoiceEnabledFromButton()">Voice Enabled</button>
+                  <button class="ghost-btn" id="voiceMuteBtn" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::MUTE_TOGGLE" data-leeway-command="leewayVoiceMuteToggled" onclick="toggleVoiceMute()">Mute</button>
+                  <button class="ghost-btn" id="voiceStopBtn" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::STOP_SPEAKING" data-leeway-command="leewayVoiceStopRequested" onclick="requestVoiceStop()">Stop Speaking</button>
+                  <button class="ghost-btn" id="voiceTestBtn" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::TEST_VOICE" data-leeway-command="leewayVoiceTestRequested" onclick="requestVoiceTest()">Test Voice</button>
                 </div>
+                <div class="settings-copy" id="voiceControlStatus" data-leeway-id="LEEWAY_APP::VOICE::LIVE_ROUTE::AUDIBLE_OUTPUT_PROOF" style="margin-top:10px">LeeWay live voice proof is standing by.</div>
+                <div class="settings-copy" id="voiceControlError" data-leeway-id="LEEWAY_APP::VOICE::LIVE_ROUTE::CLONE_ENGINE_ERROR_SURFACE" style="margin-top:6px">No live voice errors.</div>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Auto Speak Responses</div>
+                <label class="settings-row" for="voiceAutoSpeakToggle">
+                  <input id="voiceAutoSpeakToggle" class="settings-toggle" type="checkbox" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::AUTO_SPEAK_RESPONSES" data-leeway-command="leewayVoiceSettingsChanged" data-leeway-setting-key="voiceAutoSpeak" onchange="setVoiceAutoSpeak(this.checked)" />
+                  <span class="muted">Speak assistant replies automatically when voice is enabled.</span>
+                </label>
               </div>
               <div class="model-card">
                 <div class="model-label">Voice Style</div>
@@ -2763,6 +3757,40 @@ textarea::placeholder{color:#8c859c}
                   <option value="highFlow">High Flow</option>
                   <option value="storyMode">Story Mode</option>
                 </select>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Voice Provider</div>
+                <select id="leewayVoiceRuntimeKind" onchange="setLeeWayVoiceRuntimeKind(this.value)">
+                  <option value="leeway-agent-voice-local">LeeWay Voice Bridge</option>
+                  <option value="leeway-agent-voice-browser-fallback">Browser Speech Fallback</option>
+                </select>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Auto Send Final Transcript</div>
+                <label class="settings-row" for="voiceAutoSendFinalTranscriptToggle">
+                  <input id="voiceAutoSendFinalTranscriptToggle" class="settings-toggle" type="checkbox" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::AUTO_SEND_FINAL_TRANSCRIPT" data-leeway-command="leewayVoiceSettingsChanged" data-leeway-setting-key="voiceAutoSendFinalTranscript" onchange="setVoiceAutoSendFinalTranscript(this.checked)" />
+                  <span class="muted">Off by default. LeeWay Voice should review what was heard before anything is sent.</span>
+                </label>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Voice Speed</div>
+                <input id="voiceRate" type="range" min="0.6" max="1.4" step="0.05" value="0.9" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_RATE" data-leeway-command="leewayVoiceSettingsChanged" data-leeway-setting-key="voiceRate" oninput="setVoiceRate(this.value)" />
+                <div class="model-status" id="voiceRateLabel">0.90x</div>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Speech Volume</div>
+                <input id="voiceVolume" type="range" min="0" max="1.5" step="0.05" value="1.0" data-leeway-id="LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_VOLUME" data-leeway-command="leewayVoiceSettingsChanged" data-leeway-setting-key="voiceVolume" oninput="setVoiceVolume(this.value)" />
+                <div class="model-status" id="voiceVolumeLabel">1.00x</div>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Voice Pitch</div>
+                <input id="voicePitch" type="range" min="0.7" max="1.3" step="0.05" value="1.0" oninput="setVoicePitch(this.value)" />
+                <div class="model-status" id="voicePitchLabel">1.00x</div>
+              </div>
+              <div class="model-card">
+                <div class="model-label">Voice Tone</div>
+                <input id="voiceTone" type="range" min="0.7" max="1.3" step="0.05" value="1.0" oninput="setVoiceTone(this.value)" />
+                <div class="model-status" id="voiceToneLabel">1.00x</div>
               </div>
               <div class="model-card">
                 <div class="model-label">Speech Send Shortcut</div>
@@ -2797,9 +3825,28 @@ textarea::placeholder{color:#8c859c}
                   <button class="ghost-btn" onclick="saveVoiceCloneSettings()">Save Clone Setup</button>
                   <button class="ghost-btn" onclick="testClonedVoice()">Test Cloned Voice</button>
                   <button class="ghost-btn" onclick="activateClonedVoice()">Use Clone As Default</button>
-                  <button class="ghost-btn" onclick="activatePiperVoice()">Use Piper Fallback</button>
                 </div>
                 <div class="settings-copy" id="voiceCloneStatus" style="margin-top:10px">Voice cloning status will appear here.</div>
+              </div>
+              <div class="voice-bridge-card">
+                <div class="model-label">Voice Bridge Status</div>
+                <div class="voice-review-copy" id="voiceBridgeSummary">LeeWay Voice is standing by.</div>
+                <div class="voice-bridge-grid">
+                  <div class="voice-review-field"><div class="voice-review-label">Authority</div><div class="voice-review-value" id="voiceBridgeAuthority">Unknown</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Listening Source</div><div class="voice-review-value" id="voiceBridgeSource">Unknown</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Endpoint</div><div class="voice-review-value" id="voiceBridgeEndpoint">http://127.0.0.1:7671/transcript</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">What Was Heard</div><div class="voice-review-value" id="voiceBridgeLastHeard">Nothing captured yet.</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Sent Yet</div><div class="voice-review-value" id="voiceBridgeLastSent">No.</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Typed Input</div><div class="voice-review-value" id="voiceBridgeTypedInput">Available</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Runtime</div><div class="voice-review-value" id="voiceBridgeRuntime">Unknown</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Duplicate Suppressions</div><div class="voice-review-value" id="voiceBridgeSuppressionCount">0</div></div>
+                  <div class="voice-review-field"><div class="voice-review-label">Next Action</div><div class="voice-review-value" id="voiceBridgeNextAction">Use typed input or start LeeWay Voice when the runtime is ready.</div></div>
+                </div>
+                <div class="voice-bridge-warning" id="voiceBridgeWarning">Status, heartbeat, and errors are routed here instead of chat.</div>
+                <div class="settings-row">
+                  <button class="ghost-btn" onclick="discardVoiceReview()">Clear Voice Session</button>
+                  <div class="settings-copy">Restart bridge instructions: pause the mic, reload the sidebar, and start LeeWay Voice again if the bridge becomes degraded.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -2818,6 +3865,7 @@ textarea::placeholder{color:#8c859c}
               <span class="runtime-pill" id="workspaceBadge">Workspace: checking...</span>
               <span class="runtime-pill" id="voiceStatus">Voice: checking...</span>
               <span class="runtime-pill" id="hiveStatus">Hive: checking...</span>
+              <span class="runtime-pill" id="runtimeHealthBadge">Runtime Health: checking...</span>
             </div>
           </div>
           </div>
@@ -2895,7 +3943,7 @@ textarea::placeholder{color:#8c859c}
             </div>
             <div class="settings-row" style="margin-top:8px">
               <label class="muted" for="voiceAlTestPhrase">Test phrase (what Agent Lee will say)</label>
-              <input id="voiceAlTestPhrase" class="workflow-input" style="min-height:40px" value="Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done." />
+              <input id="voiceAlTestPhrase" class="workflow-input" style="min-height:40px" value="Hey, I'm online, ready, and listening. Just say the word and I'll get it done." />
             </div>
             <div class="settings-row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
               <button class="ghost-btn" onclick="voiceAlCloneAndPreview()">&#9889; Clone &amp; Preview</button>
@@ -3006,6 +4054,31 @@ textarea::placeholder{color:#8c859c}
     <div class="chat" id="chat"></div>
 
     <div class="composer">
+      <div class="voice-review-panel" id="voiceReviewPanel" hidden>
+        <div class="voice-review-head">
+          <div>
+            <div class="voice-review-title">LeeWay Voice Review</div>
+            <div class="voice-review-copy" id="voiceReviewSummary">Voice input will appear here for review before anything is sent.</div>
+          </div>
+          <span class="runtime-pill" id="voiceReviewAuthority">Voice review pending</span>
+        </div>
+        <div class="voice-review-grid">
+          <div class="voice-review-field"><div class="voice-review-label">Heard Text</div><div class="voice-review-value" id="voiceReviewHeardText">Nothing captured yet.</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Source</div><div class="voice-review-value" id="voiceReviewSource">Unknown</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Confidence</div><div class="voice-review-value" id="voiceReviewConfidence">Not provided</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Transcript ID</div><div class="voice-review-value" id="voiceReviewTranscriptId">Pending</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Timestamp</div><div class="voice-review-value" id="voiceReviewTimestamp">Pending</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Classification</div><div class="voice-review-value" id="voiceReviewClassification">Unknown</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Risk</div><div class="voice-review-value" id="voiceReviewRisk">Unknown</div></div>
+          <div class="voice-review-field"><div class="voice-review-label">Next Action</div><div class="voice-review-value" id="voiceReviewNextAction">Review before send.</div></div>
+        </div>
+        <div class="voice-review-actions">
+          <button class="ghost-btn" onclick="sendVoiceReview()">Send as Message</button>
+          <button class="ghost-btn" onclick="createVoiceReviewProposal()">Create Proposal</button>
+          <button class="ghost-btn" onclick="clarifyVoiceReview()">Ask Clarification</button>
+          <button class="ghost-btn" onclick="discardVoiceReview()">Discard</button>
+        </div>
+      </div>
       <div class="status-line" id="status">Getting the room set...</div>
         <div class="composer-shell">
         <div class="plugin-approval hidden" id="pluginApproval">
@@ -3021,9 +4094,9 @@ textarea::placeholder{color:#8c859c}
         <div class="attachment-list hidden" id="attachmentList"></div>
         <div class="composer-bottom">
           <div class="toolbelt">
-            <button class="tool-link icon-only" onclick="pickAttachments()" aria-label="Attach files" title="Attach files"><span class="tool-icon">&#128206;</span></button>
-            <button class="tool-link icon-only" onclick="mic()" aria-label="Microphone input" title="Microphone input"><span class="tool-icon">&#127908;</span></button>
-            <button class="tool-link" id="voiceToggleBtn" data-enabled="true" onclick="toggleVoiceOutput()" aria-label="Toggle speech" title="Mute speech">Mute</button>
+            <button class="tool-link icon-only" id="attachFilesBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::ATTACH_FILES_BUTTON" onclick="pickAttachments()" aria-label="Attach files" title="Attach files"><span class="tool-icon">&#128206;</span></button>
+            <button class="tool-link icon-only" id="micBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::MIC_BUTTON" onclick="mic()" aria-label="Toggle live microphone" title="Toggle live microphone"><span class="tool-icon">&#127908;</span></button>
+            <button class="tool-link" id="voiceToggleBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::VOICE_TOGGLE_BUTTON" data-enabled="true" onclick="toggleVoiceOutput()" aria-label="Toggle speech" title="Mute speech">Mute</button>
             <div class="muted" id="attachmentMeta">Text, image, audio, and mic input ready.</div>
           </div>
           <div class="composer-right">
@@ -3045,25 +4118,26 @@ textarea::placeholder{color:#8c859c}
               <option value="deepseek-coder-v2:16b">MODEL: deepseek-coder-v2:16b</option>
               <option value="llama3.1:8b">MODEL: llama3.1:8b</option>
             </select>
-            <button class="send-btn" onclick="send()" aria-label="Send message" title="Send message">Send</button>
+            <button class="send-btn" id="sendBtn" data-leeway-id="LEEWAY_OBJECT::CONTROL::SEND_BUTTON" onclick="send()" aria-label="Send message" title="Send message">Send</button>
           </div>
         </div>
       </div>
       <div class="footer">
         <div style="display:flex;align-items:center;gap:8px">
-          <button class="img-btn" id="bottomLeftStandardsBtn" title="LeeWay Standards"><img src="${standardsBtnUri}" alt="LeeWay Standards" style="height:20px;border-radius:4px" /></button>
+          <button class="img-btn" id="bottomLeftStandardsBtn" title="LeeWay Standards"><img src="${standardsBtnUri}" alt="LeeWay Standards button" style="height:20px;border-radius:4px" onerror="fallbackImageButton(this,'LS');" /></button>
           <span>Agent Lee enforces LeeWay Standards in every response.</span>
         </div>
         <div class="footer-right" style="display:flex;align-items:center;gap:8px">
+          <img src="${standardsLogoUri}" alt="LeeWay Standards logo" style="height:18px;border-radius:4px" onerror="this.style.display='none';" />
           <span>Local private runtime</span>
-          <button class="img-btn" id="bottomRightBtn" aria-label="Bottom Button" title="Bottom Button"><img src="${bottomBtnUri}" alt="Bottom Button" style="height:20px" /></button>
+          <button class="img-btn" id="bottomRightBtn" aria-label="Bottom Button" title="Bottom Button"><img src="${bottomBtnUri}" alt="Bottom Button" style="height:20px" onerror="fallbackImageButton(this,'AL');" /></button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script nonce="${nonce}">
+<script>
 const vscode = acquireVsCodeApi();
 const roleIds = {
   builder_model: ["builderModel", "builderStatus"],
@@ -3081,6 +4155,13 @@ let currentAgentVm = null;
 let currentAgentVmApp = "desktop";
 const agentVmSessions = {};
 let latestAgentVmMemory = {};
+
+function fallbackImageButton(image, label){
+  if(!image || !image.parentElement) return;
+  image.style.display = "none";
+  image.parentElement.classList.add("text-fallback");
+  image.parentElement.textContent = label;
+}
 
 function normalizeVmSlug(value){
   return String(value || "agent").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"") || "agent";
@@ -3543,7 +4624,11 @@ function taskAction(command){
 function toggleVoiceOutput(){
   const button=document.getElementById("voiceToggleBtn");
   const enabled=button && button.getAttribute("data-enabled")==="true";
-  taskAction(enabled ? "muteVoice" : "talkOn");
+  if(enabled){
+    toggleVoiceMute();
+    return;
+  }
+  setVoiceEnabled(true);
 }
 
 function setRequireCtrlEnter(value){
@@ -4148,6 +5233,7 @@ function render(role,text,activity,variant){
 function setApproval(v){ vscode.postMessage({command:"setState", key:"approval", value:v}); }
 function setAutoRunStagedPlans(value){ vscode.postMessage({command:"setState", key:"autoRunStagedPlans", value:!!value}); }
 function setAutoUpdateEnabled(value){ vscode.postMessage({command:"setState", key:"autoUpdateEnabled", value:!!value}); }
+function setPreferRightSideSurface(value){ vscode.postMessage({command:"setState", key:"preferRightSideSurface", value:!!value}); }
 function setAgentEnvironment(value){ vscode.postMessage({command:"setState", key:"agentEnvironment", value:value}); }
 function setAppLanguage(value){ vscode.postMessage({command:"setState", key:"appLanguage", value:value}); }
 function setInferenceSpeed(value){ vscode.postMessage({command:"setState", key:"inferenceSpeed", value:value}); }
@@ -4155,6 +5241,125 @@ function setFollowupBehavior(value){ setSegmentChoice("followupBehavior", value)
 function setCodeReviewBehavior(value){ setSegmentChoice("codeReviewBehavior", value); vscode.postMessage({command:"setState", key:"codeReviewBehavior", value:value}); }
 function setWorkMode(value){ vscode.postMessage({command:"setState", key:"workMode", value:value}); }
 function setVoiceStyle(value){ vscode.postMessage({command:"setState", key:"voiceStyle", value:value}); }
+function setVoiceAutoSendFinalTranscript(value){ vscode.postMessage({command:"leewayVoiceSettingsChanged", key:"voiceAutoSendFinalTranscript", value:!!value}); }
+function postLeeWayVoiceSettingChange(key, value){
+  vscode.postMessage({command:"leewayVoiceSettingsChanged", key:key, value:value});
+}
+function normalizeLeeWayVoiceRuntimeKind(value){
+  if(value === "leeway-agent-voice-browser-fallback" || value === "browser-speech-recognition") return "leeway-agent-voice-browser-fallback";
+  // Map legacy local-whisper name and anything unknown to the current local runtime name.
+  return "leeway-agent-voice-local";
+}
+function setLeeWayVoiceRuntimeKind(value){
+  var normalized = normalizeLeeWayVoiceRuntimeKind(value);
+  window.agentLeeVoiceProviderKind = normalized;
+  if(window.agentLeeVoiceProvider && typeof window.agentLeeVoiceProvider.disconnect === "function"){
+    try { window.agentLeeVoiceProvider.disconnect("provider_switch"); } catch {}
+  }
+  window.agentLeeVoiceProvider = null;
+  window.agentLeeVoiceProviderReady = false;
+  vscode.postMessage({command:"setState", key:"leewayVoiceRuntimeKind", value:normalized});
+  if(window.agentLeeLiveMicAlwaysOn){
+    startLiveMic();
+  }
+}
+function renderVoiceBridgeStatus(state){
+  state = state || {};
+  var setText=function(id,value){ var node=document.getElementById(id); if(node) node.textContent = value; };
+  setText("voiceBridgeSummary", state.nextActionHint || "LeeWay Voice is standing by.");
+  setText("voiceBridgeAuthority", state.authorityState || "Unknown");
+  setText("voiceBridgeSource", state.listeningSource || "NONE");
+  setText("voiceBridgeEndpoint", state.endpointUrl || "http://127.0.0.1:7671/transcript");
+  setText("voiceBridgeLastHeard", state.lastHeardText || "Nothing captured yet.");
+  setText("voiceBridgeLastSent", state.lastSentText || "No.");
+  setText("voiceBridgeTypedInput", state.typedInputAvailable === false ? "Unavailable" : "Available");
+  setText("voiceBridgeRuntime", state.staleRuntime ? "Stale runtime may affect voice." : (state.runtimeSourceMode || "Unknown"));
+  setText("voiceBridgeSuppressionCount", String(state.duplicateSuppressionCount || 0));
+  setText("voiceBridgeNextAction", state.nextActionHint || "Use typed input or start LeeWay Voice when the runtime is ready.");
+  setText("voiceBridgeWarning", state.loopDetected
+    ? "Voice bridge status loop detected. Status messages are being suppressed and will not enter chat."
+    : (state.lastError || "Status, heartbeat, and errors are routed here instead of chat."));
+}
+function renderVoiceReviewState(review){
+  var panel=document.getElementById("voiceReviewPanel");
+  if(!panel) return;
+  if(!review){
+    panel.hidden = true;
+    return;
+  }
+  panel.hidden = false;
+  var setText=function(id,value){ var node=document.getElementById(id); if(node) node.textContent = value; };
+  setText("voiceReviewSummary", review.sent
+    ? "This reviewed voice request has already been sent through the governed path."
+    : "The owner speaks. LeeWay classifies. Agents assist. Law governs. Nothing mutates without approval.");
+  setText("voiceReviewAuthority", review.identity && review.identity.authorityState ? review.identity.authorityState : "Voice review pending");
+  setText("voiceReviewHeardText", review.heardText || "Nothing captured yet.");
+  setText("voiceReviewSource", review.sourceLabel || review.source || "Unknown");
+  setText("voiceReviewConfidence", review.confidence === undefined || review.confidence === null ? "Not provided" : String(review.confidence));
+  setText("voiceReviewTranscriptId", review.transcriptId || "Pending");
+  setText("voiceReviewTimestamp", review.timestamp || "Pending");
+  setText("voiceReviewClassification", review.classification || "Unknown");
+  setText("voiceReviewRisk", review.risk || "Unknown");
+  setText("voiceReviewNextAction", review.nextAction || "Review before send.");
+}
+function sendVoiceReview(){ vscode.postMessage({command:"voiceReviewSend"}); }
+function createVoiceReviewProposal(){ vscode.postMessage({command:"voiceReviewCreateProposal"}); }
+function clarifyVoiceReview(){ vscode.postMessage({command:"voiceReviewClarify"}); }
+function discardVoiceReview(){ vscode.postMessage({command:"voiceReviewDiscard"}); }
+function updateVoiceSliderLabel(id, value){
+  var node=document.getElementById(id);
+  if(!node) return;
+  node.textContent = Number(value).toFixed(2) + "x";
+}
+function updateVoiceButtonState(isEnabled, isMuted){
+  var enabledBtn=document.getElementById("voiceEnabledBtn");
+  if(enabledBtn){
+    enabledBtn.textContent = isEnabled ? "Voice Enabled" : "Voice Disabled";
+    enabledBtn.setAttribute("data-enabled", isEnabled ? "true" : "false");
+  }
+  var muteBtn=document.getElementById("voiceMuteBtn");
+  if(muteBtn){
+    muteBtn.textContent = isMuted ? "Unmute" : "Mute";
+    muteBtn.setAttribute("data-muted", isMuted ? "true" : "false");
+  }
+  var composerToggle=document.getElementById("voiceToggleBtn");
+  if(composerToggle){
+    composerToggle.textContent = isMuted || !isEnabled ? "Talk" : "Mute";
+    composerToggle.setAttribute("data-enabled", isEnabled && !isMuted ? "true" : "false");
+    composerToggle.setAttribute("title", isEnabled && !isMuted ? "Mute speech" : "Enable speech");
+  }
+}
+function setVoiceEnabled(value){
+  postLeeWayVoiceSettingChange("voiceEnabled", !!value);
+}
+function setVoiceEnabledFromButton(){
+  var enabledBtn=document.getElementById("voiceEnabledBtn");
+  var isEnabled=enabledBtn && enabledBtn.getAttribute("data-enabled")==="true";
+  setVoiceEnabled(!isEnabled);
+}
+function setVoiceAutoSpeak(value){
+  postLeeWayVoiceSettingChange("voiceAutoSpeak", !!value);
+}
+function setVoiceRate(value){
+  var parsed=Number(value);
+  updateVoiceSliderLabel("voiceRateLabel", parsed);
+  postLeeWayVoiceSettingChange("voiceRate", parsed);
+}
+function setVoiceVolume(value){
+  var parsed=Number(value);
+  updateVoiceSliderLabel("voiceVolumeLabel", parsed);
+  postLeeWayVoiceSettingChange("voiceVolume", parsed);
+}
+function setVoicePitch(value){
+  var parsed=Number(value);
+  updateVoiceSliderLabel("voicePitchLabel", parsed);
+  vscode.postMessage({command:"setState", key:"voicePitch", value:parsed});
+}
+function setVoiceTone(value){
+  var parsed=Number(value);
+  updateVoiceSliderLabel("voiceToneLabel", parsed);
+  vscode.postMessage({command:"setState", key:"voiceTone", value:parsed});
+}
 function pickVoiceReference(){ vscode.postMessage({command:"pickVoiceReference"}); }
 function voiceClonePayload(){
   return {
@@ -4167,7 +5372,6 @@ function saveVoiceCloneSettings(){ vscode.postMessage({command:"saveVoiceCloneSe
 function transcribeVoiceReference(){ vscode.postMessage({command:"transcribeVoiceReference", payload:voiceClonePayload()}); }
 function testClonedVoice(){ vscode.postMessage({command:"testClonedVoice", payload:voiceClonePayload()}); }
 function activateClonedVoice(){ vscode.postMessage({command:"activateClonedVoice", payload:voiceClonePayload()}); }
-function activatePiperVoice(){ vscode.postMessage({command:"activatePiperVoice"}); }
 function useBundledReferenceVoice(){ vscode.postMessage({command:"useBundledReferenceVoice"}); }
 
 // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ Voice of Agent Lee tab functions Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
@@ -4218,9 +5422,9 @@ function renderVoiceAlCatalog(catalog, activeVoiceId){
     html += '<div class="settings-copy" style="margin-top:2px">' + (v.description || '') + '</div>';
     html += '</div>';
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
-    html += '<button class="ghost-btn" onclick="voiceAlTestVoice(\'' + v.id + '\')">&#9654; Play</button>';
-    if(!isActive) html += '<button class="ghost-btn" onclick="voiceAlSetActive(\'' + v.id + '\')">Set Active</button>';
-    if(!v.isLocked) html += '<button class="ghost-btn" style="color:#ff8c8c" onclick="voiceAlDeleteVoice(\'' + v.id + '\')">Delete</button>';
+    html += '<button class="ghost-btn" onclick="voiceAlTestVoice(\\'' + v.id + '\\')">&#9654; Play</button>';
+    if(!isActive) html += '<button class="ghost-btn" onclick="voiceAlSetActive(\\'' + v.id + '\\')">Set Active</button>';
+    if(!v.isLocked) html += '<button class="ghost-btn" style="color:#ff8c8c" onclick="voiceAlDeleteVoice(\\'' + v.id + '\\')">Delete</button>';
     html += '</div></div>';
   });
   if(!voices.length) html = '<div class="settings-copy">No voices in the catalog yet.</div>';
@@ -4234,11 +5438,18 @@ function setPerformanceProfile(value){ vscode.postMessage({command:"setPerforman
 function completeOnboarding(){ vscode.postMessage({command:"setState", key:"onboardingComplete", value:true}); vscode.postMessage({command:"refreshRuntime"}); toggleSettings(false); }
 function pickAttachments(){ vscode.postMessage({command:"pickAttachments"}); }
 function toggleWeb(){ const b=document.getElementById("webBtn"); const on=b.textContent==="Web Off"; b.textContent=on?"Web On":"Web Off"; vscode.postMessage({command:"setState", key:"web", value:on}); }
-function toggleVoice(){ const b=document.getElementById("voiceBtn"); const on=b.textContent==="Voice Off"; b.textContent=on?"Voice On":"Voice Off"; vscode.postMessage({command:"setState", key:"voice", value:on}); }
+function toggleVoice(){ setVoiceEnabled(!(window.agentLeeVoiceEnabled !== false)); }
 function toggleBrowserVisual(){ const b=document.getElementById("browserVisualBtn"); const on=b.textContent==="Visual Browser Off"; b.textContent=on?"Visual Browser On":"Visual Browser Off"; vscode.postMessage({command:"setState", key:"browserVisualMode", value:on}); }
 function toggleBrowserCursor(){ const b=document.getElementById("browserCursorBtn"); const on=b.textContent==="Show Cursor Off"; b.textContent=on?"Show Cursor On":"Show Cursor Off"; vscode.postMessage({command:"setState", key:"browserShowCursor", value:on}); }
 function setBrowserSlowMo(value){ vscode.postMessage({command:"setState", key:"browserSlowMoMs", value:Number(value)}); }
-function stopVoice(){ vscode.postMessage({command:"stopVoice"}); }
+function toggleVoiceMute(){ vscode.postMessage({command:"leewayVoiceMuteToggled"}); }
+function stopVoice(){ requestVoiceStop(); }
+function requestVoiceStop(){ vscode.postMessage({command:"leewayVoiceStopRequested"}); }
+function requestVoiceTest(){
+  var testInput=document.getElementById("voiceCloneTestText");
+  var text=(testInput && testInput.value ? testInput.value : "Agent Lee live voice test.").trim();
+  vscode.postMessage({command:"leewayVoiceTestRequested", text:text});
+}
 function toggleSettings(forceOpen){
   const backdrop=document.getElementById("settingsBackdrop");
   if(typeof forceOpen==="boolean"){
@@ -4249,7 +5460,24 @@ function toggleSettings(forceOpen){
 }
 function closeSettingsIfBackdrop(event){ if(event.target && event.target.id==="settingsBackdrop"){ toggleSettings(false); } }
 function postUiAction(action, payload){ vscode.postMessage(Object.assign({command:"agentLeeUiAction", action:action}, payload || {})); }
-function send(){ const input=document.getElementById("input"); const text=input.value.trim(); if(!text && !window.pendingAttachments.length)return; const displayText=text || window.pendingAttachments.map(function(item){ return item.name; }).join(", "); render("user",displayText); input.value=""; render("agent","I'm on it. Reading the real files and lining up the live tracker now."); vscode.postMessage({command:"sendMessage", text:text, attachments:window.pendingAttachments}); window.pendingAttachments=[]; syncAttachments(); }
+function submitOutgoingMessage(text, options){
+  options = options || {};
+  var trimmed = String(text || "").trim();
+  if(!trimmed && !window.pendingAttachments.length) return;
+  var displayText = trimmed || window.pendingAttachments.map(function(item){ return item.name; }).join(", ");
+  render("user", displayText);
+  if(!options.skipPlaceholder){
+    render("agent","I'm on it. Reading the real files and lining up the live tracker now.");
+  }
+  vscode.postMessage({command:"sendMessage", text:trimmed, attachments:window.pendingAttachments});
+  window.pendingAttachments=[];
+  syncAttachments();
+}
+function send(){
+  var input=document.getElementById("input");
+  submitOutgoingMessage(input ? input.value : "");
+  if(input) input.value="";
+}
 function registerAgentLeeControlButtons(){ document.querySelectorAll("[data-ui-action]").forEach(function(button){ button.addEventListener("click",function(){ const action=button.getAttribute("data-ui-action"); const input=document.getElementById("input"); const prompt=input ? input.value.trim() : ""; postUiAction(action,{ text:prompt }); }); }); }
 function registerAgentLeeTopButtons(){
   const settings=document.getElementById("settingsBtn");
@@ -4261,7 +5489,395 @@ function registerAgentLeeTopButtons(){
   if(closeHistoryButton) closeHistoryButton.addEventListener("click",function(){ toggleHistory(false); });
   if(newChatButton) newChatButton.addEventListener("click",function(){ newChat(); });
 }
-function mic(){ const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR){ render("agent","Mic capture is not available in this VS Code webview. Use text input or your local transcript bridge command for live voice."); return; } const rec=new SR(); rec.lang="en-US"; setAttachmentMeta("Mic listening...", true); rec.onresult=function(e){ const transcript=e.results[0][0].transcript; document.getElementById("input").value=transcript; setAttachmentMeta("Mic input captured. Sending now...", true); send(); }; rec.onerror=function(){ setAttachmentMeta(""); }; rec.onend=function(){ const meta=document.getElementById("attachmentMeta"); if(meta && meta.textContent==="Mic listening..."){ setAttachmentMeta(""); } }; rec.start(); }
+
+function nextLavrClientId(prefix){
+  return String(prefix || "lavr") + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+}
+
+function emitLeeWayVoiceEvent(type, payload){
+  var sessionId = String(window.agentLeeLavrSessionId || "").trim();
+  if(!sessionId){
+    sessionId = nextLavrClientId("lavr-session");
+    window.agentLeeLavrSessionId = sessionId;
+  }
+
+  var enriched = Object.assign({}, payload || {});
+  enriched.lavrSessionId = String(enriched.lavrSessionId || sessionId);
+  if(enriched.lavrTurnId){
+    window.agentLeeLavrTurnId = String(enriched.lavrTurnId);
+  } else if(window.agentLeeLavrTurnId){
+    enriched.lavrTurnId = String(window.agentLeeLavrTurnId);
+  }
+
+  if(type === "LAVR_TOOL_REQUESTED"){
+    if(!enriched.lavrToolRequestId){
+      enriched.lavrToolRequestId = nextLavrClientId("lavr-tool");
+    }
+    if(!enriched.callId){
+      enriched.callId = String(enriched.lavrToolRequestId);
+    }
+  }
+
+  vscode.postMessage({
+    command:"leewayVoiceEvent",
+    event:Object.assign({ type:type, timestamp:Date.now() }, enriched)
+  });
+}
+
+function queueLeewayVoiceTurnCommit(delayMs){
+  queueLeewayVoiceTurnCommitForSource(delayMs, "timeout");
+}
+
+function normalizeLavrTurnText(value){
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function ensureLavrTurnGateState(){
+  if(!window.agentLeeLavrTurnGateState){
+    window.agentLeeLavrTurnGateState = {
+      turnId: "",
+      utteranceId: "",
+      interruptId: "",
+      startedAt: 0,
+      partialText: "",
+      finalText: "",
+      finalNormalized: "",
+      hasFinal: false,
+      hasCommitted: false,
+      hasCancelled: false,
+      commitToken: 0
+    };
+  }
+  return window.agentLeeLavrTurnGateState;
+}
+
+function beginLavrUtterance(reason){
+  var gate = ensureLavrTurnGateState();
+  if(window.agentLeeRealtimeCommitTimer){
+    clearTimeout(window.agentLeeRealtimeCommitTimer);
+    window.agentLeeRealtimeCommitTimer = null;
+  }
+  gate.turnId = nextLavrClientId("lavr-turn");
+  gate.utteranceId = nextLavrClientId("lavr-utt");
+  gate.interruptId = "";
+  gate.startedAt = Date.now();
+  gate.partialText = "";
+  gate.finalText = "";
+  gate.finalNormalized = "";
+  gate.hasFinal = false;
+  gate.hasCommitted = false;
+  gate.hasCancelled = false;
+  gate.commitToken = Number(gate.commitToken || 0) + 1;
+  window.agentLeeLavrTurnId = gate.turnId;
+  window.agentLeeLavrUtteranceId = gate.utteranceId;
+  window.agentLeeLavrInterruptId = "";
+  emitLeeWayVoiceEvent("LAVR_TURN_STARTED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    reason:String(reason || "speech_started")
+  });
+  return gate;
+}
+
+function getActiveLavrUtterance(){
+  var gate = ensureLavrTurnGateState();
+  if(!gate.turnId || gate.hasCommitted || gate.hasCancelled){
+    return beginLavrUtterance("auto_start");
+  }
+  return gate;
+}
+
+function updateLavrPartialText(text){
+  var gate = getActiveLavrUtterance();
+  var value = String(text || "").trim();
+  if(!value) return gate;
+  gate.partialText = value;
+  window.agentLeeRealtimeInterim = value;
+  emitLeeWayVoiceEvent("LAVR_PARTIAL_UPDATED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    transcript:value
+  });
+  return gate;
+}
+
+function updateLavrFinalText(text){
+  var gate = getActiveLavrUtterance();
+  var value = String(text || "").trim();
+  if(!value) return { gate:gate, accepted:false, duplicate:false };
+  var normalized = normalizeLavrTurnText(value);
+  if(!normalized) return { gate:gate, accepted:false, duplicate:false };
+
+  if(gate.finalNormalized === normalized){
+    emitLeeWayVoiceEvent("LAVR_DUPLICATE_COMMIT_SUPPRESSED", {
+      lavrTurnId:gate.turnId,
+      lavrUtteranceId:gate.utteranceId,
+      reason:"duplicate_final"
+    });
+    return { gate:gate, accepted:false, duplicate:true };
+  }
+
+  gate.finalText = value;
+  gate.finalNormalized = normalized;
+  gate.hasFinal = true;
+  window.agentLeeRealtimeTurnBuffer = value;
+  emitLeeWayVoiceEvent("LAVR_FINAL_RECEIVED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    transcript:value
+  });
+  return { gate:gate, accepted:true, duplicate:false };
+}
+
+function requestLavrInterrupt(reason){
+  var gate = getActiveLavrUtterance();
+  if(gate.interruptId) return gate.interruptId;
+  gate.interruptId = nextLavrClientId("lavr-int");
+  window.agentLeeLavrInterruptId = gate.interruptId;
+  emitLeeWayVoiceEvent("LAVR_INTERRUPT_REQUESTED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    lavrInterruptId:gate.interruptId,
+    reason:String(reason || "user_barge_in")
+  });
+  return gate.interruptId;
+}
+
+function cancelLeewayVoiceTurn(reason){
+  var gate = ensureLavrTurnGateState();
+  if(window.agentLeeRealtimeCommitTimer){
+    clearTimeout(window.agentLeeRealtimeCommitTimer);
+    window.agentLeeRealtimeCommitTimer = null;
+  }
+  if(!gate.turnId || gate.hasCommitted || gate.hasCancelled) return false;
+  gate.hasCancelled = true;
+  window.agentLeeRealtimeUserSpeaking = false;
+  window.agentLeeRealtimeTurnBuffer = "";
+  window.agentLeeRealtimeInterim = "";
+  emitLeeWayVoiceEvent("LAVR_TURN_CANCELLED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    reason:String(reason || "cancelled")
+  });
+  return true;
+}
+
+function queueLeewayVoiceTurnCommitForSource(delayMs, source){
+  var gate = getActiveLavrUtterance();
+  if(window.agentLeeRealtimeCommitTimer){
+    clearTimeout(window.agentLeeRealtimeCommitTimer);
+  }
+  gate.commitToken = Number(gate.commitToken || 0) + 1;
+  var token = gate.commitToken;
+  emitLeeWayVoiceEvent("LAVR_COMMIT_SCHEDULED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    source:String(source || "timeout"),
+    commitDelayMs:Math.max(120, Number(delayMs || 420))
+  });
+  window.agentLeeRealtimeCommitTimer = setTimeout(function(){
+    commitLeewayVoiceTurn(source || "timeout", { commitToken:token });
+  }, Math.max(120, Number(delayMs || 420)));
+}
+
+function isLavrLowConfidenceTurn(text){
+  var normalized = normalizeLavrTurnText(text);
+  if(!normalized) return true;
+  return normalized.length < 2;
+}
+
+function commitLeewayVoiceTurn(source, options){
+  if(window.agentLeeRealtimeCommitTimer){
+    clearTimeout(window.agentLeeRealtimeCommitTimer);
+    window.agentLeeRealtimeCommitTimer = null;
+  }
+
+  var gate = ensureLavrTurnGateState();
+  var expectedToken = Number(options && options.commitToken || 0);
+  if(expectedToken && expectedToken !== Number(gate.commitToken || 0)){
+    emitLeeWayVoiceEvent("LAVR_DUPLICATE_COMMIT_SUPPRESSED", {
+      lavrTurnId:gate.turnId || "",
+      lavrUtteranceId:gate.utteranceId || "",
+      reason:"stale_commit_timer"
+    });
+    return false;
+  }
+
+  if(gate.hasCommitted || gate.hasCancelled){
+    emitLeeWayVoiceEvent("LAVR_DUPLICATE_COMMIT_SUPPRESSED", {
+      lavrTurnId:gate.turnId || "",
+      lavrUtteranceId:gate.utteranceId || "",
+      reason:"terminal_outcome_already_emitted"
+    });
+    return false;
+  }
+
+  var text = String(gate.finalText || window.agentLeeRealtimeTurnBuffer || "").trim();
+  window.agentLeeRealtimeTurnBuffer = "";
+  window.agentLeeRealtimeInterim = "";
+
+  if(!gate.hasFinal){
+    emitLeeWayVoiceEvent("LAVR_SILENCE_TIMEOUT", {
+      lavrTurnId:gate.turnId || "",
+      lavrUtteranceId:gate.utteranceId || "",
+      source:String(source || "timeout")
+    });
+    cancelLeewayVoiceTurn("interim_only_or_no_final");
+    return false;
+  }
+
+  if(!text || isLavrLowConfidenceTurn(text)){
+    cancelLeewayVoiceTurn("empty_or_low_confidence");
+    return false;
+  }
+
+  gate.hasCommitted = true;
+  if(window.agentLeeRealtimeUserSpeaking){
+    window.agentLeeRealtimeUserSpeaking = false;
+    emitLeeWayVoiceEvent("LAVR_USER_SPEECH_STOPPED", {
+      lavrTurnId:gate.turnId,
+      lavrUtteranceId:gate.utteranceId
+    });
+  }
+
+  emitLeeWayVoiceEvent("LAVR_TURN_COMMITTED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    transcript:text,
+    source:source || "unknown"
+  });
+  emitLeeWayVoiceEvent("LAVR_COMMIT_EMITTED", {
+    lavrTurnId:gate.turnId,
+    lavrUtteranceId:gate.utteranceId,
+    transcript:text,
+    source:source || "unknown"
+  });
+  setAttachmentMeta("LeeWay Agent Voice turn committed. Agent Lee is responding...", true);
+  vscode.postMessage({
+    command:"leewayVoiceTurnCommit",
+    text:text,
+    lavrTurnId:gate.turnId || "",
+    lavrUtteranceId:gate.utteranceId || "",
+    lavrInterruptId:gate.interruptId || "",
+    lavrSessionId:String(window.agentLeeLavrSessionId || "")
+  });
+  return true;
+}
+
+function resetLeewayVoiceTurnState(){
+  var gate = ensureLavrTurnGateState();
+  window.agentLeeRealtimeTurnBuffer = "";
+  window.agentLeeRealtimeInterim = "";
+  window.agentLeeRealtimeUserSpeaking = false;
+  if(window.agentLeeRealtimeCommitTimer){
+    clearTimeout(window.agentLeeRealtimeCommitTimer);
+    window.agentLeeRealtimeCommitTimer = null;
+  }
+  gate.partialText = "";
+  gate.finalText = "";
+  gate.finalNormalized = "";
+  gate.hasFinal = false;
+  gate.hasCommitted = false;
+  gate.hasCancelled = false;
+  gate.interruptId = "";
+  gate.commitToken = Number(gate.commitToken || 0) + 1;
+}
+
+function createLeeWayVoiceEventBus(){
+  var listeners = {};
+  return {
+    on: function(type, handler){
+      if(!type || typeof handler !== "function") return function(){};
+      if(!listeners[type]) listeners[type] = [];
+      listeners[type].push(handler);
+      return function(){
+        listeners[type] = (listeners[type] || []).filter(function(item){ return item !== handler; });
+      };
+    },
+    emit: function(type, payload){
+      emitLeeWayVoiceEvent(type, payload);
+      (listeners[type] || []).slice().forEach(function(handler){
+        try { handler(payload || {}); } catch {}
+      });
+    }
+  };
+}
+
+${voiceProviderFactoryClientScript}
+
+function getVoiceProviderState(){
+  if(!window.agentLeeVoiceProvider || typeof window.agentLeeVoiceProvider.getState !== "function") return null;
+  try { return window.agentLeeVoiceProvider.getState() || null; } catch { return null; }
+}
+
+function isVoiceSessionActive(){
+  var state = getVoiceProviderState();
+  if(state){
+    return !!(
+      state.connected ||
+      state.listening ||
+      state.status === "connecting" ||
+      state.status === "connected" ||
+      state.status === "user_speaking" ||
+      state.status === "assistant_speaking" ||
+      state.status === "tool_running"
+    );
+  }
+  return !!window.agentLeeMicShouldRun;
+}
+
+function syncMicButtonFromProviderState(){
+  var micBtn=document.getElementById("micBtn");
+  if(!micBtn) return;
+  var active = isVoiceSessionActive();
+  micBtn.title = active ? "Pause live microphone" : "Enable live microphone";
+  micBtn.style.opacity = active ? "1" : "0.6";
+}
+
+function startLiveMic(){
+  if(isVoiceSessionActive()){
+    syncMicButtonFromProviderState();
+    return;
+  }
+  if(!initLeeWayVoiceRuntime()){
+    window.agentLeeMicShouldRun = true;
+    setAttachmentMeta("Local transcript bridge fallback is starting. Voice input will be labeled and governed.", true);
+    vscode.postMessage({command:"leewayStartTranscriptBridge"});
+    emitLeeWayVoiceEvent("LAVR_FALLBACK_BRIDGE_REQUESTED");
+    syncMicButtonFromProviderState();
+    return;
+  }
+  if(window.agentLeeVoiceProvider && typeof window.agentLeeVoiceProvider.connect === "function"){
+    window.agentLeeVoiceProvider.connect();
+  }
+  syncMicButtonFromProviderState();
+}
+
+function stopLiveMic(){
+  if(window.agentLeeVoiceProvider && typeof window.agentLeeVoiceProvider.disconnect === "function"){
+    window.agentLeeVoiceProvider.disconnect("manual_stop");
+  } else {
+    window.agentLeeMicShouldRun = false;
+    if(window.agentLeeRealtimeCommitTimer){
+      clearTimeout(window.agentLeeRealtimeCommitTimer);
+      window.agentLeeRealtimeCommitTimer = null;
+    }
+    emitLeeWayVoiceEvent("LAVR_SESSION_CLOSED", { reason:"manual_stop" });
+  }
+  syncMicButtonFromProviderState();
+}
+
+function mic(){
+  if(isVoiceSessionActive()){
+    stopLiveMic();
+  } else {
+    startLiveMic();
+  }
+}
 function newChat(){ vscode.postMessage({command:"newConversation"}); }
 function toggleHistory(forceOpen){
   const drawer=document.getElementById("historyDrawer");
@@ -4329,12 +5945,17 @@ function syncAutoRunStagedPlansUI(state){
 }
 function syncAutoUpdateUI(state){
   const toggle=document.getElementById("autoUpdateEnabledToggle");
+  const rightToggle=document.getElementById("preferRightSideSurfaceToggle");
   const hint=document.getElementById("autoUpdateHint");
   if(toggle) toggle.checked = !!(state && state.autoUpdateEnabled);
+  if(rightToggle) rightToggle.checked = !!(state && state.preferRightSideSurface !== false);
   if(hint){
+    var openSurfaceLabel = state && state.preferRightSideSurface !== false
+      ? "Right-side panel preferred."
+      : "Sidebar preferred.";
     hint.textContent = state && state.autoUpdateEnabled
-      ? "Auto-update is on. Agent Lee will install the newest local VSIX on startup and reload the window."
-      : "Auto-update is off. Use Update Now whenever you want to apply the newest local VSIX.";
+      ? "Startup local-release repair is on. Agent Lee will reinstall the newest local VSIX on startup, but this is not marketplace auto-update. " + openSurfaceLabel
+      : "Startup local-release repair is off. Use Update Now to apply the newest local VSIX manually. " + openSurfaceLabel;
   }
 }
 
@@ -4371,15 +5992,35 @@ window.addEventListener("message",function(e){
     syncAutoRunStagedPlansUI(msg.state || {});
     syncAutoUpdateUI(msg.state || {});
     document.getElementById("voiceStyle").value = msg.state.voiceStyle || "grounded";
+    var leewayVoiceSelect=document.getElementById("leewayVoiceRuntimeKind");
+    window.agentLeeVoiceProviderKind = normalizeLeeWayVoiceRuntimeKind(msg.state.leewayVoiceRuntimeKind || msg.state.voiceProviderKind || "leeway-agent-voice-local");
+    if(leewayVoiceSelect) leewayVoiceSelect.value = window.agentLeeVoiceProviderKind;
+    var voiceRate = Number(msg.state.voiceRate || 0.9);
+    var voiceVolume = Number(msg.state.voiceVolume || 1.0);
+    var voicePitch = Number(msg.state.voicePitch || 1.0);
+    var voiceTone = Number(msg.state.voiceTone || 1.0);
+    var voiceRateInput=document.getElementById("voiceRate");
+    var voiceVolumeInput=document.getElementById("voiceVolume");
+    var voicePitchInput=document.getElementById("voicePitch");
+    var voiceToneInput=document.getElementById("voiceTone");
+    if(voiceRateInput) voiceRateInput.value = String(voiceRate);
+    if(voiceVolumeInput) voiceVolumeInput.value = String(voiceVolume);
+    if(voicePitchInput) voicePitchInput.value = String(voicePitch);
+    if(voiceToneInput) voiceToneInput.value = String(voiceTone);
+    updateVoiceSliderLabel("voiceRateLabel", voiceRate);
+    updateVoiceSliderLabel("voiceVolumeLabel", voiceVolume);
+    updateVoiceSliderLabel("voicePitchLabel", voicePitch);
+    updateVoiceSliderLabel("voiceToneLabel", voiceTone);
+    window.agentLeeLiveMicAlwaysOn = msg.state.liveMicAlwaysOn !== false;
     document.getElementById("webBtn").textContent = msg.state.web ? "Web On" : "Web Off";
-    document.getElementById("voiceBtn").textContent = msg.state.voice ? "Voice On" : "Voice Off";
-    window.agentLeeVoiceEnabled = !!msg.state.voice;
-    const voiceToggleBtn=document.getElementById("voiceToggleBtn");
-    if(voiceToggleBtn){
-      voiceToggleBtn.textContent = msg.state.voice ? "Mute" : "Talk";
-      voiceToggleBtn.setAttribute("data-enabled", msg.state.voice ? "true" : "false");
-      voiceToggleBtn.setAttribute("title", msg.state.voice ? "Mute speech" : "Enable speech");
-    }
+    window.agentLeeVoiceEnabled = !!msg.state.voiceEnabled;
+    window.agentLeeVoiceMuted = !!msg.state.voiceMuted;
+    updateVoiceButtonState(!!msg.state.voiceEnabled, !!msg.state.voiceMuted);
+    var voiceAutoSpeakToggle=document.getElementById("voiceAutoSpeakToggle");
+    if(voiceAutoSpeakToggle) voiceAutoSpeakToggle.checked = !!msg.state.voiceAutoSpeak;
+    var voiceAutoSendToggle=document.getElementById("voiceAutoSendFinalTranscriptToggle");
+    if(voiceAutoSendToggle) voiceAutoSendToggle.checked = !!msg.state.voiceAutoSendFinalTranscript;
+    syncMicButtonFromProviderState();
     document.getElementById("browserVisualBtn").textContent = msg.state.browserVisualMode ? "Visual Browser On" : "Visual Browser Off";
     document.getElementById("browserCursorBtn").textContent = msg.state.browserShowCursor ? "Show Cursor On" : "Show Cursor Off";
     document.getElementById("browserSlowMo").value = String(msg.state.browserSlowMoMs || 250);
@@ -4395,6 +6036,11 @@ window.addEventListener("message",function(e){
     renderWorkers(msg.state);
     renderModelInventory(msg.inventory || [], msg.state || {});
     renderVoiceCloneConfig(msg.voiceRuntime || {});
+    renderVoiceBridgeStatus(msg.voiceBridge || (msg.voice && msg.voice.voiceBridge) || {});
+    renderVoiceReviewState(msg.voiceReview || (msg.voice && msg.voice.voiceReview) || null);
+    if(window.agentLeeLiveMicAlwaysOn && !isVoiceSessionActive()){
+      startLiveMic();
+    }
     if(!msg.state.onboardingComplete){ toggleSettings(true); }
   }
   if(msg.command==="history"){
@@ -4408,10 +6054,29 @@ window.addEventListener("message",function(e){
     toggleHistory(false);
   }
   if(msg.command==="response" || msg.command==="progress"){
+    if(!window.agentLeeRealtimeAssistantSpeaking){
+      emitLeeWayVoiceEvent("LAVR_ASSISTANT_RESPONSE_STARTED");
+    }
+    window.agentLeeRealtimeAssistantSpeaking = true;
+    window.agentLeeAgentTurnActive = true;
     const chat=document.getElementById("chat");
     const last=chat.lastElementChild;
     if(last && last.textContent && (last.textContent.indexOf("Hold up, I'm building the plan and tracking the workflow now.") !== -1 || last.textContent.indexOf("IÃ¢â‚¬â„¢m on it. Reading the real files and lining up the live tracker now.") !== -1 || last.textContent.indexOf("I'm on it. Reading the real files and lining up the live tracker now.") !== -1)) last.remove();
     render("agent",msg.text,msg.activity||null,msg.command==="progress" ? "progress" : "response");
+    setTimeout(function(){
+      window.agentLeeAgentTurnActive = false;
+      if(window.agentLeeRealtimeAssistantSpeaking){
+        window.agentLeeRealtimeAssistantSpeaking = false;
+        emitLeeWayVoiceEvent("LAVR_ASSISTANT_RESPONSE_DONE");
+      }
+      if(isVoiceSessionActive() && window.agentLeeVoiceProvider && typeof window.agentLeeVoiceProvider.connect === "function"){
+        var providerState = getVoiceProviderState();
+        if(!providerState || !providerState.listening){
+          try { window.agentLeeVoiceProvider.connect(); } catch {}
+        }
+      }
+      syncMicButtonFromProviderState();
+    }, 450);
     if(msg.reportPath){ document.getElementById("evidenceStatus").textContent = "Repair report path: " + msg.reportPath; }
   }
   if(msg.command==="agentLeeUiResponse"){
@@ -4425,11 +6090,27 @@ window.addEventListener("message",function(e){
   if(msg.command==="status"){
     document.getElementById("status").textContent=msg.text;
   }
+  if(msg.command==="submitVoiceReviewMessage"){
+    submitOutgoingMessage(msg.text || "", { skipPlaceholder:false });
+  }
   if(msg.command==="runtimeInfo"){
     latestAgentVmMemory = msg.memory || latestAgentVmMemory || {};
     document.getElementById("workspaceBadge").textContent = "Workspace: " + (msg.workspaceRoot || "not open");
-    document.getElementById("voiceStatus").textContent = "Voice: " + (msg.voice.enabled ? "On" : "Off") + " | " + msg.voice.engine + " | ready=" + msg.voice.ready;
+    document.getElementById("voiceStatus").textContent = "Voice: " + (msg.voice.enabled ? "On" : "Off") + " | authority=" + ((msg.voiceBridge && msg.voiceBridge.authorityState) || "unknown") + " | route=" + (msg.voice.routeId || "unknown") + " | first-audio=" + (msg.voice.firstAudioLatencyMs == null ? "pending" : msg.voice.firstAudioLatencyMs + "ms");
     document.getElementById("hiveStatus").textContent = "Hive: " + msg.hive.taskType + " | degraded=" + msg.hive.degraded;
+    var runtimeTruth = msg.sovereignRuntime && msg.sovereignRuntime.runtimeTruth ? msg.sovereignRuntime.runtimeTruth : null;
+    var runtimeHealthBadge=document.getElementById("runtimeHealthBadge");
+    if(runtimeHealthBadge){
+      runtimeHealthBadge.textContent = "Runtime Health: "
+        + (runtimeTruth ? runtimeTruth.sourceMode : "SOURCE_UNKNOWN")
+        + " | installed=" + (runtimeTruth ? runtimeTruth.installedRuntimeStatus : "unknown");
+    }
+    var voiceControlStatus=document.getElementById("voiceControlStatus");
+    if(voiceControlStatus) voiceControlStatus.textContent = msg.voice.audibleOutputProof || msg.voice.currentStatus || "LeeWay live voice proof is standing by.";
+    var voiceControlError=document.getElementById("voiceControlError");
+    if(voiceControlError) voiceControlError.textContent = msg.voice.lastError || "No live voice errors.";
+    renderVoiceBridgeStatus(msg.voiceBridge || (msg.voice && msg.voice.voiceBridge) || {});
+    renderVoiceReviewState(msg.voiceReview || (msg.voice && msg.voice.voiceReview) || null);
     renderPluginMesh(msg.pluginMesh || []);
     msg.hive.roles.forEach(function(role){
       if(!roleIds[role.role]) return;
@@ -4459,11 +6140,53 @@ window.addEventListener("message",function(e){
   if(msg.command==="voiceCloneStatus"){
     const status=document.getElementById("voiceCloneStatus");
     if(status) status.textContent = msg.text || "Voice cloning status updated.";
+    const voiceControlError=document.getElementById("voiceControlError");
+    if(voiceControlError && /fail|error|missing|unavailable|degraded/i.test(String(msg.text || ""))){
+      voiceControlError.textContent = msg.text || "Live voice error surfaced.";
+    }
     if(msg.voiceRuntime){ renderVoiceCloneConfig(msg.voiceRuntime); }
     const alStatus=document.getElementById("voiceAlCloneStatus");
     if(alStatus) alStatus.textContent = msg.text || "";
     const alDefault=document.getElementById("voiceAlDefaultStatus");
     if(alDefault && msg.defaultStatus) alDefault.textContent = msg.defaultStatus;
+  }
+  if(msg.command==="leewayVoiceStatusChanged"){
+    var payload=msg.voiceState || {};
+    window.agentLeeVoiceEnabled = !!payload.enabled;
+    window.agentLeeVoiceMuted = !!payload.muted;
+    updateVoiceButtonState(!!payload.enabled, !!payload.muted);
+    var autoSpeakToggle=document.getElementById("voiceAutoSpeakToggle");
+    if(autoSpeakToggle) autoSpeakToggle.checked = !!payload.autoSpeak;
+    var voiceControlStatusNode=document.getElementById("voiceControlStatus");
+    if(voiceControlStatusNode) voiceControlStatusNode.textContent = payload.audibleOutputProof || payload.currentStatus || "LeeWay live voice proof is standing by.";
+    var voiceControlErrorNode=document.getElementById("voiceControlError");
+    if(voiceControlErrorNode) voiceControlErrorNode.textContent = payload.lastError || "No live voice errors.";
+    var voiceStatus=document.getElementById("voiceStatus");
+    if(voiceStatus){
+      var firstAudio = payload.firstAudioLatencyMs == null ? "pending" : payload.firstAudioLatencyMs + "ms";
+      var segments = payload.multiSegmentPlayback ? (payload.multiSegmentPlayback.playedSegments + "/" + payload.multiSegmentPlayback.plannedSegments) : "0/0";
+      voiceStatus.textContent = "Voice: " + (payload.active ? "On" : "Off") + " | route=" + (payload.routeId || "unknown") + " | first-audio=" + firstAudio + " | segments=" + segments;
+    }
+    renderVoiceBridgeStatus(payload.voiceBridge || {});
+    renderVoiceReviewState(payload.voiceReview || null);
+  }
+  if(msg.command==="leewayVoiceBridgeStatusChanged"){
+    renderVoiceBridgeStatus(msg.voiceBridge || {});
+  }
+  if(msg.command==="leewayVoiceReviewChanged"){
+    renderVoiceReviewState(msg.review || null);
+  }
+  if(msg.command==="visibleRuntimeState"){
+    var runtimeHealth = document.getElementById("runtimeHealthBadge");
+    if(runtimeHealth && msg.runtime){
+      var healthLines = msg.runtime.detailLines || [];
+      var sourceLine = healthLines.find(function(line){
+        return String(line).indexOf("Extension source mode:") === 0 || String(line).indexOf("Source mode:") === 0;
+      }) || "Source mode: SOURCE_UNKNOWN";
+      var channelLine = healthLines.find(function(line){ return String(line).indexOf("Update channel:") === 0; }) || "Update channel: UPDATE_CHANNEL_UNKNOWN";
+      var installedLine = healthLines.find(function(line){ return String(line).indexOf("Installed runtime status:") === 0; }) || "Installed runtime status: unknown";
+      runtimeHealth.textContent = "Runtime Health: " + sourceLine.replace("Extension source mode: ", "").replace("Source mode: ", "") + " | " + channelLine.replace("Update channel: ", "") + " | " + installedLine.replace("Installed runtime status: ", "");
+    }
   }
   if(msg.command==="voiceAlCatalogUpdate"){
     renderVoiceAlCatalog(msg.catalog, msg.activeVoiceId);
@@ -4477,6 +6200,72 @@ window.addEventListener("message",function(e){
   if(msg.command==="pluginConfirmationCleared"){
     hidePluginApproval();
   }
+  if(msg.command==="leewayVoiceToolCompleted"){
+    var provider = window.agentLeeVoiceProvider;
+    var callId = String(msg.callId || "").trim();
+    var requestId = String(msg.lavrToolRequestId || callId || "").trim();
+    var terminalStatus = String(msg.terminalStatus || (msg.ok ? "completed" : "failed")).trim() || "failed";
+    var resultKey = requestId + ":" + terminalStatus;
+    if(!window.agentLeeLavrTerminalResultSet) window.agentLeeLavrTerminalResultSet = {};
+    if(window.agentLeeLavrTerminalResultSet[resultKey]){
+      return;
+    }
+    window.agentLeeLavrTerminalResultSet[resultKey] = true;
+
+    if(provider && callId){
+      if(msg.ok && terminalStatus === "completed"){
+        if(typeof provider.sendToolResult === "function"){
+          provider.sendToolResult(callId, {
+            ok:true,
+            pluginId:msg.pluginId || "",
+            action:msg.action || "",
+            summary:msg.summary || "",
+            data:msg.result,
+            receiptId:msg.receiptId || "",
+            requiresFollowUp:!!msg.requiresFollowUp,
+            lavrToolRequestId:requestId,
+            lavrTurnId:msg.lavrTurnId || "",
+            lavrSessionId:msg.lavrSessionId || "",
+            terminalStatus:terminalStatus
+          });
+        }
+      } else if(typeof provider.sendToolError === "function"){
+        provider.sendToolError(callId, String(msg.error || "LAVR tool request failed."));
+      }
+    }
+    if(msg.ok && terminalStatus === "completed"){
+      emitLeeWayVoiceEvent("LAVR_TOOL_COMPLETED", {
+        callId:callId,
+        lavrToolRequestId:requestId,
+        lavrTurnId:msg.lavrTurnId || "",
+        lavrSessionId:msg.lavrSessionId || "",
+        terminalStatus:terminalStatus,
+        result:{
+          pluginId:msg.pluginId || "",
+          action:msg.action || "",
+          summary:msg.summary || "",
+          data:msg.result,
+          receiptId:msg.receiptId || "",
+          requiresFollowUp:!!msg.requiresFollowUp
+        }
+      });
+    } else {
+      emitLeeWayVoiceEvent("LAVR_TOOL_COMPLETED", {
+        callId:callId,
+        lavrToolRequestId:requestId,
+        lavrTurnId:msg.lavrTurnId || "",
+        lavrSessionId:msg.lavrSessionId || "",
+        terminalStatus:terminalStatus,
+        result:{
+          ok:false,
+          error:String(msg.error || "LAVR tool request failed."),
+          pluginId:msg.pluginId || "",
+          action:msg.action || "",
+          receiptId:msg.receiptId || ""
+        }
+      });
+    }
+  }
   if(msg.command==="attachmentsPicked"){
     window.pendingAttachments = msg.attachments || [];
     syncAttachments();
@@ -4489,6 +6278,24 @@ window.addEventListener("message",function(e){
 document.addEventListener("keydown",function(e){ const input=document.getElementById("input"); const focused=document.activeElement===input; if(!focused || e.key!=="Enter") return; if((e.ctrlKey || e.metaKey)){ e.preventDefault(); send(); return; } if(runtimeStateRequireCtrlEnter()){ return; } if(e.shiftKey){ return; } e.preventDefault(); send(); });
 window.pendingAttachments=[];
 window.agentLeeVoiceEnabled=true;
+window.agentLeeVoiceProvider = null;
+window.agentLeeVoiceProviderReady = false;
+window.agentLeeVoiceProviderKind = "leeway-agent-voice-local";
+window.agentLeeMicShouldRun = false;
+window.agentLeeMicListening = false;
+window.agentLeeAgentTurnActive = false;
+window.agentLeeRealtimeAssistantSpeaking = false;
+window.agentLeeRealtimeUserSpeaking = false;
+window.agentLeeRealtimeTurnBuffer = "";
+window.agentLeeRealtimeInterim = "";
+window.agentLeeRealtimeCommitTimer = null;
+window.agentLeeLavrSessionId = "";
+window.agentLeeLavrTurnId = "";
+window.agentLeeLavrUtteranceId = "";
+window.agentLeeLavrInterruptId = "";
+window.agentLeeLavrTerminalResultSet = {};
+window.agentLeeLavrTurnGateState = null;
+window.agentLeeLiveMicAlwaysOn = true;
 window.agentLeeRuntimeState = {
   enabledPlugins: [],
   enabledMcpServers: defaultMcpServerCatalog.map(function(entry){ return entry.id; }),
@@ -4505,16 +6312,22 @@ function bootAgentLeeUiHandlers(){
   registerAgentLeeControlButtons();
   registerAgentLeeTopButtons();
   console.log('UI version: ${AGENT_LEE_UI_VERSION}');
+  setAttachmentMeta("Text, image, audio, and mic input ready.");
+  var workflowShell = document.getElementById("workflowShell");
+  if(workflowShell){
+    workflowShell.classList.add("collapsed");
+  }
+  var workflowChevron = document.getElementById("workflowChevron");
+  if(workflowChevron){
+    workflowChevron.textContent = "\u25b8";
+  }
+  syncRequireCtrlEnterToggle(false);
 }
 if(document.readyState === "loading"){
   document.addEventListener("DOMContentLoaded", bootAgentLeeUiHandlers);
 } else {
   bootAgentLeeUiHandlers();
 }
-setAttachmentMeta("Text, image, audio, and mic input ready.");
-document.getElementById("workflowShell").classList.add("collapsed");
-document.getElementById("workflowChevron").textContent = "\u25b8";
-syncRequireCtrlEnterToggle(false);
 setSegmentChoice("followupBehavior","steer");
 setSegmentChoice("codeReviewBehavior","inline");
 switchSettingsSection("general");
@@ -4525,7 +6338,7 @@ renderWorkers({ enabledWorkers: defaultWorkerCatalog.map(function(entry){ return
 renderModelInventory([], window.agentLeeRuntimeState);
 renderPluginMesh([]);
 renderTaskState({ mode:"execute", summary:"I will show the plan and live to-dos here.", status:"Waiting for a new task.", nextTodo:"Waiting for a new task.", todos:[], activities:[], awaitingApproval:false, canExecute:false, savedPlanPath:"", plan:null });
-vscode.postMessage({command:"ready"});
+vscode.postMessage({command:"agentLeeUiReady"});
 </script>
 </body>
 </html>`;
@@ -4564,6 +6377,17 @@ async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task
   const installedModels = await getModels();
   refreshRuntimeFromInstalled(installedModels);
   const sovereignRuntime = getAgentLeeRuntimeState();
+  const runtimeTruth = sovereignRuntime?.runtimeTruth || null;
+  updateVoiceBridgeRuntimeState({
+    runtimeSourceMode: String(runtimeTruth?.sourceMode || "SOURCE_UNKNOWN"),
+    staleRuntime: String(runtimeTruth?.installedRuntimeStatus || "") === "stale",
+    authorityState: String(runtimeTruth?.installedRuntimeStatus || "") === "stale"
+      ? "STALE_EXTENSION_RUNTIME"
+      : voiceBridgeRuntimeState.authorityState,
+    nextActionHint: String(runtimeTruth?.installedRuntimeStatus || "") === "stale"
+      ? "Repair or reload the extension runtime before trusting voice authority."
+      : voiceBridgeRuntimeState.nextActionHint
+  }, { broadcast: false });
   const routedModels = loadModelRoutingCatalog();
   const routedRoleMap = routedModels.reduce<Record<string, string[]>>((map, entry) => {
     if (!map[entry.id]) map[entry.id] = [];
@@ -4599,10 +6423,21 @@ async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task
 
   webview.postMessage({
     command: "runtimeInfo",
+    runtimeIdentity: {
+      uiGenerationId: AGENT_LEE_UI_VERSION,
+      chatWebviewRuntimeId: CHAT_WEBVIEW_RUNTIME_ID,
+      statusBarRuntimeId: STATUS_BAR_RUNTIME_ID,
+      readmeRuntimeId: README_RUNTIME_ID,
+      voiceRuntimeId: VOICE_RUNTIME_ID,
+      splitBrainDetected: Boolean(runtimeTruth?.splitBrainDetected),
+      staleRuntimeDetected: String(runtimeTruth?.installedRuntimeStatus || "") === "stale"
+    },
     voice: {
       ...getVoiceStatus(),
-      enabled: runtimeState.voice
+      ...buildVoiceUiState()
     },
+    voiceBridge: voiceBridgeRuntimeState,
+    voiceReview: voiceReviewState,
     hive,
     pluginMesh: buildPluginMeshSnapshot(),
     memory: getMemoryStatus(),
@@ -4630,6 +6465,8 @@ async function postRuntimeInfo(webview: vscode.Webview, prompt = "front-end task
       verifierModel: runtimeState.verifierModel
     },
     state: runtimeState,
+    voiceBridge: voiceBridgeRuntimeState,
+    voiceReview: voiceReviewState,
     sovereignRuntime
   });
   try {
@@ -4751,6 +6588,334 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     return;
   }
 
+  if (msg.command === "leewayVoiceTurnCommit") {
+    const text = String(msg.text || "").trim();
+    if (!text) {
+      return;
+    }
+    lavrLastObservedTurnId = String(msg.lavrTurnId || lavrLastObservedTurnId || currentLavrTurnId());
+    recordAgentLeeRuntimeReceipt({
+      event: "lavr.turn.commit-emitted",
+      lavrSessionId: String(msg.lavrSessionId || ""),
+      lavrTurnId: String(msg.lavrTurnId || ""),
+      lavrUtteranceId: String(msg.lavrUtteranceId || ""),
+      lavrInterruptId: String(msg.lavrInterruptId || ""),
+      transcript: text
+    });
+    const source: LeeWayVoiceEventSource = runtimeState.leewayVoiceRuntimeKind === "leeway-agent-voice-local"
+      ? "LOCAL_TRANSCRIPT_BRIDGE"
+      : "BROWSER_SPEECH_FALLBACK";
+    const captured = captureVoiceTranscriptForReview({
+      text,
+      source,
+      transcriptId: String(msg.lavrUtteranceId || msg.lavrTurnId || ""),
+      timestamp: new Date().toISOString(),
+      webview
+    });
+    if (captured && runtimeState.voiceAutoSendFinalTranscript === true && voiceReviewState && voiceReviewState.nextAction === "Send as message") {
+      await handle(webview, { command: "voiceReviewSend" }, context);
+    }
+    return;
+  }
+
+  if (msg.command === "leewayVoiceInterruptRequested") {
+    if (runtimeState.voiceInterruptOnUserSpeech !== false) {
+      stopLavrPlayback("voice_barge_in_interrupt", "cancel");
+      abortCurrentExecution("Voice barge-in detected. Yielding to the new live user turn.");
+      cancelPendingLavrToolRequests(webview, "LAVR tool request cancelled by voice interruption.");
+      currentTaskState.status = "Voice barge-in detected. Interrupting current response.";
+    } else {
+      currentTaskState.status = "Voice barge-in observed, but interrupt-on-user-speech is disabled.";
+    }
+    postTaskState();
+    return;
+  }
+
+  if (msg.command === "voiceReviewSend") {
+    if (!voiceReviewState) {
+      webview.postMessage({ command: "status", text: "No captured voice request is waiting for review." });
+      return;
+    }
+    const review = voiceReviewState;
+    review.sent = true;
+    setVoiceReviewState(review);
+    updateVoiceBridgeRuntimeState({
+      lastSentText: review.heardText,
+      nextActionHint: "Voice request sent as a governed message."
+    });
+    clearVoiceReviewState();
+    submitOutgoingVoiceMessage(webview, review.heardText, review);
+    return;
+  }
+
+  if (msg.command === "voiceReviewCreateProposal") {
+    if (!voiceReviewState) {
+      webview.postMessage({ command: "status", text: "No captured voice request is waiting for review." });
+      return;
+    }
+    const review = voiceReviewState;
+    const prompt = `Create a governed proposal from this voice request: ${review.heardText}`;
+    updateVoiceBridgeRuntimeState({
+      lastSentText: review.heardText,
+      nextActionHint: "Proposal request sent from reviewed voice input."
+    });
+    clearVoiceReviewState();
+    submitOutgoingVoiceMessage(webview, prompt, review);
+    return;
+  }
+
+  if (msg.command === "voiceReviewClarify") {
+    if (!voiceReviewState) {
+      webview.postMessage({ command: "status", text: "No captured voice request is waiting for review." });
+      return;
+    }
+    webview.postMessage({
+      command: "status",
+      text: "Voice review is waiting for clarification. Typed input remains available."
+    });
+    updateVoiceBridgeRuntimeState({
+      nextActionHint: "Ask a clarification question or discard the current voice draft."
+    });
+    return;
+  }
+
+  if (msg.command === "voiceReviewDiscard") {
+    clearVoiceReviewState();
+    updateVoiceBridgeRuntimeState({
+      nextActionHint: "Voice draft discarded. You can speak again or use typed input."
+    });
+    webview.postMessage({ command: "status", text: "Voice draft discarded. Nothing was sent." });
+    return;
+  }
+
+  if (msg.command === "leewayVoiceEvent") {
+    const event = ((msg?.event && typeof msg.event === "object") ? msg.event : {}) as Record<string, unknown>;
+    const eventType = String(event.type || "unknown");
+    const callId = String(event.callId || nextLavrHostId("lavr-call"));
+    const lavrToolRequestId = String(event.lavrToolRequestId || callId || nextLavrHostId("lavr-tool")).trim();
+    const lavrSessionId = String(event.lavrSessionId || lavrHostSessionId).trim() || lavrHostSessionId;
+    const lavrTurnId = String(event.lavrTurnId || `lavr-turn-${++lavrHostTurnCounter}`).trim();
+    if (lavrTurnId) {
+      lavrLastObservedTurnId = lavrTurnId;
+    }
+
+    if (
+      eventType === "LAVR_TURN_STARTED" ||
+      eventType === "LAVR_PARTIAL_UPDATED" ||
+      eventType === "LAVR_FINAL_RECEIVED" ||
+      eventType === "LAVR_COMMIT_SCHEDULED" ||
+      eventType === "LAVR_COMMIT_EMITTED" ||
+      eventType === "LAVR_DUPLICATE_COMMIT_SUPPRESSED" ||
+      eventType === "LAVR_SPEECH_STARTED" ||
+      eventType === "LAVR_SPEECH_PARTIAL" ||
+      eventType === "LAVR_SPEECH_FINAL" ||
+      eventType === "LAVR_SILENCE_TIMEOUT" ||
+      eventType === "LAVR_TURN_CANCELLED" ||
+      eventType === "LAVR_INTERRUPT_REQUESTED"
+    ) {
+      recordAgentLeeRuntimeReceipt({
+        event: `lavr.turn.${eventType.toLowerCase()}`,
+        lavrSessionId,
+        lavrTurnId,
+        lavrUtteranceId: String(event.lavrUtteranceId || ""),
+        lavrInterruptId: String(event.lavrInterruptId || ""),
+        source: String(event.source || ""),
+        reason: String(event.reason || ""),
+        transcript: String(event.transcript || "")
+      });
+      logEvent("lavr-turn-lifecycle", "Agent Lee", `LAVR turn lifecycle: ${eventType}`, {
+        lavrSessionId,
+        lavrTurnId,
+        lavrUtteranceId: String(event.lavrUtteranceId || ""),
+        lavrInterruptId: String(event.lavrInterruptId || ""),
+        source: String(event.source || ""),
+        reason: String(event.reason || "")
+      });
+
+      if (eventType === "LAVR_TURN_CANCELLED") {
+        currentTaskState.status = `LAVR turn cancelled (${String(event.reason || "unspecified")}).`;
+        postTaskState();
+      }
+      if (eventType === "LAVR_TURN_STARTED") {
+        stopLavrPlayback("new_turn_boundary", "cancel");
+        currentTaskState.status = "LAVR turn started. Previous playback boundary closed.";
+        postTaskState();
+      }
+      if (eventType === "LAVR_COMMIT_EMITTED") {
+        currentTaskState.status = "LAVR turn commit emitted to host router.";
+        postTaskState();
+      }
+      if (eventType === "LAVR_DUPLICATE_COMMIT_SUPPRESSED") {
+        updateVoiceBridgeRuntimeState({
+          duplicateSuppressionCount: Number((voiceDeduplicator.getState() as any).duplicateSuppressionCount || voiceBridgeRuntimeState.duplicateSuppressionCount),
+          loopDetected: true,
+          status: "loop-detected",
+          authorityState: "VOICE_STATUS_LOOP_DETECTED",
+          nextActionHint: "Repeated voice status or transcript commits are being suppressed."
+        });
+      }
+      if (eventType === "LAVR_INTERRUPT_REQUESTED") {
+        currentTaskState.status = "LAVR interrupt requested by active user speech.";
+        postTaskState();
+      }
+    }
+
+    if (eventType === "LAVR_TOOL_REQUESTED") {
+      const existingByRequest = lavrToolByRequestId.get(lavrToolRequestId);
+      if (existingByRequest) {
+        recordLavrToolLifecycle("duplicate-request-suppressed", {
+          requestId: lavrToolRequestId,
+          callId,
+          lavrSessionId,
+          lavrTurnId,
+          existingStatus: existingByRequest.status
+        });
+        return;
+      }
+      const existingRequestId = lavrRequestByCallId.get(callId);
+      if (existingRequestId) {
+        recordLavrToolLifecycle("duplicate-request-suppressed", {
+          requestId: existingRequestId,
+          callId,
+          lavrSessionId,
+          lavrTurnId,
+          reason: "callId-already-bound"
+        });
+        return;
+      }
+
+      const pluginCall = parseVoiceRealtimeToolCall(event, callId);
+      if (!pluginCall) {
+        const invalidState: LavrToolLifecycleState = {
+          requestId: lavrToolRequestId,
+          callId,
+          lavrSessionId,
+          lavrTurnId,
+          status: "pending",
+          createdAt: Date.now(),
+          providerAcceptedResult: false,
+          timeoutHandle: null
+        };
+        lavrToolByRequestId.set(lavrToolRequestId, invalidState);
+        lavrRequestByCallId.set(callId, lavrToolRequestId);
+        finalizeLavrToolRequest(webview, lavrToolRequestId, "failed", {
+          ok: false,
+          error: "Invalid LeeWay Agent Voice tool request payload. Expected pluginId/action or name like plugin.action.",
+          summary: "LAVR tool request rejected due to invalid payload."
+        });
+        return;
+      }
+
+      const state: LavrToolLifecycleState = {
+        requestId: lavrToolRequestId,
+        callId,
+        lavrSessionId,
+        lavrTurnId,
+        status: "pending",
+        createdAt: Date.now(),
+        pluginId: pluginCall.pluginId,
+        action: pluginCall.action,
+        providerAcceptedResult: false,
+        timeoutHandle: null
+      };
+      state.timeoutHandle = setTimeout(() => {
+        finalizeLavrToolRequest(webview, lavrToolRequestId, "timed_out", {
+          ok: false,
+          pluginId: state.pluginId || "",
+          action: state.action || "",
+          error: `LAVR tool request timed out after ${LAVR_TOOL_TIMEOUT_MS}ms.`,
+          summary: "LAVR tool request timed out before completion."
+        });
+      }, LAVR_TOOL_TIMEOUT_MS);
+      lavrToolByRequestId.set(lavrToolRequestId, state);
+      lavrRequestByCallId.set(callId, lavrToolRequestId);
+
+      recordLavrToolLifecycle("request-emitted", {
+        requestId: lavrToolRequestId,
+        callId,
+        lavrSessionId,
+        lavrTurnId,
+        pluginId: pluginCall.pluginId,
+        action: pluginCall.action
+      });
+
+      state.executionStartedAt = Date.now();
+      recordLavrToolLifecycle("execution-started", {
+        requestId: lavrToolRequestId,
+        callId,
+        lavrSessionId,
+        lavrTurnId,
+        pluginId: pluginCall.pluginId,
+        action: pluginCall.action
+      });
+
+      try {
+        const pluginResult = await handlePluginCall(webview, pluginCall, false);
+        finalizeLavrToolRequest(webview, lavrToolRequestId, pluginResult.ok ? "completed" : "failed", {
+          ok: pluginResult.ok,
+          pluginId: pluginResult.pluginId,
+          action: pluginResult.action,
+          summary: pluginResult.summary,
+          result: pluginResult.data,
+          error: pluginResult.error,
+          receiptId: pluginResult.receiptId,
+          requiresFollowUp: !!pluginResult.requiresFollowUp
+        });
+
+        currentTaskState.status = pluginResult.ok
+          ? `LeeWay Agent Voice tool completed: ${pluginResult.pluginId}.${pluginResult.action}`
+          : `LeeWay Agent Voice tool failed: ${pluginResult.pluginId}.${pluginResult.action} (${pluginResult.error || "unknown error"})`;
+        postTaskState();
+      } catch (error) {
+        finalizeLavrToolRequest(webview, lavrToolRequestId, "failed", {
+          ok: false,
+          pluginId: pluginCall.pluginId,
+          action: pluginCall.action,
+          error: describeFileError(error),
+          summary: "LAVR tool request failed during host execution."
+        });
+      }
+
+      return;
+    }
+
+    if (eventType === "LAVR_TOOL_COMPLETED") {
+      const resolvedRequestId = String(event.lavrToolRequestId || lavrRequestByCallId.get(callId) || "").trim();
+      const terminalStatus = normalizeLavrTerminalStatus(event.terminalStatus);
+      if (resolvedRequestId) {
+        const lifecycleState = lavrToolByRequestId.get(resolvedRequestId);
+        if (lifecycleState && !lifecycleState.providerAcceptedResult) {
+          lifecycleState.providerAcceptedResult = true;
+          recordLavrToolLifecycle("provider-accepted-result", {
+            requestId: resolvedRequestId,
+            callId: lifecycleState.callId,
+            lavrSessionId: lifecycleState.lavrSessionId,
+            lavrTurnId: lifecycleState.lavrTurnId,
+            terminalStatus
+          });
+        }
+      }
+      currentTaskState.status = `LAVR provider accepted terminal result (${terminalStatus}).`;
+      postTaskState();
+      return;
+    }
+
+    if (eventType === "LAVR_ERROR") {
+      const detail = String(event.message || "Realtime voice transport error.");
+      currentTaskState.status = `Realtime voice transport error: ${detail}`;
+      updateVoiceBridgeRuntimeState({
+        status: /permission/i.test(detail) ? "permission-required" : "error",
+        lastError: detail,
+        authorityState: /permission/i.test(detail) ? "MIC_PERMISSION_REQUIRED" : "LEEWAY_VOICE_DEGRADED",
+        nextActionHint: /permission/i.test(detail)
+          ? "Grant microphone permission before using LeeWay Voice."
+          : "Typed input remains available while the voice path is degraded."
+      });
+      postTaskState();
+    }
+    return;
+  }
+
   if (msg.command === "agentVmDiagnosticEvent") {
     const ledgerPath = recordAxAgentLeeDiagnosticEvent((msg.event || {}) as Record<string, unknown>);
     webview.postMessage({
@@ -4839,6 +7004,109 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     return;
   }
 
+  if (msg.command === "leewayVoiceSettingsChanged") {
+    const key = String(msg.key || "").trim();
+    const rawValue = msg.value;
+    recordVoiceUiCommand("leewayVoiceSettingsChanged", { key, value: rawValue });
+    if (!key) {
+      updateVoiceRuntimeStatus("LeeWay live voice settings change was rejected because the setting key was missing.", {
+        error: "Missing voice setting key.",
+        eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+      });
+      await postRuntimeInfo(webview);
+      return;
+    }
+
+    if (key === "voiceEnabled") {
+      runtimeState.voiceEnabled = Boolean(rawValue);
+    } else if (key === "voiceAutoSpeak") {
+      runtimeState.voiceAutoSpeak = Boolean(rawValue);
+    } else if (key === "voiceMuted") {
+      runtimeState.voiceMuted = Boolean(rawValue);
+    } else if (key === "voiceInterruptOnUserSpeech") {
+      runtimeState.voiceInterruptOnUserSpeech = Boolean(rawValue);
+    } else if (key === "voiceRate" || key === "voiceVolume" || key === "voicePitch" || key === "voiceTone") {
+      (runtimeState as any)[key] = Number(rawValue);
+    } else {
+      (runtimeState as any)[key] = rawValue;
+    }
+
+    syncVoiceRuntimeStateShape();
+    if (!runtimeState.voice) {
+      stopLavrPlayback("voice_settings_change_disabled_output", "stop");
+    }
+    try {
+      const config = getVoiceRuntimeConfig();
+      applyRuntimeVoiceTuning(config, runtimeState);
+      persistVoiceRuntimeConfig(config);
+    } catch (error) {
+      updateVoiceRuntimeStatus(`Voice settings update failed: ${describeFileError(error)}`, {
+        error: describeFileError(error),
+        eventType: "LEEWAY_VOICE_PLAYBACK_FAILED"
+      });
+    }
+    persistRuntime();
+    currentTaskState.status = `LeeWay live voice setting updated: ${key}.`;
+    updateVoiceRuntimeStatus(currentTaskState.status, {
+      error: runtimeState.voiceLastError,
+      eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+    });
+    postTaskState();
+    await postRuntimeInfo(webview);
+    return;
+  }
+
+  if (msg.command === "leewayVoiceMuteToggled") {
+    recordVoiceUiCommand("leewayVoiceMuteToggled", { nextMuted: !runtimeState.voiceMuted });
+    runtimeState.voiceMuted = !runtimeState.voiceMuted;
+    syncVoiceRuntimeStateShape();
+    persistRuntime();
+    if (runtimeState.voiceMuted) {
+      stopLavrPlayback("voice_muted", "stop");
+      voiceEvidenceState.status = "muted";
+      currentTaskState.status = "Voice output muted.";
+    } else {
+      currentTaskState.status = "Voice output unmuted.";
+      updateVoiceRuntimeStatus("LeeWay live voice output is unmuted and standing by.", {
+        error: "",
+        eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+      });
+    }
+    postTaskState();
+    await postRuntimeInfo(webview);
+    return;
+  }
+
+  if (msg.command === "leewayVoiceStopRequested") {
+    recordVoiceUiCommand("leewayVoiceStopRequested", { routeId: voiceEvidenceState.currentRouteId });
+    stopLavrPlayback("leeway_voice_stop_requested", "stop");
+    currentTaskState.status = "Voice playback stopped.";
+    postTaskState();
+    await postRuntimeInfo(webview);
+    return;
+  }
+
+  if (msg.command === "leewayVoiceTestRequested") {
+    const testPhrase = String(
+      msg.text ||
+      "Agent Lee live voice test. If you can hear this, the LeeWay-owned route is active and speaking through the current extension runtime."
+    ).trim();
+    recordVoiceUiCommand("leewayVoiceTestRequested", { text: testPhrase });
+    runtimeState.voiceEnabled = true;
+    runtimeState.voiceMuted = false;
+    syncVoiceRuntimeStateShape();
+    persistRuntime();
+    currentTaskState.status = "Running the LeeWay live voice test phrase.";
+    updateVoiceRuntimeStatus(currentTaskState.status, {
+      error: "",
+      eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+    });
+    postTaskState();
+    speak(testPhrase);
+    await postRuntimeInfo(webview);
+    return;
+  }
+
   if (msg.command === "setState") {
     let blockedProtectedMutation = false;
     let nextValue = msg.value;
@@ -4867,9 +7135,26 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       const sanitized = preserveProtectedConfigs(msg.value, runtimeState.mcpServerConfigs, PROTECTED_MCP_IDS);
       blockedProtectedMutation = JSON.stringify(sanitized) !== JSON.stringify(msg.value);
       nextValue = sanitized;
+    } else if (msg.key === "leewayVoiceRuntimeKind") {
+      nextValue = String(msg.value || "") === "leeway-agent-voice-browser-fallback" || String(msg.value || "") === "browser-speech-recognition"
+        ? "leeway-agent-voice-browser-fallback"
+        : "leeway-agent-voice-local";
+    } else if (msg.key === "voice") {
+      nextValue = Boolean(msg.value);
+    } else if (msg.key === "voiceEnabled" || msg.key === "voiceMuted" || msg.key === "voiceAutoSpeak" || msg.key === "voiceAutoSendFinalTranscript" || msg.key === "voiceInterruptOnUserSpeech") {
+      nextValue = Boolean(msg.value);
+    } else if (msg.key === "voiceRate" || msg.key === "voiceVolume" || msg.key === "voicePitch" || msg.key === "voiceTone") {
+      nextValue = Number(msg.value);
     }
 
     (runtimeState as any)[msg.key] = nextValue;
+    if (msg.key === "voice") {
+      runtimeState.voiceEnabled = Boolean(nextValue);
+      if (runtimeState.voiceEnabled) {
+        runtimeState.voiceMuted = false;
+      }
+    }
+    syncVoiceRuntimeStateShape();
     persistRuntime();
     if (blockedProtectedMutation) {
       currentTaskState.status = protectedMutationStatus(String(msg.key || ""));
@@ -4900,8 +7185,14 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     }
     if (msg.key === "autoUpdateEnabled") {
       currentTaskState.status = nextValue
-        ? "Agent Lee auto-update is enabled and will run on startup."
-        : "Agent Lee auto-update is disabled.";
+        ? "Agent Lee local VSIX startup repair is enabled. This does not make VS Code marketplace auto-update work for side-loaded installs."
+        : "Agent Lee local VSIX startup repair is disabled.";
+      postTaskState();
+    }
+    if (msg.key === "preferRightSideSurface") {
+      currentTaskState.status = nextValue
+        ? "Agent Lee will prefer the right-side panel by default. The contributed sidebar container still remains a VS Code left-side surface unless you move it manually."
+        : "Agent Lee will prefer the contributed sidebar by default.";
       postTaskState();
     }
     if (msg.key === "approval") {
@@ -4930,24 +7221,125 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       currentTaskState.status = `Inference speed set to ${nextValue}.`;
       postTaskState();
     }
+    if (msg.key === "voiceRate" || msg.key === "voiceVolume" || msg.key === "voicePitch" || msg.key === "voiceTone") {
+      try {
+        const config = getVoiceRuntimeConfig();
+        applyRuntimeVoiceTuning(config, runtimeState);
+        persistVoiceRuntimeConfig(config);
+        currentTaskState.status = `Voice tuning updated (${runtimeState.voiceRate.toFixed(2)}x speed, ${runtimeState.voiceVolume.toFixed(2)}x volume, ${runtimeState.voicePitch.toFixed(2)}x pitch, ${runtimeState.voiceTone.toFixed(2)}x tone).`;
+      } catch (error) {
+        currentTaskState.status = `Voice tuning update failed: ${describeFileError(error)}`;
+      }
+      updateVoiceRuntimeStatus(currentTaskState.status, {
+        error: runtimeState.voiceLastError,
+        eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+      });
+      postTaskState();
+    }
+    if (msg.key === "liveMicAlwaysOn") {
+      currentTaskState.status = nextValue ? "Live mic auto-listen is on." : "Live mic auto-listen is off.";
+      postTaskState();
+    }
+    if (msg.key === "leewayVoiceRuntimeKind") {
+      currentTaskState.status = String(nextValue) === "leeway-agent-voice-local"
+        ? "LeeWay Voice authority is using the local transcript bridge path."
+        : "LeeWay Voice authority is using browser speech as a labeled fallback.";
+      updateVoiceRuntimeStatus(currentTaskState.status, {
+        error: runtimeState.voiceLastError,
+        eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+      });
+      updateVoiceBridgeRuntimeState({
+        listeningSource: String(nextValue) === "leeway-agent-voice-local" ? "LOCAL_TRANSCRIPT_BRIDGE" : "BROWSER_SPEECH_FALLBACK",
+        authorityState: String(nextValue) === "leeway-agent-voice-local" ? "LEEWAY_VOICE_READY" : "BROWSER_SPEECH_AVAILABLE",
+        browserSpeechAvailable: String(nextValue) !== "leeway-agent-voice-local",
+        localTranscriptAvailable: String(nextValue) === "leeway-agent-voice-local",
+        nextActionHint: String(nextValue) === "leeway-agent-voice-local"
+          ? "LeeWay Voice will classify local bridge input before anything is sent."
+          : "Browser speech will be labeled as fallback input and reviewed before send."
+      });
+      postTaskState();
+    }
     await postRuntimeInfo(webview);
   }
 
   if (msg.command === "talkOn") {
-    runtimeState.voice = true;
+    runtimeState.voiceEnabled = true;
+    runtimeState.voiceMuted = false;
+    syncVoiceRuntimeStateShape();
     persistRuntime();
     currentTaskState.status = "Voice output enabled.";
+    updateVoiceRuntimeStatus(currentTaskState.status, {
+      error: "",
+      eventType: "LEEWAY_VOICE_STATUS_CHANGED"
+    });
     postTaskState();
     await postRuntimeInfo(webview);
   }
 
   if (msg.command === "muteVoice") {
-    runtimeState.voice = false;
+    runtimeState.voiceMuted = true;
+    syncVoiceRuntimeStateShape();
     persistRuntime();
-    stopVoicePlayback();
+    stopLavrPlayback("voice_muted", "stop");
     currentTaskState.status = "Voice output muted.";
     postTaskState();
     await postRuntimeInfo(webview);
+  }
+
+  if (msg.command === "leewayStartTranscriptBridge") {
+    try {
+      currentTaskState.status = "Starting Agent Lee local transcript bridge.";
+      postTaskState();
+      const result = await vscode.commands.executeCommand<{ alreadyRunning?: boolean; started?: boolean; url?: string }>("agentLee.liveVoice.startTranscriptBridge");
+      const bridgeUrl = String(result?.url || voiceBridgeRuntimeState.endpointUrl);
+      const alreadyRunning = result?.alreadyRunning === true;
+      recordVoiceBridgeStatus({
+        type: "VOICE_STATUS",
+        status: alreadyRunning ? "VOICE_STATUS_LOOP_DETECTED" : "LOCAL_TRANSCRIPT_AVAILABLE",
+        message: alreadyRunning
+          ? "Voice bridge status loop detected. Status messages are being suppressed and will not enter chat."
+          : "Local transcript bridge is available as a fallback. Voice input will be labeled and governed.",
+        timestamp: new Date().toISOString(),
+        source: "local-bridge"
+      }, "LOCAL_TRANSCRIPT_BRIDGE");
+      updateVoiceBridgeRuntimeState({
+        endpointUrl: bridgeUrl,
+        localTranscriptAvailable: true,
+        listeningSource: "LOCAL_TRANSCRIPT_BRIDGE",
+        authorityState: "LOCAL_TRANSCRIPT_BRIDGE_READY",
+        status: alreadyRunning ? "loop-detected" : "online",
+        nextActionHint: alreadyRunning
+          ? "Bridge is already active. Review captured voice before sending."
+          : "LeeWay Voice will review captured local transcripts before they become chat."
+      });
+      currentTaskState.status = alreadyRunning
+        ? "Local transcript bridge was already active. Repeated status output is being suppressed."
+        : "Local transcript bridge is ready for governed review.";
+      postTaskState();
+      webview.postMessage({
+        command: "status",
+        text: alreadyRunning
+          ? "Voice bridge status loop detected. Status messages are being suppressed and will not enter chat."
+          : "Local transcript bridge is available as a fallback. Voice input will be labeled and governed."
+      });
+      await postRuntimeInfo(webview);
+    } catch (error) {
+      const detail = describeFileError(error);
+      currentTaskState.status = `Transcript bridge failed: ${detail}`;
+      updateVoiceBridgeRuntimeState({
+        status: "error",
+        lastError: detail,
+        authorityState: "LOCAL_TRANSCRIPT_BRIDGE_DEGRADED",
+        listeningSource: "LOCAL_TRANSCRIPT_BRIDGE",
+        nextActionHint: "Typed input remains available while the local bridge is repaired."
+      });
+      postTaskState();
+      webview.postMessage({
+        command: "status",
+        text: "LeeWay Voice is degraded. Typed input remains available, and no voice command will execute automatically."
+      });
+    }
+    return;
   }
 
   if (msg.command === "pickAttachments") {
@@ -5070,7 +7462,8 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
   }
 
   if (msg.command === "stopVoice") {
-    stopVoicePlayback();
+    recordVoiceUiCommand("leewayVoiceStopRequested", { source: "legacy_stopVoice" });
+    stopLavrPlayback("stop_voice_command", "stop");
     postAgentResponse(webview, "Agent Lee voice stopped.", { speak: false });
     await postRuntimeInfo(webview);
   }
@@ -5152,7 +7545,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       postAgentResponse(webview, "Agent Lee runtime is degraded: persona module unavailable. Only scan and doctor style diagnostics are available until the full sovereign runtime is active again.", { speak: false });
       return;
     }
-    stopVoicePlayback();
+    stopLavrPlayback("new_ask_request", "stop");
     const text = String(msg.text || "");
     const attachments = Array.isArray(msg.attachments) ? msg.attachments as PendingAttachment[] : [];
     const attachmentSummary = summarizeAttachmentList(attachments);
@@ -5203,6 +7596,13 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       });
     }
     log("ask", { text, attachments, runtimeState, workspaceRoot: workspaceRoot(), conversationId: active.id });
+    const promptClass = classifyPromptForRuntime(promptText);
+    recordAgentLeeRuntimeReceipt({
+      event: "prompt.classified",
+      promptClass,
+      promptLength: promptText.length,
+      attachmentCount: attachments.length
+    });
 
     if (isSelfIdentityQuestion(text) && !attachments.length) {
       const finalText = agentLeeText(buildIdentityAnswer(), { voiceMode: "grounded" });
@@ -5242,8 +7642,10 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       return;
     }
 
-    if (isCasualConversationPrompt(text) && !attachments.length) {
-      const lightReply = buildCasualReply(text);
+    if (promptClass === "simple_greeting" && !attachments.length) {
+      const fastLaneStartedAt = Date.now();
+      const lightReply = await runLightConversation(text, installedModels);
+      const fastLaneCompletedAt = Date.now();
       const finalText = agentLeeText(lightReply, { voiceMode: "grounded" });
       appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
       currentTaskState = {
@@ -5251,11 +7653,22 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
         mode: "ask",
         prompt: promptText,
         draftPrompt: promptText,
-        summary: "Natural conversational turn handled directly.",
-        status: "Answered directly without planning.",
+        summary: "Simple greeting detected. Lightweight conversation lane used without workspace ingestion.",
+        status: "Answered immediately without loading workspace context.",
         activePhase: "answer"
       };
       postTaskState();
+      recordAgentLeeRuntimeReceipt({
+        event: "prompt.completed",
+        promptClass,
+        durationMs: fastLaneCompletedAt - fastLaneStartedAt,
+        usedFastLane: true,
+        intentClassification: "GREETING",
+        workflowId: "LEEWAY_WORKFLOW::FAST_LANE_GREETING",
+        workspaceScanSkipped: true,
+        responseStartedMs: 0,
+        responseCompletedMs: fastLaneCompletedAt - fastLaneStartedAt
+      });
       postAgentResponse(webview, finalText);
       webview.postMessage({ command: "history", items: conversationItems() });
       await postRuntimeInfo(webview, text);
@@ -5289,6 +7702,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     }
 
     if (parkedTaskState) {
+      const redirectLaneStartedAt = Date.now();
       currentTaskState = {
         ...emptyTaskState(),
         mode: "ask",
@@ -5310,6 +7724,12 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       currentTaskState.status = "Redirect handled. Paused task restored.";
       parkedTaskState = null;
       postTaskState();
+      recordAgentLeeRuntimeReceipt({
+        event: "prompt.completed",
+        promptClass,
+        durationMs: Date.now() - redirectLaneStartedAt,
+        usedFastLane: false
+      });
       webview.postMessage({ command: "history", items: conversationItems() });
       await postRuntimeInfo(webview, text);
       await runNextQueuedFollowUp(webview);
@@ -5317,6 +7737,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     }
 
     if (shouldAnswerDirectly(promptText)) {
+      const directLaneStartedAt = Date.now();
       const reviewStyleRequest = isReviewRequest(promptText) || isRepositoryOpinionRequest(promptText);
       currentTaskState = {
         ...emptyTaskState(),
@@ -5355,6 +7776,12 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       currentTaskState.status = reviewStyleRequest ? "Direct review finished." : "Direct answer finished.";
       currentTaskState.activePhase = "answer";
       postTaskState();
+      recordAgentLeeRuntimeReceipt({
+        event: "prompt.completed",
+        promptClass,
+        durationMs: Date.now() - directLaneStartedAt,
+        usedFastLane: false
+      });
       postAgentResponse(webview, finalText, { reportPath: response.reportPath || "" });
       webview.postMessage({ command: "history", items: conversationItems() });
       await postRuntimeInfo(webview, text);
@@ -5363,6 +7790,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     }
 
     if (runtimeState.workMode === "ask") {
+      const askLaneStartedAt = Date.now();
       currentTaskState = {
         ...emptyTaskState(),
         mode: "ask",
@@ -5381,6 +7809,12 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       appendConversationMessage(workspaceRoot(), { role: "agent", text: finalText, timestamp: new Date().toISOString() }, { conversationId: active.id });
       currentTaskState.status = "Ask mode finished the response.";
       postTaskState();
+      recordAgentLeeRuntimeReceipt({
+        event: "prompt.completed",
+        promptClass,
+        durationMs: Date.now() - askLaneStartedAt,
+        usedFastLane: false
+      });
       postAgentResponse(webview, finalText, { reportPath: response.reportPath || "" });
       webview.postMessage({ command: "history", items: conversationItems() });
       await postRuntimeInfo(webview, text);
@@ -5434,6 +7868,21 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     webview.postMessage({ command: "voiceReferencePicked", path: pickedPath });
   }
 
+  if (msg.command === "transcribeVoiceReference") {
+    const payload = msg.payload || {};
+    const providedTranscript = String(payload.transcript || "").trim();
+    if (providedTranscript) {
+      webview.postMessage({ command: "voiceReferenceTranscribed", text: providedTranscript });
+      webview.postMessage({ command: "voiceCloneStatus", text: "Reference transcript applied from the current voice settings." });
+    } else {
+      webview.postMessage({
+        command: "voiceCloneStatus",
+        text: "Automatic transcription is unavailable in this local-only runtime. Paste the reference transcript manually."
+      });
+      webview.postMessage({ command: "voiceReferenceTranscribed", text: "" });
+    }
+  }
+
   if (msg.command === "saveVoiceCloneSettings") {
     try {
       const payload = msg.payload || {};
@@ -5451,14 +7900,14 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     try {
       const payload = msg.payload || {};
       const config = getVoiceRuntimeConfig();
-      const testText = payload.testText || "Hey, I'm Agent Lee. I'm online, ready, and listening.";
+      const testText = payload.testText || "Hey, I'm online, ready, and listening.";
       webview.postMessage({ command: "voiceCloneStatus", text: "Generating cloned voice test... this may take a minute." });
       const outputPath = path.join(ROOT, "agent-lee", "voice", "agent-lee-test-clone.wav");
       await runCommandCapture(
         config.clonePythonPath || "python",
         [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", config.cloneReferenceAudioPath || "", "--ref_text", config.cloneReferenceText || "", "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
       );
-      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      await playWavSync(outputPath);
       webview.postMessage({ command: "voiceCloneStatus", text: "Test complete. Clone voice played successfully.", voiceRuntime: config });
     } catch (err: any) {
       webview.postMessage({ command: "voiceCloneStatus", text: `Clone test failed: ${err.message}` });
@@ -5469,23 +7918,13 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     try {
       const config = getVoiceRuntimeConfig();
       config.engine = "f5-clone-local";
+      config.fallbackEngine = "none";
+      config.preferVoiceServer = true;
       persistVoiceRuntimeConfig(config);
       webview.postMessage({ command: "voiceCloneStatus", text: "Cloned voice is now Agent Lee's active voice.", voiceRuntime: config });
       await postRuntimeInfo(webview);
     } catch (err: any) {
       webview.postMessage({ command: "voiceCloneStatus", text: `Activation failed: ${err.message}` });
-    }
-  }
-
-  if (msg.command === "activatePiperVoice") {
-    try {
-      const config = getVoiceRuntimeConfig();
-      config.engine = "piper-local";
-      persistVoiceRuntimeConfig(config);
-      webview.postMessage({ command: "voiceCloneStatus", text: "Piper voice restored as Agent Lee's active voice.", voiceRuntime: config });
-      await postRuntimeInfo(webview);
-    } catch (err: any) {
-      webview.postMessage({ command: "voiceCloneStatus", text: `Piper activation failed: ${err.message}` });
     }
   }
 
@@ -5507,7 +7946,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     try {
       const catalog = loadVoiceCatalog();
       const targetId = msg.command === "voiceAlTestDefault" ? "agent-lee-default" : String(msg.id || "");
-      const testText = "Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done.";
+      const testText = "Hey, I'm online, ready, and listening. Just say the word and I'll get it done.";
       const voiceEntry = (catalog.voices || []).find((v: any) => v.id === targetId);
       const refAudio = voiceEntry?.referenceAudioPath || DEFAULT_DEVELOPER_REFERENCE_AUDIO;
       const refText = voiceEntry?.referenceText || DEFAULT_DEVELOPER_REFERENCE_TEXT;
@@ -5518,7 +7957,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
         config.clonePythonPath || "python",
         [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", refAudio, "--ref_text", refText, "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
       );
-      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      await playWavSync(outputPath);
       webview.postMessage({ command: "voiceCloneStatus", text: `Voice "${voiceEntry?.label || targetId}" played successfully.` });
     } catch (err: any) {
       webview.postMessage({ command: "voiceCloneStatus", text: `Voice test failed: ${err.message}` });
@@ -5529,16 +7968,19 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
     try {
       const config = getVoiceRuntimeConfig();
       config.engine = "f5-clone-local";
+      config.fallbackEngine = "none";
+      config.preferVoiceServer = true;
       config.cloneReferenceAudioPath = DEFAULT_DEVELOPER_REFERENCE_AUDIO;
       config.cloneReferenceText = DEFAULT_DEVELOPER_REFERENCE_TEXT;
       config.selectedVoiceId = "agent-lee-default";
       config.selectedVoiceLabel = "Agent Lee Default Voice";
+      config.selectedSpeakerId = "";
       persistVoiceRuntimeConfig(config);
       const catalog = loadVoiceCatalog();
       catalog.defaultVoiceId = "agent-lee-default";
       saveVoiceCatalog(catalog);
-      webview.postMessage({ command: "voiceCloneStatus", text: "Agent Lee default voice restored as active.", voiceRuntime: config, defaultStatus: "Default voice is now active." });
-      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: "agent-lee-default" });
+      webview.postMessage({ command: "voiceCloneStatus", text: "Agent Lee default live clone voice is now active.", voiceRuntime: config, defaultStatus: "Default voice is now active." });
+      webview.postMessage({ command: "voiceAlCatalogUpdate", catalog, activeVoiceId: config.selectedVoiceId });
       await postRuntimeInfo(webview);
     } catch (err: any) {
       webview.postMessage({ command: "voiceCloneStatus", text: `Restore failed: ${err.message}` });
@@ -5546,7 +7988,7 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
   }
 
   if (msg.command === "voiceAlRecordMic") {
-    vscode.window.showInformationMessage("Open a terminal and run: cd " + path.join(ROOT, "agent-lee", "voice") + " && .\\voice-cloning-env\\Scripts\\python.exe record_mic.py");
+    showAgentLeeInfo("Open a terminal and run: cd " + path.join(ROOT, "agent-lee", "voice") + " && .\\voice-cloning-env\\Scripts\\python.exe record_mic.py");
     webview.postMessage({ command: "voiceCloneStatus", text: "Open a terminal to record. Once done, paste the file path in the Reference audio field." });
   }
 
@@ -5556,14 +7998,14 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       if (!payload.audioPath) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide a reference audio file path." }); return; }
       if (!payload.transcript) { webview.postMessage({ command: "voiceCloneStatus", text: "Please provide the transcript of the reference audio." }); return; }
       const config = getVoiceRuntimeConfig();
-      const testText = payload.testText || "Hey, I'm Agent Lee. I'm online, ready, and listening. Just say the word and I'll get it done.";
+      const testText = payload.testText || "Hey, I'm online, ready, and listening. Just say the word and I'll get it done.";
       const outputPath = path.join(ROOT, "agent-lee", "voice", "agent-lee-clone-preview.wav");
       webview.postMessage({ command: "voiceCloneStatus", text: "Cloning voice and generating preview... this may take a minute on CPU." });
       await runCommandCapture(
         config.clonePythonPath || "python",
         [config.cloneScriptPath || path.join(ROOT, "agent-lee", "voice", "clone_voice.py"), "--ref_audio", payload.audioPath, "--ref_text", payload.transcript, "--text", testText, "--output", outputPath, "--device", config.cloneDevice || "cpu"]
       );
-      await runCommandCapture("powershell.exe", ["-NoProfile", "-Command", `Add-Type -AssemblyName PresentationCore; $p=New-Object System.Windows.Media.MediaPlayer; $p.Open([Uri]'${outputPath}'); Start-Sleep -Milliseconds 500; $p.Play(); while(!$p.NaturalDuration.HasTimeSpan){Start-Sleep -Milliseconds 100}; Start-Sleep -Milliseconds ([math]::Ceiling($p.NaturalDuration.TimeSpan.TotalMilliseconds)); $p.Stop()`]);
+      await playWavSync(outputPath);
       webview.postMessage({ command: "voiceCloneStatus", text: `Clone preview complete. If it sounds good, click Save to Catalog.` });
     } catch (err: any) {
       webview.postMessage({ command: "voiceCloneStatus", text: `Clone preview failed: ${err.message}` });
@@ -5615,6 +8057,8 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
       saveVoiceCatalog(catalog);
       const config = getVoiceRuntimeConfig();
       config.engine = "f5-clone-local";
+      config.fallbackEngine = "none";
+      config.preferVoiceServer = true;
       config.cloneReferenceAudioPath = voiceEntry.referenceAudioPath;
       config.cloneReferenceText = voiceEntry.referenceText;
       config.selectedVoiceId = voiceEntry.id;
@@ -5664,6 +8108,11 @@ async function handle(webview: vscode.Webview, msg: any, context?: vscode.Extens
 }
 
 function openPanel(context: vscode.ExtensionContext) {
+  if (agentLeePanel) {
+    agentLeePanel.reveal(vscode.ViewColumn.Beside, false);
+    return agentLeePanel;
+  }
+
   const panel = vscode.window.createWebviewPanel(
     "agentLeeRuntimePanel",
     "Agent Lee",
@@ -5676,6 +8125,14 @@ function openPanel(context: vscode.ExtensionContext) {
   panel.webview.html = getHtml(panel.webview, context);
   activeWebviews.add(panel.webview);
   panel.webview.onDidReceiveMessage((msg) => handle(panel.webview, msg, context));
+  panel.onDidDispose(() => {
+    activeWebviews.delete(panel.webview);
+    if (agentLeePanel === panel) {
+      agentLeePanel = null;
+    }
+  });
+  agentLeePanel = panel;
+  return panel;
 }
 
 async function openAgentLeeSidebar() {
@@ -5685,6 +8142,35 @@ async function openAgentLeeSidebar() {
   } catch {
     // Older VS Code builds may not expose an explicit focus command for contributed webview views.
   }
+}
+
+function preferRightSideSurface() {
+  const configured = vscode.workspace.getConfiguration("agentLee").get<boolean>("preferRightSideSurface", true);
+  return configured && runtimeState.preferRightSideSurface !== false;
+}
+
+async function openAgentLeeRightSurface(context: vscode.ExtensionContext) {
+  recordAgentLeeRuntimeReceipt({
+    event: "ui.right-surface.opened",
+    uiSurfaceTruthState: LEEWAY_UI_SURFACE_RIGHT_PANEL_OPENED,
+    fallbackTruthState: LEEWAY_UI_SURFACE_RIGHT_SIDE_UNSUPPORTED_FALLBACK,
+    route: "panel-beside",
+    limitation: "VS Code extensions cannot directly contribute a view container to the Secondary Sidebar. Agent Lee uses a right-side webview panel as the strongest enforceable default."
+  });
+  openPanel(context);
+}
+
+async function openPreferredAgentLeeSurface(context: vscode.ExtensionContext) {
+  if (preferRightSideSurface()) {
+    await openAgentLeeRightSurface(context);
+    return;
+  }
+  recordAgentLeeRuntimeReceipt({
+    event: "ui.right-surface.fallback",
+    uiSurfaceTruthState: LEEWAY_UI_SURFACE_PRIMARY_SIDEBAR_OPENED,
+    limitation: "Right-side preference disabled. Agent Lee opened the primary sidebar surface."
+  });
+  await openAgentLeeSidebar();
 }
 
 function registerChatParticipant(context: vscode.ExtensionContext) {
@@ -5757,12 +8243,15 @@ function registerChatParticipant(context: vscode.ExtensionContext) {
     }
   ) as vscode.ChatParticipant;
 
-  participant.iconPath = vscode.Uri.joinPath(context.extensionUri, "media", "agent-lee-icon.png");
+  participant.iconPath = vscode.Uri.joinPath(
+    context.extensionUri,
+    ...getLeewayAssetRelativePath("LEEWAY_ASSET::CHAT_HEADER_AVATAR").split("/")
+  );
   participant.followupProvider = {
     provideFollowups() {
       return [
         { prompt: "Inspect this workspace and summarize the front-end architecture.", label: "Inspect workspace" },
-        { prompt: "Open the Agent Lee sidebar.", label: "Open sidebar", command: "openSidebar" },
+        { prompt: "Open Agent Lee on the right-side surface.", label: "Open right surface", command: "open" },
         { prompt: "Review the current UI visually and give me evidence paths.", label: "Visual review" }
       ];
     }
@@ -5772,6 +8261,7 @@ function registerChatParticipant(context: vscode.ExtensionContext) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+  extensionActivationTimestamp = new Date().toISOString();
   // LEEWAY EMERGENCY COMMAND BOOTSTRAP - DO NOT REMOVE
   try {
     const leewayBootLog = vscode.window.createOutputChannel("Agent Lee Bootstrap");
@@ -5781,24 +8271,45 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand("agentLee.openSidebar", async () => {
       leewayBootLog.appendLine("[BOOT] agentLee.openSidebar executed.");
       try {
-        await openPanel(context);
+        await openAgentLeeSidebar();
       } catch (err: any) {
-        leewayBootLog.appendLine("[BOOT][ERROR] openPanel failed: " + (err?.stack || err?.message || String(err)));
-        vscode.window.showErrorMessage("Agent Lee failed to open. Check Output > Agent Lee Bootstrap.");
+        leewayBootLog.appendLine("[BOOT][ERROR] openAgentLeeSidebar failed: " + (err?.stack || err?.message || String(err)));
+        leewayBootLog.appendLine("[BOOT] Falling back to openPanel.");
+        try {
+          await openPanel(context);
+        } catch (innerErr: any) {
+          leewayBootLog.appendLine("[BOOT][ERROR] fallback openPanel failed: " + (innerErr?.stack || innerErr?.message || String(innerErr)));
+          showAgentLeeError("Agent Lee failed to open. Check Output > Agent Lee Bootstrap.");
+        }
       }
     }));
 
     context.subscriptions.push(vscode.commands.registerCommand("agentLee.open", async () => {
       leewayBootLog.appendLine("[BOOT] agentLee.open executed.");
       try {
-        await openPanel(context);
+        await openPreferredAgentLeeSurface(context);
       } catch (err: any) {
-        leewayBootLog.appendLine("[BOOT][ERROR] open failed: " + (err?.stack || err?.message || String(err)));
-        vscode.window.showErrorMessage("Agent Lee failed to open. Check Output > Agent Lee Bootstrap.");
+        leewayBootLog.appendLine("[BOOT][ERROR] open preferred surface failed: " + (err?.stack || err?.message || String(err)));
+        showAgentLeeError("Agent Lee failed to open. Check Output > Agent Lee Bootstrap.");
+      }
+    }));
+
+    context.subscriptions.push(vscode.commands.registerCommand("agentLee.openRightSurface", async () => {
+      leewayBootLog.appendLine("[BOOT] agentLee.openRightSurface executed.");
+      try {
+        await openAgentLeeRightSurface(context);
+      } catch (err: any) {
+        recordAgentLeeRuntimeReceipt({
+          event: "ui.right-surface.failed",
+          uiSurfaceTruthState: LEEWAY_UI_SURFACE_OPEN_FAILED,
+          error: err?.message || String(err)
+        });
+        leewayBootLog.appendLine("[BOOT][ERROR] openRightSurface failed: " + (err?.stack || err?.message || String(err)));
+        showAgentLeeError("Agent Lee failed to open. Check Output > Agent Lee Bootstrap.");
       }
     }));
   } catch (err: any) {
-    vscode.window.showErrorMessage("Agent Lee bootstrap command registration failed: " + (err?.message || String(err)));
+    showAgentLeeError("Agent Lee bootstrap command registration failed: " + (err?.message || String(err)));
   }
 
   const provider = new Provider(context);
@@ -5806,10 +8317,10 @@ export async function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel("Agent Lee LeeWay");
   agentLeeOutputChannel = output;
   runtimeStatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  runtimeStatusBarItem.name = "Agent Lee LeeWay";
-  runtimeStatusBarItem.text = "$(robot) Agent Lee";
-  runtimeStatusBarItem.tooltip = "Agent Lee LeeWay — click to open panel";
-  runtimeStatusBarItem.command = AGENT_LEE_OPEN_PANEL_COMMAND;
+  runtimeStatusBarItem.name = `Agent Lee LeeWay (${STATUS_BAR_RUNTIME_ID})`;
+  runtimeStatusBarItem.text = "Agent Lee: Booting";
+  runtimeStatusBarItem.tooltip = `Agent Lee is booting. Runtime ID: ${STATUS_BAR_RUNTIME_ID}. Click to open the preferred right-side surface.`;
+  runtimeStatusBarItem.command = "agentLee.openRightSurface";
   runtimeStatusBarItem.show();
   context.subscriptions.push(runtimeStatusBarItem);
 
@@ -5849,8 +8360,9 @@ export async function activate(context: vscode.ExtensionContext) {
     appendAgentLeeLine(output, `LVIS workspace revealed. Receipt: ${receiptPath}`, { voiceMode: "operator" });
   }));
   context.subscriptions.push(vscode.commands.registerCommand("agentLee.runtimeStatus", async () => {
-    await openAgentLeeSidebar();
+    await openPreferredAgentLeeSurface(context);
     const state = getAgentLeeRuntimeState();
+    writeLiveHostSelfAttestation(context, state);
     const summary = getRuntimeProofSummary(state);
     const lines = summary.detailLines;
     appendAgentLeeLine(output, lines.join("\n"), { voiceMode: "operator" });
@@ -5864,6 +8376,72 @@ export async function activate(context: vscode.ExtensionContext) {
     }
     await Promise.allSettled(Array.from(activeWebviews).map((webview) => postVisibleRuntimeState(webview)));
   }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.diagnoseRuntime", async () => {
+    const state = getAgentLeeRuntimeState();
+    writeLiveHostSelfAttestation(context, state);
+    const summary = getRuntimeProofSummary(state);
+    const lines = [
+      `Runtime status: ${summary.statusLabel}`,
+      ...summary.detailLines
+    ];
+    output.appendLine(lines.join("\n"));
+    output.show(true);
+    showAgentLeeInfo(`Agent Lee runtime diagnosis recorded. Status: ${summary.statusLabel}.`);
+    await Promise.allSettled(Array.from(activeWebviews).map((webview) => postVisibleRuntimeState(webview)));
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.recoverUi", async () => {
+    try {
+      await openAgentLeeSidebar();
+      await vscode.commands.executeCommand("agentLee.runtimeStatus");
+    } catch (error) {
+      const detail = describeFileError(error);
+      output.appendLine(`Agent Lee UI recovery failed: ${detail}`);
+      output.show(true);
+      showAgentLeeWarning(`Agent Lee UI recovery could not complete: ${detail}`);
+    }
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.repairInstallation", async () => {
+    try {
+      await installManagedVsix(context, "manual");
+      await vscode.commands.executeCommand("agentLee.diagnoseRuntime");
+    } catch (error) {
+      const detail = describeFileError(error);
+      output.appendLine(`Agent Lee install repair failed: ${detail}`);
+      output.show(true);
+      showAgentLeeError(`Agent Lee install repair failed: ${detail}`);
+    }
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.showInstalledVersion", async () => {
+    const state = getAgentLeeRuntimeState();
+    writeLiveHostSelfAttestation(context, state);
+    const runtimeTruth = state.runtimeTruth;
+    const detail = [
+      `Current extension version: ${runtimeTruth?.packageVersion || "unknown"}`,
+      `Repo source version: ${runtimeTruth?.repoPackageVersion || "unknown"}`,
+      `Installed extension version: ${runtimeTruth?.installedVersion || "not_found"}`,
+      `Installed runtime status: ${runtimeTruth?.installedRuntimeStatus || "unknown"}`
+    ].join("\n");
+    appendAgentLeeLine(output, detail, { voiceMode: "operator" });
+    output.show(true);
+    showAgentLeeInfo(`Installed extension version: ${runtimeTruth?.installedVersion || "not_found"}.`);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.showUpdateChannel", async () => {
+    const state = getAgentLeeRuntimeState();
+    writeLiveHostSelfAttestation(context, state);
+    const runtimeTruth = state.runtimeTruth;
+    const detail = [
+      `Update channel: ${runtimeTruth?.updateChannel || "UPDATE_CHANNEL_UNKNOWN"}`,
+      `Automatic update explanation: ${runtimeTruth?.autoUpdateExpectation || "unknown"}`,
+      `extensions.autoUpdate: ${runtimeTruth?.autoUpdateSetting || "unknown"}`,
+      `workspace extensions.autoUpdate: ${runtimeTruth?.autoUpdateWorkspaceSetting || "unknown"}`
+    ].join("\n");
+    appendAgentLeeLine(output, detail, { voiceMode: "operator" });
+    output.show(true);
+    showAgentLeeInfo(`Update channel: ${runtimeTruth?.updateChannel || "UPDATE_CHANNEL_UNKNOWN"}.`);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.installCurrentBuild", async () => {
+    await vscode.commands.executeCommand("agentLee.repairInstallation");
+  }));
 
   context.subscriptions.push(vscode.window.registerWebviewViewProvider(AGENT_LEE_SIDEBAR_VIEW_ID, provider));
   context.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: "file" }, editBufferCodeLensProvider));
@@ -5873,6 +8451,87 @@ export async function activate(context: vscode.ExtensionContext) {
   registerAgentLeeLiveVoiceCommands(context, async (text) => {
     speak(text);
   });
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.liveVoice.chat", async (text: string) => {
+    const prompt = String(text || "").trim();
+    if (!prompt) return;
+    if (!activeWebviews.size) {
+      await openPreferredAgentLeeSurface(context);
+      if (!activeWebviews.size) {
+        openPanel(context);
+      }
+    }
+    for (const webview of Array.from(activeWebviews)) {
+      await handle(webview, { command: "ask", text: prompt, attachments: [] }, context);
+    }
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.voiceBridge.handleTranscript", async (payload: LeeWayVoiceBridgeMessage | { text?: string; transcriptId?: string; timestamp?: string; confidence?: number; source?: string }) => {
+    const normalized = ((payload && typeof payload === "object" ? payload : {}) as any);
+    const text = String(normalized.text || "").trim();
+    const source: LeeWayVoiceEventSource = String(normalized.source || "").includes("browser")
+      ? "BROWSER_SPEECH_FALLBACK"
+      : "LOCAL_TRANSCRIPT_BRIDGE";
+    if (normalized.type === "VOICE_STATUS" || containsBlockedStatusPhrase(text)) {
+      recordVoiceBridgeStatus({
+        type: "VOICE_STATUS",
+        status: String(normalized.status || "LOCAL_TRANSCRIPT_AVAILABLE") as any,
+        message: String(normalized.message || normalized.text || "Local transcript bridge is available as a fallback. Voice input will be labeled and governed."),
+        timestamp: String(normalized.timestamp || new Date().toISOString()),
+        source: source === "BROWSER_SPEECH_FALLBACK" ? "browser" : "local-bridge"
+      }, source);
+      return true;
+    }
+    if (normalized.type === "VOICE_ERROR") {
+      recordVoiceBridgeStatus({
+        type: "VOICE_ERROR",
+        errorId: String(normalized.errorId || createVoiceEventId("voice-error")),
+        message: String(normalized.message || normalized.text || "Voice bridge error."),
+        timestamp: String(normalized.timestamp || new Date().toISOString()),
+        source: String(normalized.source || "local-bridge")
+      }, source);
+      return true;
+    }
+    if (!text) return false;
+    if (!activeWebviews.size) {
+      await openPreferredAgentLeeSurface(context);
+    }
+    captureVoiceTranscriptForReview({
+      text,
+      source,
+      transcriptId: String(normalized.transcriptId || createVoiceEventId("voice-transcript")),
+      timestamp: String(normalized.timestamp || new Date().toISOString()),
+      confidence: typeof normalized.confidence === "number" ? normalized.confidence : undefined,
+      webview: Array.from(activeWebviews)[0] || null
+    });
+    return true;
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.voiceBridge.handleRuntimeStatus", async (payload: LeeWayVoiceBridgeMessage) => {
+    if (payload.type === "VOICE_STATUS" || payload.type === "VOICE_ERROR") {
+      recordVoiceBridgeStatus(payload as any, payload.source === "browser" ? "BROWSER_SPEECH_FALLBACK" : "LOCAL_TRANSCRIPT_BRIDGE");
+      await Promise.allSettled(Array.from(activeWebviews).map((webview) => postRuntimeInfo(webview, currentTaskState.prompt || "voice status")));
+    }
+    return true;
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.liveVoice.explainActiveContext", async (text: string) => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      await vscode.commands.executeCommand("agentLee.liveVoice.chat", String(text || "Explain the current workspace context."));
+      return;
+    }
+    const selected = editor.document.getText(editor.selection).trim();
+    const excerpt = (selected || editor.document.getText()).slice(0, 1200);
+    const prompt = [
+      "Explain the active coding context with practical next steps.",
+      `File: ${editor.document.uri.fsPath}`,
+      "Context:",
+      excerpt,
+      text ? `\nUser note: ${String(text).trim()}` : ""
+    ].filter(Boolean).join("\n");
+    await vscode.commands.executeCommand("agentLee.liveVoice.chat", prompt);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand("agentLee.liveVoice.createPendingEditFromSpeech", async (text: string) => {
+    const prompt = `Create a safe pending edit proposal from this voice instruction: ${String(text || "").trim()}`;
+    await vscode.commands.executeCommand("agentLee.liveVoice.chat", prompt);
+  }));
   registerAgentLeeCodingSessionCommands(context, async (text) => {
     speak(text);
   });
@@ -6034,7 +8693,7 @@ export async function activate(context: vscode.ExtensionContext) {
     showAgentLeeInfo("Agent Lee started a new conversation.");
   }));
   context.subscriptions.push(vscode.commands.registerCommand("agentLee.stopVoice", () => {
-    stopVoicePlayback();
+    stopLavrPlayback("agentlee_stop_voice_command", "stop");
     showAgentLeeInfo("Agent Lee voice stopped.");
   }));
   context.subscriptions.push(vscode.commands.registerCommand("agentLee.executionBrain.createPendingEdit", async () => {
@@ -6110,6 +8769,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   initializeAgentLeeRuntime(context)
     .then(async (state) => {
+      writeLiveHostSelfAttestation(context, state);
       updateRuntimeStatusBar(state);
       await Promise.allSettled(Array.from(activeWebviews).map((webview) => postVisibleRuntimeState(webview)));
       if (state.degraded) {
@@ -6131,7 +8791,7 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  stopVoicePlayback();
+  stopLavrPlayback("extension_deactivate", "stop");
   stopBrowserPreviews();
 }
 
@@ -6139,4 +8799,3 @@ export function deactivate() {
 DISCOVERY_PIPELINE:
 Voice Ã¢â€ â€™ Intent Ã¢â€ â€™ Location Ã¢â€ â€™ Vertical Ã¢â€ â€™ Ranking Ã¢â€ â€™ Render
 */
-

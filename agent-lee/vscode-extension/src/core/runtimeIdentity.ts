@@ -1,0 +1,71 @@
+/*
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.RUNTIME.EXTENSION.IDENTITY
+PURPOSE: Canonical runtime identity constants for Agent Lee live host, UI generation, surface truth, evidence scope, and owner-facing runtime attestation.
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+*/
+
+export const LEEWAY_RUNTIME_IDENTITY_VERSION = "2026-05-18.runtime-alignment-pass-1";
+
+export const AGENT_LEE_UI_GENERATION_ID = "chat-ui-runtime-truth-2026-05-18-align-pass-1";
+export const STATUS_BAR_RUNTIME_ID = "LEEWAY_RUNTIME::STATUS_BAR::MAIN";
+export const CHAT_WEBVIEW_RUNTIME_ID = "LEEWAY_RUNTIME::CHAT_WEBVIEW::MAIN";
+export const README_RUNTIME_ID = "LEEWAY_RUNTIME::README::PUBLIC_DOCS";
+export const VOICE_RUNTIME_ID = "LEEWAY_RUNTIME::VOICE::MAIN";
+
+export const LEEWAY_UI_SURFACE_RIGHT_PANEL_OPENED = "LEEWAY_UI_SURFACE::RIGHT_PANEL_OPENED";
+export const LEEWAY_UI_SURFACE_SECONDARY_SIDEBAR_OPENED = "LEEWAY_UI_SURFACE::SECONDARY_SIDEBAR_OPENED";
+export const LEEWAY_UI_SURFACE_PRIMARY_SIDEBAR_OPENED = "LEEWAY_UI_SURFACE::PRIMARY_SIDEBAR_OPENED";
+export const LEEWAY_UI_SURFACE_RIGHT_SIDE_UNSUPPORTED_FALLBACK = "LEEWAY_UI_SURFACE::RIGHT_SIDE_UNSUPPORTED_FALLBACK";
+export const LEEWAY_UI_SURFACE_OPEN_FAILED = "LEEWAY_UI_SURFACE::OPEN_FAILED";
+
+export const LEEWAY_WORKFLOW_PROMPT_INTENT_CLASSIFICATION = "LEEWAY_WORKFLOW::PROMPT_INTENT_CLASSIFICATION";
+export const LEEWAY_WORKFLOW_FAST_LANE_GREETING = "LEEWAY_WORKFLOW::FAST_LANE_GREETING";
+export const LEEWAY_WORKFLOW_WORKSPACE_CONTEXT_LOAD = "LEEWAY_WORKFLOW::WORKSPACE_CONTEXT_LOAD";
+
+export const EVIDENCE_SCOPE_SOURCE_ONLY = "SOURCE_ONLY";
+export const EVIDENCE_SCOPE_PACKAGE_ONLY = "PACKAGE_ONLY";
+export const EVIDENCE_SCOPE_INSTALLED_ONLY = "INSTALLED_ONLY";
+export const EVIDENCE_SCOPE_LIVE_RUNTIME = "LIVE_RUNTIME";
+export const EVIDENCE_SCOPE_HUMAN_AUDIBLE = "HUMAN_AUDIBLE";
+
+export const UPDATE_CHANNEL_PRIVATE_REGISTRY = "UPDATE_CHANNEL_PRIVATE_REGISTRY";
+
+export const AUTO_UPDATE_NOT_AVAILABLE_FOR_LOCAL_VSIX = "AUTO_UPDATE_NOT_AVAILABLE_FOR_LOCAL_VSIX";
+
+export const HUMAN_AUDIBLE_PROOF_MISSING = "HUMAN_AUDIBLE_PROOF_MISSING";
+export const LEEWAY_VOICE_READY = "LEEWAY_VOICE_READY";
+export const LEEWAY_VOICE_DEGRADED = "LEEWAY_VOICE_DEGRADED";
+export const LEEWAY_VOICE_UNAVAILABLE = "LEEWAY_VOICE_UNAVAILABLE";
+export const LEEWAY_CLONED_VOICE_PROVIDER_READY = "LEEWAY_CLONED_VOICE_PROVIDER_READY";
+export const LEEWAY_CLONED_VOICE_PROVIDER_MISSING = "LEEWAY_CLONED_VOICE_PROVIDER_MISSING";
+export const LEEWAY_EDGE_RTC_AVAILABLE = "LEEWAY_EDGE_RTC_AVAILABLE";
+export const LEEWAY_EDGE_RTC_UNAVAILABLE = "LEEWAY_EDGE_RTC_UNAVAILABLE";
+export const LOCAL_TRANSCRIPT_BRIDGE_READY = "LOCAL_TRANSCRIPT_BRIDGE_READY";
+export const LOCAL_TRANSCRIPT_BRIDGE_DEGRADED = "LOCAL_TRANSCRIPT_BRIDGE_DEGRADED";
+
+export const LEEWAY_ALIGNMENT_SURFACES = [
+  "Source truth",
+  "Package truth",
+  "Installed runtime truth",
+  "Live extension host truth",
+  "Activity Bar icon truth",
+  "Chat header avatar truth",
+  "Sidebar branding truth",
+  "README media truth",
+  "Button branding truth",
+  "Command identity truth",
+  "Runtime diagnosis truth",
+  "Voice route truth",
+  "Transcript bridge truth",
+  "Human-audible voice truth",
+  "Prompt speed truth",
+  "Right-side surface truth",
+  "Auto-update/distribution truth",
+  "Evidence/receipt truth",
+  "Identity graph truth",
+  "LeeWay law compliance truth"
+] as const;
+

@@ -1,0 +1,94 @@
+﻿{
+    "gate":  "LEEWAY_ACTIVE_RUNTIME_ATTESTATION",
+    "generatedAt":  "2026-05-17T23:41:38.3042234-05:00",
+    "status":  "PASS",
+    "sourceVersion":  "1.2.11",
+    "packageJsonVersion":  "1.2.11",
+    "latestVsixVersion":  "1.2.11",
+    "latestVsixPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\agent-lee-leeway-coding-system-1.2.11.vsix",
+    "latestVsixBuildHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "installedExtensionVersion":  "1.2.11",
+    "liveExtensionHostVersion":  "1.2.11",
+    "liveExtensionHostPath":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+    "liveExtensionHostStatus":  "activated",
+    "liveUiGenerationId":  "chat-ui-runtime-truth-2026-05-18-align-pass-1",
+    "liveUiGenerationEvidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\runtime-truth-live-voice-audible-output-result.json",
+    "runtimeBuildHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "installedRuntimeHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "liveExtensionHostBuildHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "liveRuntimeSourceMode":  "SOURCE_PACKAGED_VSIX",
+    "extensionActivationTimestamp":  "2026-05-18T04:38:47.003Z",
+    "statusBarRuntimeId":  "LEEWAY_RUNTIME::STATUS_BAR::MAIN",
+    "chatWebviewRuntimeId":  "LEEWAY_RUNTIME::CHAT_WEBVIEW::MAIN",
+    "chatUiRuntimeId":  "LEEWAY_RUNTIME::CHAT_WEBVIEW::MAIN",
+    "readmeRuntimeId":  "LEEWAY_RUNTIME::README::PUBLIC_DOCS",
+    "voiceRuntimeId":  "LEEWAY_RUNTIME::VOICE::MAIN",
+    "staleRuntimeDetected":  false,
+    "splitBrainDetected":  false,
+    "liveHostSelfAttestationPath":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\User\\globalStorage\\leeway.agent-lee-leeway-coding-system\\live-host-attestation-current.json",
+    "locatorEvidencePath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-live-extension-host-locator-result.json",
+    "liveVisualVerdict":  "FAIL",
+    "installedRuntimeVerdict":  "PASS",
+    "checks":  [
+                   {
+                       "name":  "source and package version agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "source and latest VSIX version agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "source and installed version agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "installed and live host version agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "source and VSIX build hashes agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "runtime hashes agree",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "live host build hash agrees",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "UI generation agrees across live host",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "live host path is known",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "live host attestation is present",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "duplicate extension folders are not active blockers",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "stale runtime not detected",
+                       "pass":  true
+                   },
+                   {
+                       "name":  "split-brain not detected",
+                       "pass":  true
+                   }
+               ],
+    "sources":  {
+                    "buildInfo":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\build\\runtime-build-info.json",
+                    "installedCheck":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-installed-extension-check-result.json",
+                    "runtimeCheck":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-extension-runtime-check-result.json",
+                    "liveVisualValidation":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-extension-live-visual-validation-result.json",
+                    "liveHostLog":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\logs\\20260517T233753\\window1\\exthost\\exthost.log",
+                    "liveHostSelfAttestation":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\User\\globalStorage\\leeway.agent-lee-leeway-coding-system\\live-host-attestation-current.json"
+                }
+}

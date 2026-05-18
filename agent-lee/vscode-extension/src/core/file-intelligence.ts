@@ -11,7 +11,26 @@ DISCOVERY_PIPELINE:
 import * as fs from "fs";
 import * as path from "path";
 
-const IGNORE = new Set(["node_modules", ".git", "dist", "out", "build", ".next", ".vite", "coverage", ".cache", ".turbo"]);
+const IGNORE = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "out",
+  "build",
+  ".next",
+  ".vite",
+  "coverage",
+  ".cache",
+  ".turbo",
+  "_archive",
+  "reports",
+  "knowledge",
+  "memory",
+  "logs",
+  "backups",
+  "patches",
+  "sandbox"
+]);
 const CODE_EXT = /\.(ts|tsx|js|jsx|json|html|css|md|mjs|cjs|py|ps1|yaml|yml|xml|sql)$/i;
 
 export type FileContextTelemetry = {

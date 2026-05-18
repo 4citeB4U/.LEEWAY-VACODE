@@ -1,0 +1,52 @@
+﻿{
+    "generatedAt":  "2026-05-17T23:41:35.4502805-05:00",
+    "allDiscoveredExtensionFolders":  [
+                                          {
+                                              "root":  "stable-user",
+                                              "folderPath":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+                                              "version":  "1.2.11",
+                                              "packageJsonPath":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11\\package.json",
+                                              "runtimeEntryHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+                                              "mediaAssetHash":  "7473145F39713F5E886CB0C4F247156D022C11CF9FB89419FBE38FF04545A608",
+                                              "activeCandidate":  true
+                                          },
+                                          {
+                                              "root":  "repo-source",
+                                              "folderPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
+                                              "version":  "1.2.11",
+                                              "packageJsonPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\package.json",
+                                              "runtimeEntryHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+                                              "mediaAssetHash":  "7473145F39713F5E886CB0C4F247156D022C11CF9FB89419FBE38FF04545A608",
+                                              "activeCandidate":  false
+                                          }
+                                      ],
+    "activationLogs":  [
+                           {
+                               "logPath":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\logs\\20260517T233753\\window1\\exthost\\exthost.log",
+                               "processId":  37284,
+                               "running":  false,
+                               "activatedAt":  "2026-05-17 23:38:46.432",
+                               "extensionPath":  ""
+                           },
+                           {
+                               "logPath":  "C:\\Users\\Leona\\.leeway-vscode\\sandbox\\runtime-host-userdata\\logs\\20260517T230933\\window1\\exthost\\exthost.log",
+                               "processId":  92400,
+                               "running":  false,
+                               "activatedAt":  "2026-05-17 23:09:37.440",
+                               "extensionPath":  ""
+                           }
+                       ],
+    "activeExtensionHostPath":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+    "activeExtensionHostVersion":  "1.2.11",
+    "activeExtensionHostLogPath":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\logs\\20260517T233753\\window1\\exthost\\exthost.log",
+    "duplicateExtensionFoldersDetected":  false,
+    "liveHostAttestationPath":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\User\\globalStorage\\leeway.agent-lee-leeway-coding-system\\live-host-attestation-current.json",
+    "liveHostAttestationPresent":  true,
+    "runningExtensionHostPids":  [
+                                     70000,
+                                     80936,
+                                     89564,
+                                     71916
+                                 ],
+    "finalVerdict":  "PASS"
+}

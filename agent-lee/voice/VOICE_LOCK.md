@@ -9,30 +9,38 @@ PURPOSE: Locked voice selection and playback tuning record for Agent Lee local s
 
 ## Agent Lee Voice Lock
 
-Agent Lee's locked default voice is `en_US-hfc_male-medium`.
+Agent Lee's locked default voice route is `leeway.voice.primary.clone.live`.
 
-This voice is the current law for local Piper playback in the Agent Lee app unless an explicit re-audition replaces it.
+This route is the current law for Agent Lee live speech in the LeeWay app unless an explicit governed re-audition replaces it.
 
 ### Locked Runtime
 
 - Runtime config: [voice-runtime.json](/abs/c:/Users/Leona/.leeway-vscode/agent-lee/voice/voice-runtime.json)
-- Speech pipeline: [Speak-AgentLeePiper.ps1](/abs/c:/Users/Leona/.leeway-vscode/agent-lee/voice/Speak-AgentLeePiper.ps1)
-- Model file: `C:\Users\Leona\.leeway-vscode\agent-lee\voice\models\en_US-hfc_male-medium.onnx`
-- Config file: `C:\Users\Leona\.leeway-vscode\agent-lee\voice\models\en_US-hfc_male-medium.onnx.json`
-- Selected speaker lane: default model lane
+- Live route manifest: [leeway-live-voice-manifest.json](/abs/c:/Users/Leona/.leeway-vscode/agent-lee/voice/leeway-live-voice-manifest.json)
+- Primary speech pipeline: [Speak-AgentLeeCloned.ps1](/abs/c:/Users/Leona/.leeway-vscode/agent-lee/voice/Speak-AgentLeeCloned.ps1)
+- Compact fallback route: `leeway.voice.compact.clone.live`
+- Branded fallback route: `leeway.voice.branded.live`
+- Emergency route: `leeway.voice.text.emergency`
 
 ### Locked Tuning
 
-- `selectedVoiceId`: `en_US-hfc_male-medium`
-- `selectedVoiceLabel`: `Agent Lee Male Voice - HFC`
-- `selectedSpeakerId`: default model lane
-- `sampleTrimRatio`: `0.95`
-- `playbackRateRatio`: `0.95`
+- `selectedVoiceId`: `agent-lee-default`
+- `selectedVoiceLabel`: `Agent Lee Default Voice`
+- `selectedSpeakerId`: default route lane
+- `cloneSpeedRatio`: `0.85`
+- `playbackRateRatio`: `1.0`
 
 ### Reference Audition
 
-The accepted runtime target is now the packaged validation male model path expected by the product docs.
+The accepted runtime target is the LeeWay-owned default reference identity packaged with Agent Lee.
 
 ### Rule
 
-If Agent Lee voice playback is rebuilt, migrated, or repaired later, preserve this same voice ID and tuning unless the user explicitly approves a new audition winner.
+If Agent Lee voice playback is rebuilt, migrated, or repaired later, preserve the LeeWay route order unless the user explicitly approves a governed change:
+
+1. `leeway.voice.primary.clone.live`
+2. `leeway.voice.compact.clone.live`
+3. `leeway.voice.branded.live`
+4. `leeway.voice.text.emergency`
+
+No foreign or non-LeeWay voice runtime is allowed in the normal Agent Lee speech ladder.

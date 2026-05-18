@@ -1,0 +1,11 @@
+﻿{
+    "gate":  "LEEWAY_UPDATE_CHANNEL_TRUTH",
+    "generatedAt":  "2026-05-17T23:44:07.1521061-05:00",
+    "currentInstalledVersion":  "1.2.11",
+    "latestPackageVersion":  "1.2.11",
+    "updateChannel":  "UPDATE_CHANNEL_MANUAL_LOCAL_VSIX",
+    "autoUpdateTruth":  "AUTO_UPDATE_NOT_AVAILABLE_FOR_LOCAL_VSIX",
+    "manualUpdatePath":  "Agent Lee: Install Current Build",
+    "sourceEvidence":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\leeway-extension-install-current-result.json",
+    "finalVerdict":  "PASS"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: LeeWay Runtime Truth Layer
+  short_description: Prove real VS Code runtime health and stale-build drift
+  default_prompt: Restore a LeeWay-governed extension when the app is visibly broken even though compile or packaging gates still pass.

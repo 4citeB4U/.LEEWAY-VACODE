@@ -12,7 +12,25 @@ import * as path from "path";
 import { leewayKnowledgeStore } from "./leewayKnowledgeStore";
 import type { LeeWayRegion } from "./leewayKnowledge.types";
 
-const SKIP_DIRS = new Set(["node_modules", ".git", "dist", "out", "build", ".next", "coverage", ".turbo", ".cache"]);
+const SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  "out",
+  "build",
+  ".next",
+  "coverage",
+  ".turbo",
+  ".cache",
+  "_archive",
+  "reports",
+  "knowledge",
+  "memory",
+  "logs",
+  "backups",
+  "patches",
+  "sandbox"
+]);
 const INDEX_EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".css", ".html", ".ps1", ".py", ".yml", ".yaml"]);
 
 export interface RepoIndexStats {

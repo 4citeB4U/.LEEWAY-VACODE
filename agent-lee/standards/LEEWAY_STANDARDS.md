@@ -81,6 +81,9 @@ Supporting references:
 - [Packaged validation guide](../docs/Agent-Lee-Packaged-Validation.md)
 - [GitHub policy](../github/GITHUB_POLICY.md)
 - [MCP adapters README](../mcp/adapters/README.md)
+- [LeeWay governance law set](../../references/law-set.md)
+- [LeeWay proposal-before-mutation reference](../../references/proposal-before-mutation.md)
+- [LeeWay audit checks reference](../../references/audit-checks.md)
 
 ## Governance Principles
 
@@ -137,7 +140,7 @@ The application uses a multi-role model hive instead of pretending one model sho
 If those exact models are unavailable, the runtime may fall back to compatible installed alternatives.
 
 Voice is equally governed.
-The locked local speech target is the male Piper model documented in the voice lock, and the voice experience should remain consistent with the same production tuning unless an explicit re-audition is approved.
+The locked local speech target is the LeeWay-owned live clone route documented in the voice lock, and the voice experience should remain consistent with that governed route order unless an explicit re-audition is approved.
 
 ## Memory, Receipts, And Verification
 
@@ -193,6 +196,9 @@ Workspace-level identity assets that should remain available to the teaching mat
 - `../../readme.md-image-header.png`
 - `../../readms.md-image-1.png`
 - `../../leeway-standards-button.png`
+
+Historical UI proof artifacts classified for deletion under LeeWay production cleanse:
+
 - `../../top right button .png`
 - `../../bottom button for agent lee .png`
 - `../../all buttons.png`
@@ -217,4 +223,3 @@ The document should stay strong enough to support the application, but clear eno
 ## Maintenance Rule
 
 When the app gains new models, new agent identities, new images, new security rules, or new validation flows, the standards file should be updated in the same pass so the teaching layer never drifts from the actual runtime.
-

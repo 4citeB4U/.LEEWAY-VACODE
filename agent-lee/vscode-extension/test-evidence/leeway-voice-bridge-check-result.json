@@ -1,0 +1,31 @@
+﻿{
+    "timestamp":  "2026-05-17T23:44:06.3530794-05:00",
+    "checkedFiles":  [
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\extension.ts",
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\live-voice\\liveTranscriptBridge.ts",
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\governance\\law\\law-0021-voice-bridge-message-separation.md",
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\voice\\leeway-voice-brand-doctrine.md",
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\core\\runtime-settings.ts",
+                         "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\core\\voice\\leewayVoiceTruth.ts"
+                     ],
+    "bridgeEndpoint":  "http://127.0.0.1:7671/transcript",
+    "brandDoctrinePresent":  true,
+    "ownerFacingLanguagePass":  true,
+    "voiceIdentityPass":  true,
+    "voiceReviewPanelPass":  true,
+    "truthfulFallbackLanguagePass":  true,
+    "statusClassificationPass":  true,
+    "transcriptClassificationPass":  true,
+    "dedupePass":  true,
+    "readinessStringBlockedFromChat":  true,
+    "loopDetectionPass":  true,
+    "runtimeHealthExposurePass":  true,
+    "autoSendGoverned":  true,
+    "mutatingVoiceGovernancePass":  true,
+    "trustQuestionCoveragePass":  true,
+    "finalVerdict":  "PASS",
+    "caveats":  [
+                    "This script verifies source truth and UI/report wiring. It does not prove a live human-audible VS Code session.",
+                    "Live runtime remains separate from source verification and must still be validated in VS Code."
+                ]
+}

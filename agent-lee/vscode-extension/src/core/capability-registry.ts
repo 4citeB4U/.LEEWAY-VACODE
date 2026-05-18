@@ -364,6 +364,9 @@ export function searchCapabilityCatalog(catalog: CapabilityCatalog, query: strin
 
 export function isCapabilityQuestion(query: string) {
   const lowered = query.toLowerCase();
+  if (/\b(what's going on|whats going on|what's happening|whats happening|what are you up to|what are you doing|how are you|how you doing)\b/i.test(query)) {
+    return false;
+  }
   return (
     lowered.includes("capabilities") ||
     lowered.includes("workflow") ||
@@ -424,9 +427,13 @@ export function buildCapabilityAnswer(args: {
   );
 
   const lines: string[] = [
-    `I have ${args.catalog.counts.total} connected capabilities active in this runtime, and I can execute through them instead of only listing them.`,
-    `Primary model: ${args.primaryModel}. Active build stack: ${activeHive.map((role) => `${role.label}: ${role.selected}`).join(" | ")}.`
+    `I can work across ${args.catalog.counts.total} connected capabilities in this runtime.`,
+    `My main lanes are repository work, UI systems, debugging, automation, agent and MCP wiring, local tooling, validation, and governed packaging.`
   ];
+
+  if (activeHive.length) {
+    lines.push(`My active build stack is ${activeHive.map((role) => `${role.label}: ${role.selected}`).join(" | ")}.`);
+  }
 
   const familyLines = Array.from(bySource.entries())
     .map(([source, entries]) => {
@@ -449,11 +456,7 @@ export function buildCapabilityAnswer(args: {
       )
     );
   }
-
-  lines.push(
-    "",
-    "Build classes I can help execute include repository features, UI and front-end systems, debugging and defect repair, automation flows, agent and MCP wiring, local toolchain work, validation, and governed packaging. State the target build."
-  );
+  lines.push("", "Tell me what you want me to inspect, build, or fix, and I can use the right path directly.");
 
   return lines.join("\n");
 }

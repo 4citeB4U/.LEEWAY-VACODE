@@ -1,0 +1,12 @@
+﻿{
+    "pass":  false,
+    "hits":  [
+                 "extension/out/plugins/adapters/gmail.adapter.js",
+                 "extension/out/plugins/adapters/gmail.adapter.js.map",
+                 "extension/out/plugins/adapters/huggingface.adapter.js",
+                 "extension/out/plugins/adapters/huggingface.adapter.js.map",
+                 "extension/out/plugins/adapters/vercel.adapter.js",
+                 "extension/out/plugins/adapters/vercel.adapter.js.map"
+             ],
+    "fileCount":  434
+}

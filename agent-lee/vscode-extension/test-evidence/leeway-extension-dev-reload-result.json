@@ -1,0 +1,10 @@
+﻿{
+    "timestamp":  "2026-05-17T12:51:03.6083197-05:00",
+    "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
+    "repoRoot":  "C:\\Users\\Leona\\.leeway-vscode",
+    "compilePassed":  true,
+    "launchedExtensionDevelopmentHost":  false,
+    "codeCli":  "C:\\Users\\Leona\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\code.cmd",
+    "recommendedLoop":  "F5 / Extension Development Host from .vscode/launch.json",
+    "skipLaunch":  true
+}

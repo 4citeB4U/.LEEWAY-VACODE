@@ -1,0 +1,35 @@
+{
+  "date": "2026-05-18T04:43:32.672Z",
+  "checks": [
+    {
+      "name": "success terminal path",
+      "pass": true
+    },
+    {
+      "name": "failed terminal path",
+      "pass": true
+    },
+    {
+      "name": "duplicate request suppression",
+      "pass": true
+    },
+    {
+      "name": "duplicate result suppression",
+      "pass": true
+    },
+    {
+      "name": "timeout finalization",
+      "pass": true
+    },
+    {
+      "name": "cancellation on interruption",
+      "pass": true
+    },
+    {
+      "name": "host router wiring references lifecycle transitions",
+      "pass": true
+    }
+  ],
+  "passed": 7,
+  "failed": 0
+}

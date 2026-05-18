@@ -1,0 +1,16 @@
+﻿{
+    "timestamp":  "2026-05-17T23:37:02.9825568-05:00",
+    "identityNodeId":  "LEEWAY_APP::PACKAGE::INSTALLED_CLEANUP::STALE_INSTANCE_QUARANTINE",
+    "fileIdentityId":  "LEEWAY_FILE::SCRIPT::INSTALL_CURRENT",
+    "foldersFound":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+    "foldersQuarantined":  [
+                               "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\quarantine\\extension-instances\\stable-leeway.agent-lee-leeway-coding-system-1.2.11"
+                           ],
+    "foldersKept":  [
+
+                    ],
+    "uninstallAttempted":  true,
+    "reinstallAttempted":  true,
+    "reloadRequired":  true,
+    "finalVerdict":  "PASS"
+}

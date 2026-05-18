@@ -59,7 +59,6 @@ if (Test-Path $externalRoot) {
   Copy-IfExists (Join-Path $externalRoot "scripts\enforce.mjs") (Join-Path $agentLeeRoot "sdk\validators\enforce.mjs") | Out-Null
   Copy-IfExists (Join-Path $externalRoot "scripts\generate-mcps.mjs") (Join-Path $agentLeeRoot "sdk\validators\generate-mcps.mjs") | Out-Null
   Copy-IfExists (Join-Path $externalRoot "leeway-pycharm-tools.xml") (Join-Path $agentLeeRoot "sdk\standards\leeway-pycharm-tools.xml") | Out-Null
-  Copy-IfExists (Join-Path $externalRoot "src\voice\server\piper_bin") (Join-Path $agentLeeRoot "voice\piper_bin") | Out-Null
 }
 
 $compileOutput = ""

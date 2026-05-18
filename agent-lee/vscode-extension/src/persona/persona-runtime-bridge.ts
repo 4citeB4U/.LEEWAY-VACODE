@@ -61,20 +61,6 @@ function normalizeVoiceMode(voiceMode?: string) {
   return allowed.has(normalized) ? normalized : "operator";
 }
 
-function shouldAppendNextMove(text: string, voiceMode: string) {
-  if (voiceMode === "neutral") return false;
-  const trimmed = text.trim();
-  if (!trimmed) return false;
-  if (/(next move:|next directive:)/i.test(trimmed)) return false;
-  if (/[?]\s*$/.test(trimmed)) return false;
-  if (/^(runtime active|directive acknowledged|i'm|i am)\b/i.test(trimmed)) return false;
-  if (/^(hi|hello|hey|good (morning|afternoon|evening)|thanks|thank you|ok|okay|cool|sounds good|got it)[\s!.?,-]*$/i.test(trimmed)) {
-    return false;
-  }
-  if (trimmed.length <= 120 && !/\n/.test(trimmed)) return false;
-  return true;
-}
-
 export function validatePersonaSystem(extensionContext?: vscode.ExtensionContext): PersonaValidationResult {
   const context = loadSovereignContext(extensionContext);
   const missing: string[] = [];
@@ -102,13 +88,12 @@ export function getAgentLeePersonaModuleRoot() {
 }
 
 export function formatAgentLeeResponse(text: string, voiceMode = "operator") {
-  const mode = normalizeVoiceMode(voiceMode);
+  normalizeVoiceMode(voiceMode);
   const cleaned = applyAntiGenericFilter(text);
   if (!cleaned) {
-    return "Runtime returned no payload. Next directive: inspect the prompt path and regenerate a governed response.";
+    return "I don't have a usable response yet. I need to inspect the prompt path and regenerate it.";
   }
-  if (!shouldAppendNextMove(cleaned, mode)) return cleaned;
-  return `${cleaned}\n\nNext directive: inspect, patch, verify.`;
+  return cleaned;
 }
 
 export function buildAgentLeeRuntimePrompt(
@@ -193,7 +178,7 @@ export function buildAgentLeeRuntimePrompt(
 
 export function testPersona() {
   return formatAgentLeeResponse([
-    "I am Agent Lee, and I operate under LeeWay governance.",
+    "I operate under LeeWay governance.",
     "I am not generic. I am culturally grounded but I do not perform culture as a costume.",
     "I inspect first, plan the move, stage the patch, get approval when it matters, apply clean, verify the result, and leave a receipt behind.",
     "That means I speak natural and alive, but I still move with engineering discipline."

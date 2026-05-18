@@ -25,6 +25,7 @@ import {
 } from "./leeway-connectivity-loader";
 import { AGENT_LEE_SOVEREIGN_RUNTIME_LAW, buildAgentLeeModelInstructions } from "./model-governance";
 import { buildAgentLeeRuntimePrompt, formatAgentLeeResponse, validatePersonaSystem } from "../persona/persona-runtime-bridge";
+import { collectExtensionRuntimeTruth, type ExtensionRuntimeTruthState } from "./extensionRuntimeTruth";
 
 export type AgentLeeRuntimeState = {
   AGENT_LEE_RUNTIME_READY: boolean;
@@ -46,6 +47,7 @@ export type AgentLeeRuntimeState = {
   resolvedRoot: string;
   rootSource: AgentLeeRootSource;
   missingConnectivityPaths: string[];
+  runtimeTruth: ExtensionRuntimeTruthState | null;
 };
 
 const ROOT = path.join(process.env.USERPROFILE || "", ".leeway-vscode");
@@ -74,7 +76,8 @@ let runtimeState: AgentLeeRuntimeState = {
   runtimeRoot: "",
   resolvedRoot: "",
   rootSource: "degraded",
-  missingConnectivityPaths: []
+  missingConnectivityPaths: [],
+  runtimeTruth: null
 };
 
 function countRegistryEntries(value: unknown, preferredKey: string) {
@@ -216,6 +219,7 @@ export async function initializeAgentLeeRuntime(_context?: vscode.ExtensionConte
   const modelRoutesAvailable = hasModelRoutes();
   const doctorStatus = refreshDoctorStatus();
   const missingConnectivityPaths = connectivity.missingConnectivityPaths;
+  const runtimeTruth = _context ? collectExtensionRuntimeTruth(_context) : null;
 
   const degradedReasons: string[] = [];
   if (!connectivity.valid) degradedReasons.push(`connectivity missing: ${missingConnectivityPaths.join(", ")}`);
@@ -241,7 +245,8 @@ export async function initializeAgentLeeRuntime(_context?: vscode.ExtensionConte
     runtimeRoot: connectivity.root,
     resolvedRoot: connectivity.root,
     rootSource: connectivity.rootSource,
-    missingConnectivityPaths
+    missingConnectivityPaths,
+    runtimeTruth
   };
 
   recordAgentLeeRuntimeReceipt({
@@ -259,6 +264,7 @@ export async function initializeAgentLeeRuntime(_context?: vscode.ExtensionConte
     resolvedRoot: runtimeState.resolvedRoot,
     rootSource: runtimeState.rootSource,
     missingConnectivityPaths: runtimeState.missingConnectivityPaths,
+    runtimeTruth: runtimeState.runtimeTruth,
     mcpRoot: getInternalMcpRoot(_context),
     agentRoot: getInternalAgentsRoot(_context),
     sdkRoot: getInternalSdkRoot(_context)

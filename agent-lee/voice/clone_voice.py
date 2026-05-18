@@ -1,6 +1,21 @@
+"""
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.VOICE.CLONE_SCRIPT
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+PURPOSE: LeeWay-owned local F5-TTS clone entrypoint for Agent Lee speech synthesis.
+"""
+
 import argparse
 import os
+import tempfile
 import soundfile as sf
+
+NUMBA_CACHE_DIR = os.path.join(tempfile.gettempdir(), "agent-lee-numba-cache")
+os.makedirs(NUMBA_CACHE_DIR, exist_ok=True)
+os.environ.setdefault("NUMBA_CACHE_DIR", NUMBA_CACHE_DIR)
+
 from f5_tts.api import F5TTS
 
 def main():
@@ -10,6 +25,7 @@ def main():
     parser.add_argument("--text", required=True, help="Text to generate")
     parser.add_argument("--output", default="output.wav", help="Path to save the generated audio")
     parser.add_argument("--device", default="cpu", help="Torch device to use for inference, e.g. cpu or cuda")
+    parser.add_argument("--speed", type=float, default=1.0, help="Speech rate multiplier (lower is slower, e.g. 0.9)")
     
     args = parser.parse_args()
 
@@ -24,7 +40,8 @@ def main():
     wav, sr, _spec = tts.infer(
         ref_file=args.ref_audio,
         ref_text=args.ref_text,
-        gen_text=args.text
+        gen_text=args.text,
+        speed=args.speed,
     )
     
     # Save output
