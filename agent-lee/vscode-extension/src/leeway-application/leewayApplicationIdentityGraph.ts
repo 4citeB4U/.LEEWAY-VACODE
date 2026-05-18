@@ -57,7 +57,7 @@ export interface LeeWayApplicationIdentityNode {
   status: LeeWayApplicationNodeStatus;
 }
 
-export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-14.tracer-pack-pass-1";
+export const LEEWAY_APPLICATION_IDENTITY_GRAPH_VERSION = "2026-05-18.runtime-alignment-pass-1";
 
 const WEBVIEW_TO_HOST_COMMANDS = [
   "activateClonedVoice",
@@ -69,6 +69,10 @@ const WEBVIEW_TO_HOST_COMMANDS = [
   "cancelPluginCall",
   "leewayStartTranscriptBridge",
   "leewayVoiceEvent",
+  "leewayVoiceMuteToggled",
+  "leewayVoiceSettingsChanged",
+  "leewayVoiceStopRequested",
+  "leewayVoiceTestRequested",
   "leewayVoiceTurnCommit",
   "loadConversation",
   "newConversation",
@@ -88,6 +92,10 @@ const WEBVIEW_TO_HOST_COMMANDS = [
   "transcribeVoiceReference",
   "updateAgentLeeNow",
   "useBundledReferenceVoice",
+  "voiceReviewClarify",
+  "voiceReviewCreateProposal",
+  "voiceReviewDiscard",
+  "voiceReviewSend",
   "voiceAlActivateDefault",
   "voiceAlCloneAndPreview",
   "voiceAlDeleteVoice",
@@ -104,6 +112,7 @@ const HOST_TO_WEBVIEW_COMMANDS = [
   "agentVmDiagnosticRecorded",
   "attachmentsPicked",
   "history",
+  "leewayVoiceStatusChanged",
   "leewayVoiceToolCompleted",
   "loadedConversation",
   "modelOptions",
@@ -112,6 +121,9 @@ const HOST_TO_WEBVIEW_COMMANDS = [
   "response",
   "runtimeInfo",
   "status",
+  "submitVoiceReviewMessage",
+  "leewayVoiceBridgeStatusChanged",
+  "leewayVoiceReviewChanged",
   "visibleRuntimeState",
   "voiceAlCatalogUpdate",
   "voiceCloneStatus",
@@ -123,6 +135,13 @@ const CORE_VSCODE_COMMANDS = [
   "agentLee.open",
   "agentLee.openPanel",
   "agentLee.openSidebar",
+  "agentLee.openRightSurface",
+  "agentLee.diagnoseRuntime",
+  "agentLee.recoverUi",
+  "agentLee.repairInstallation",
+  "agentLee.showInstalledVersion",
+  "agentLee.showUpdateChannel",
+  "agentLee.installCurrentBuild",
   "agentLee.scanSelf",
   "agentLee.verifySelf",
   "agentLee.scanWorkspace",
@@ -145,10 +164,7 @@ const CORE_VSCODE_COMMANDS = [
   "agentLee.executionBrain.createRepairPackageDemo"
 ] as const;
 
-const LEGACY_MANIFEST_COMMANDS = [
-  "agentLee.recoverUi",
-  "agentLee.repairInstallation"
-] as const;
+const LEGACY_MANIFEST_COMMANDS = [] as const;
 
 const VISUAL_VSCODE_COMMANDS = [
   "agentLee.visual.openPanel",
@@ -173,6 +189,11 @@ const LIVE_VOICE_VSCODE_COMMANDS = [
   "agentLee.liveVoice.sessionSummary",
   "agentLee.liveVoice.blockFile",
   "agentLee.liveVoice.unblockFile"
+] as const;
+
+const VOICE_BRIDGE_VSCODE_COMMANDS = [
+  "agentLee.voiceBridge.handleRuntimeStatus",
+  "agentLee.voiceBridge.handleTranscript"
 ] as const;
 
 const SESSION_VSCODE_COMMANDS = [
@@ -228,7 +249,6 @@ const EDIT_BUFFER_VSCODE_COMMANDS = [
 
 const EXTENSION_HANDLED_COMMANDS = [
   "activateClonedVoice",
-  "activatePiperVoice",
   "agentLeeUiAction",
   "agentLeeUiError",
   "agentLeeUiReady",
@@ -251,7 +271,15 @@ const EXTENSION_HANDLED_COMMANDS = [
   "interruptTask",
   "leewayStartTranscriptBridge",
   "leewayVoiceEvent",
+  "leewayVoiceBridgeStatusChanged",
   "leewayVoiceInterruptRequested",
+  "leewayVoiceReviewChanged",
+  "leewayVoiceMuteToggled",
+  "leewayVoiceSettingsChanged",
+  "leewayVoiceSpeakRequested",
+  "leewayVoiceStatusChanged",
+  "leewayVoiceStopRequested",
+  "leewayVoiceTestRequested",
   "leewayVoiceToolCompleted",
   "leewayVoiceTurnCommit",
   "loadConversation",
@@ -297,6 +325,10 @@ const EXTENSION_HANDLED_COMMANDS = [
   "useBundledReferenceVoice",
   "verifySelf",
   "verifyWorkspace",
+  "voiceReviewClarify",
+  "voiceReviewCreateProposal",
+  "voiceReviewDiscard",
+  "voiceReviewSend",
   "voiceAlActivateDefault",
   "voiceAlCatalogUpdate",
   "voiceAlCloneAndPreview",
@@ -309,7 +341,8 @@ const EXTENSION_HANDLED_COMMANDS = [
   "voiceAlTestVoice",
   "voiceCloneStatus",
   "voiceReferencePicked",
-  "voiceReferenceTranscribed"
+  "voiceReferenceTranscribed",
+  "submitVoiceReviewMessage"
 ] as const;
 
 const LAVR_RUNTIME_EVENTS = [
@@ -358,6 +391,14 @@ const RUNTIME_EVIDENCE = [
   "agent-lee/vscode-extension/test-evidence/runtime-smoke-voice-provider-result.json",
   "agent-lee/vscode-extension/test-evidence/lavr-host-router-dynamic-result.json",
   "agent-lee/vscode-extension/test-evidence/lavr-playback-gate-dynamic-result.json",
+  "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json",
+  "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json",
+  "agent-lee/vscode-extension/test-evidence/runtime-truth-attestation-result.json",
+  "agent-lee/vscode-extension/test-evidence/leeway-live-extension-host-locator-result.json",
+  "agent-lee/vscode-extension/test-evidence/leeway-extension-stale-instance-cleanup-result.json",
+  "AppData/Roaming/Code/User/globalStorage/leeway.agent-lee-leeway-coding-system/live-host-attestation-current.json",
+  "agent-lee/vscode-extension/test-evidence/leeway-identity-pulse-result.json",
+  "agent-lee/governance/identity/leeway-identity-pulse.json",
   "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
 ] as const;
 
@@ -394,13 +435,8 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::MEMORY::STORE::LOCAL_MEMORY",
   "LEEWAY_APP::VOICE::LAW::VOICE_LOCK",
   "LEEWAY_APP::VOICE::CONFIG::RUNTIME",
-  "LEEWAY_APP::VOICE::PIPELINE::PIPER_SPEECH",
-  "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_MODEL",
-  "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_CONFIG",
   "LEEWAY_APP::VOICE::ASSET::LIVE_CLONE_OUTPUT",
   "LEEWAY_APP::VOICE::ASSET::TEST_CLONE_OUTPUT",
-  "LEEWAY_APP::VOICE::CATALOG::AUDITION_REGISTRY",
-  "LEEWAY_APP::VOICE::QUARANTINE::DISABLED_MODELS",
   "LEEWAY_APP::VOICE::GENERATED::CLONED_WAV_OUTPUTS",
   "LEEWAY_APP::VOICE::LAVR::LOCAL_RUNTIME",
   "LEEWAY_APP::VOICE::LAVR::BROWSER_FALLBACK",
@@ -411,17 +447,68 @@ export const LEEWAY_APPLICATION_REQUIRED_NODE_IDS = [
   "LEEWAY_APP::VOICE::LAVR::INTERRUPT_GATE",
   "LEEWAY_APP::PACKAGE::VSIX::BUILD",
   "LEEWAY_APP::PACKAGE::VSIX::LEAKAGE_SCAN",
+  "LEEWAY_APP::PACKAGE::RUNTIME_ATTESTATION::VSIX_HASH",
+  "LEEWAY_APP::PACKAGE::RUNTIME_ATTESTATION::INSTALLED_HASH",
+  "LEEWAY_APP::PACKAGE::BUILD_INFO::GENERATOR",
+  "LEEWAY_APP::PACKAGE::BUILD_INFO::ARTIFACT",
+  "LEEWAY_APP::PACKAGE::INSTALLED_CLEANUP::STALE_INSTANCE_QUARANTINE",
+  "LEEWAY_APP::PACKAGE::ASSET_CHECK::ROOT",
+  "LEEWAY_APP::PACKAGE::INSTALLED_CHECK::ROOT",
+  "LEEWAY_APP::PACKAGE::RELEASE::ORCHESTRATOR",
+  "LEEWAY_APP::PACKAGE::DEV_RELOAD::ROOT",
   "LEEWAY_APP::PACKAGE::QUARANTINE::DIST_EXTENSION_JS",
   "LEEWAY_APP::GOVERNANCE::INTEGRITY_GATE::ROOT",
+  "LEEWAY_APP::GOVERNANCE::GENERATED_APP_HARNESS::ROOT",
   "LEEWAY_APP::GATE::CONSTRUCTION_LAW",
   "LEEWAY_APP::GATE::IDENTITY_MESH",
   "LEEWAY_APP::GATE::TRACER_PACK",
   "LEEWAY_APP::GATE::APPLICATION_IDENTITY_GRAPH",
+  "LEEWAY_APP::GATE::IDENTITY_PULSE",
   "LEEWAY_APP::GOVERNANCE::DOCTOR::BASELINE",
   "LEEWAY_APP::GOVERNANCE::COMPLIANCE::LEEWAY_HEADER",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::ROOT",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::ORIGIN_CLASSIFIER",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::LEEWAY_BORN_WATERMARK",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::FOREIGN_ENTITY_INDUCTION",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::UNKNOWN_OBJECT_QUARANTINE",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::HASH_ATTESTATION",
+  "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::FIRST_SEEN_LEDGER",
+  "LEEWAY_APP::DOCS::README::ROOT",
+  "LEEWAY_APP::DOCS::README_ASSETS::MEDIA",
+  "LEEWAY_APP::DOCS::README::LIVE_PROOF",
+  "LEEWAY_APP::UI::ASSET::ACTIVITYBAR_ICON",
+  "LEEWAY_APP::UI::ASSET::CHAT_AVATAR",
+  "LEEWAY_APP::UI::ASSET::REGISTRY",
+  "LEEWAY_APP::UI::RUNTIME_TRUTH::WEBVIEW_BOOT",
+  "LEEWAY_APP::UI::RUNTIME_TRUTH::CHAT_SEND_PATH",
+  "LEEWAY_APP::UI::RUNTIME_TRUTH::EXTENSION_HEALTH",
+  "LEEWAY_APP::UI::RUNTIME_TRUTH::ACTIVE_RUNTIME_ATTESTATION",
+  "LEEWAY_APP::UI::RUNTIME_TRUTH::LIVE_HOST_SELF_ATTESTATION",
+  "LEEWAY_APP::UI::RUNTIME_SMOKE::WEBVIEW_BUTTON_BRIDGE",
+  "LEEWAY_APP::UI::SURFACE::RIGHT_SIDE_OPEN_BEHAVIOR",
+  "LEEWAY_APP::DEV::WORKFLOW::LAUNCH_CONFIG",
+  "LEEWAY_APP::DEV::WORKFLOW::TASK_CONFIG",
+  "LEEWAY_APP::WORKFLOW::PROMPT_INTENT_CLASSIFICATION",
+  "LEEWAY_APP::WORKFLOW::FAST_LANE_GREETING",
+  "LEEWAY_APP::WORKFLOW::WORKSPACE_CONTEXT_LOAD",
+  "LEEWAY_APP::UI::VOICE_CONTROL::VOICE_ENABLED",
+  "LEEWAY_APP::UI::VOICE_CONTROL::MUTE_TOGGLE",
+  "LEEWAY_APP::UI::VOICE_CONTROL::STOP_SPEAKING",
+  "LEEWAY_APP::UI::VOICE_CONTROL::TEST_VOICE",
+  "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_RATE",
+  "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_VOLUME",
+  "LEEWAY_APP::UI::VOICE_CONTROL::AUTO_SPEAK_RESPONSES",
+  "LEEWAY_APP::VOICE::LIVE_ROUTE::AUDIBLE_OUTPUT_PROOF",
+  "LEEWAY_APP::VOICE::LIVE_ROUTE::FIRST_AUDIO_LATENCY",
+  "LEEWAY_APP::VOICE::LIVE_ROUTE::MULTI_SEGMENT_PLAYBACK",
+  "LEEWAY_APP::VOICE::LIVE_ROUTE::CLONE_ENGINE_ERROR_SURFACE",
+  "LEEWAY_APP::PACKAGE::UPDATE_CHANNEL::TRUTH",
+  "LEEWAY_APP::GOVERNANCE::EVIDENCE_CONSISTENCY::ROOT",
+  "LEEWAY_APP::GATE::RUNTIME_INCIDENT_CLOSURE",
   "LEEWAY_APP::TEST::LAVR::RUNTIME_SMOKE",
   "LEEWAY_APP::TEST::LAVR::HOST_ROUTER_DYNAMIC",
-  "LEEWAY_APP::TEST::LAVR::PLAYBACK_GATE_DYNAMIC"
+  "LEEWAY_APP::TEST::LAVR::PLAYBACK_GATE_DYNAMIC",
+  "LEEWAY_APP::TEST::LAVR::AUDIBLE_OUTPUT_DYNAMIC"
 ] as const;
 
 export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] = [
@@ -531,6 +618,56 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     outputs: ["UI rendering", "user commands", "voice controls"],
     verification: ["lavr-host-router-dynamic-harness"],
     evidence: ["agent-lee/vscode-extension/test-evidence/lavr-host-router-dynamic-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::RUNTIME_TRUTH::WEBVIEW_BOOT",
+    name: "Runtime truth webview boot path",
+    classification: "GOVERNANCE_GATE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-harness.cjs",
+    runtimeRole: "Dynamically generates the Agent Lee webview HTML, executes the inline script, and proves that boot completes without hidden script failure.",
+    inputs: ["src/extension.ts", "inline webview script", "simulated vscode.postMessage bridge"],
+    outputs: ["agentLeeUiReady proof", "boot exception report", "UI runtime attestation"],
+    verification: ["runtime-truth-webview-button-bridge-harness"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json"],
+    status: "TEST_ONLY"
+  },
+  {
+    id: "LEEWAY_APP::UI::RUNTIME_TRUTH::CHAT_SEND_PATH",
+    name: "Runtime truth chat send path",
+    classification: "GOVERNANCE_GATE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-harness.cjs",
+    runtimeRole: "Proves the send button emits sendMessage and that the extension host still declares a matching handler for the live chat path.",
+    inputs: ["composer send action", "sendMessage bridge", "extension.ts handler map"],
+    outputs: ["sendMessage post proof", "host handler attestation"],
+    verification: ["runtime-truth-webview-button-bridge-harness", "command emitted-vs-handled audit"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-command-audit.json"
+    ],
+    status: "TEST_ONLY"
+  },
+  {
+    id: "LEEWAY_APP::UI::RUNTIME_TRUTH::EXTENSION_HEALTH",
+    name: "Extension runtime health classifier",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/src/core/extensionRuntimeTruth.ts",
+    runtimeRole: "Classifies the active extension runtime as source, linked workspace, packaged VSIX, stale VSIX, or unknown and exposes the proof to the UI.",
+    outputs: ["runtime source mode", "installed runtime status", "asset and command truth"],
+    verification: ["runtime status command", "installed extension check", "release packaging"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-installed-extension-check-result.json",
+      "agent-lee/vscode-extension/build/runtime-build-info.json"
+    ],
     status: "ACTIVE"
   },
   {
@@ -1173,7 +1310,7 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     domain: "VOICE",
     pipeline: "LAW",
     file: "agent-lee/voice/VOICE_LOCK.md",
-    runtimeRole: "Locks the active Agent Lee Piper voice identity and tuning unless an explicit re-audition is approved.",
+    runtimeRole: "Locks the active Agent Lee live clone identity and route order unless an explicit re-audition is approved.",
     verification: ["application identity graph gate", "application integrity gate"],
     evidence: [
       "agent-lee/voice/VOICE_LOCK.md",
@@ -1189,61 +1326,12 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     domain: "VOICE",
     pipeline: "CONFIG",
     file: "agent-lee/voice/voice-runtime.json",
-    runtimeRole: "Defines the active local speech runtime, locked Piper asset paths, clone reference audio, and live clone output path.",
-    verification: ["application identity graph gate", "application integrity gate"],
+    runtimeRole: "Defines the active LeeWay-owned live clone runtime, clone reference audio, and live clone output path.",
+    verification: ["application identity graph gate", "application integrity gate", "runtime-truth-live-voice-route-harness"],
     evidence: [
       "agent-lee/voice/voice-runtime.json",
-      "agent-lee/voice/VOICE_LOCK.md"
-    ],
-    status: "ACTIVE"
-  },
-  {
-    id: "LEEWAY_APP::VOICE::PIPELINE::PIPER_SPEECH",
-    name: "Locked Piper speech pipeline",
-    classification: "LOCAL_RUNTIME",
-    owner: "LEEWAY",
-    domain: "VOICE",
-    pipeline: "PIPELINE",
-    file: "agent-lee/voice/Speak-AgentLeePiper.ps1",
-    runtimeRole: "Owns the active local Piper playback path for the locked HFC male voice.",
-    verification: ["application identity graph gate", "application integrity gate"],
-    evidence: [
-      "agent-lee/voice/Speak-AgentLeePiper.ps1",
-      "agent-lee/voice/VOICE_LOCK.md"
-    ],
-    status: "ACTIVE"
-  },
-  {
-    id: "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_MODEL",
-    name: "Locked HFC male Piper model asset",
-    classification: "CONFIGURATION",
-    owner: "LEEWAY",
-    domain: "VOICE",
-    pipeline: "ASSET",
-    file: "agent-lee/voice/voice-runtime.json",
-    runtimeRole: "Registers the production-owned Piper model dependency selected by voice runtime and voice lock.",
-    outputs: ["agent-lee/voice/models/en_US-hfc_male-medium.onnx"],
-    verification: ["application identity graph gate"],
-    evidence: [
       "agent-lee/voice/VOICE_LOCK.md",
-      "agent-lee/voice/voice-runtime.json"
-    ],
-    status: "ACTIVE"
-  },
-  {
-    id: "LEEWAY_APP::VOICE::ASSET::LOCKED_HFC_MALE_CONFIG",
-    name: "Locked HFC male Piper config asset",
-    classification: "CONFIGURATION",
-    owner: "LEEWAY",
-    domain: "VOICE",
-    pipeline: "ASSET",
-    file: "agent-lee/voice/voice-runtime.json",
-    runtimeRole: "Registers the production-owned Piper config dependency selected by voice runtime and voice lock.",
-    outputs: ["agent-lee/voice/models/en_US-hfc_male-medium.onnx.json"],
-    verification: ["application identity graph gate"],
-    evidence: [
-      "agent-lee/voice/VOICE_LOCK.md",
-      "agent-lee/voice/voice-runtime.json"
+      "agent-lee/voice/leeway-live-voice-manifest.json"
     ],
     status: "ACTIVE"
   },
@@ -1276,38 +1364,6 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
-    id: "LEEWAY_APP::VOICE::CATALOG::AUDITION_REGISTRY",
-    name: "Voice audition registry",
-    classification: "CONFIGURATION",
-    owner: "LEEWAY",
-    domain: "VOICE",
-    pipeline: "CATALOG",
-    file: "agent-lee/voice/voice-audition-catalog.json",
-    runtimeRole: "Records audition candidates outside the locked runtime path and must classify missing candidate assets through disabled-model quarantine.",
-    verification: ["application identity graph gate"],
-    evidence: [
-      "agent-lee/voice/voice-audition-catalog.json",
-      "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"
-    ],
-    status: "FALLBACK"
-  },
-  {
-    id: "LEEWAY_APP::VOICE::QUARANTINE::DISABLED_MODELS",
-    name: "Disabled voice model quarantine",
-    classification: "QUARANTINE",
-    owner: "LEEWAY",
-    domain: "VOICE",
-    pipeline: "QUARANTINE",
-    file: "agent-lee/voice/voice-audition-catalog.json",
-    runtimeRole: "Classifies disabled voice models as quarantined audition assets that must not be mistaken for the locked production runtime voice.",
-    evidence: [
-      "agent-lee/voice/models-disabled/",
-      "agent-lee/voice/voice-audition-catalog.json"
-    ],
-    verification: ["application identity graph gate"],
-    status: "DELETE_PENDING"
-  },
-  {
     id: "LEEWAY_APP::VOICE::GENERATED::CLONED_WAV_OUTPUTS",
     name: "Generated cloned WAV outputs",
     classification: "GENERATED_TRANSIENT",
@@ -1320,6 +1376,119 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     verification: ["application identity graph gate"],
     evidence: ["agent-lee/voice/Speak-AgentLeeCloned.ps1"],
     status: "GENERATED"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::ROUTE_MANAGER::ROOT",
+    name: "LeeWay live voice route manager",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "ROUTE_MANAGER",
+    file: "agent-lee/vscode-extension/src/core/leeway-live-voice-route-manager.ts",
+    runtimeRole: "Owns LeeWay live voice manifest loading, route health assessment, and normal-vs-emergency route selection.",
+    outputs: [
+      "leeway.voice.primary.clone.live",
+      "leeway.voice.compact.clone.live",
+      "leeway.voice.branded.live",
+      "leeway.voice.text.emergency"
+    ],
+    verification: ["runtime-truth-live-voice-route-harness", "npm run compile"],
+    evidence: [
+      "agent-lee/voice/leeway-live-voice-manifest.json",
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-route-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::ROUTE::PRIMARY_CLONE_LIVE",
+    name: "Primary live clone route",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "ROUTE_MANAGER",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Declares the first-priority LeeWay-owned live clone route for Agent Lee speech.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::ROUTE::COMPACT_CLONE_LIVE",
+    name: "Compact live clone route",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "ROUTE_MANAGER",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Declares the second-priority compact LeeWay clone route when the primary clone route is unhealthy.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::ROUTE::BRANDED_LIVE",
+    name: "Branded LeeWay live route",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "ROUTE_MANAGER",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Declares the branded LeeWay live voice route used only after clone routes are unavailable.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::ROUTE::TEXT_EMERGENCY",
+    name: "Text-only voice emergency route",
+    classification: "EVENT_ROUTE",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "ROUTE_MANAGER",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Declares the truthful text-only emergency route when no LeeWay-owned live voice route is healthy.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::POLICY::NO_FOREIGN_DEFAULT",
+    name: "No foreign default voice policy",
+    classification: "CONFIGURATION",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "POLICY",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Rejects non-LeeWay voice runtimes as Agent Lee's default or normal fallback route.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::POLICY::LEEWAY_OWNED_ONLY",
+    name: "LeeWay-owned-only voice policy",
+    classification: "CONFIGURATION",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "POLICY",
+    file: "agent-lee/voice/leeway-live-voice-manifest.json",
+    runtimeRole: "Rejects external provider routes during normal Agent Lee voice operation.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/voice/leeway-live-voice-manifest.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::RUNTIME_TRUTH::LIVE_STREAM",
+    name: "Live voice runtime truth",
+    classification: "TEST_HARNESS",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-route-harness.cjs",
+    runtimeRole: "Proves LeeWay live voice route order, foreign-runtime rejection, external-provider rejection, emergency truth, and one-word failure detection.",
+    verification: ["runtime-truth-live-voice-route-harness"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-route-result.json"],
+    status: "ACTIVE"
   },
   {
     id: "LEEWAY_APP::VOICE::LAVR::LOCAL_RUNTIME",
@@ -1523,7 +1692,7 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     pipeline: "VSIX",
     file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayApplicationIntegrityGate.ps1",
     runtimeRole: "Builds the extension package that the integrity gate inspects.",
-    outputs: ["agent-lee-leeway-coding-system-1.2.3.vsix"],
+    outputs: ["agent-lee-leeway-coding-system-1.2.11.vsix"],
     verification: ["npx vsce package --allow-star-activation"],
     evidence: ["agent-lee/vscode-extension/test-evidence/leeway-application-integrity-package.log"],
     status: "ACTIVE"
@@ -1539,6 +1708,34 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     runtimeRole: "Scans the packaged VSIX surface for stale artifacts and excluded providers.",
     verification: ["VSIX stale artifact and cloud-provider leakage scan"],
     evidence: ["agent-lee/vscode-extension/test-evidence/leeway-application-integrity-vsix-scan.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::RUNTIME_ATTESTATION::VSIX_HASH",
+    name: "VSIX runtime hash attestation",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "RUNTIME_ATTESTATION",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayApplicationIntegrityGate.ps1",
+    runtimeRole: "Extracts the packaged VSIX runtime and proves it matches the repo build hash for out/extension.js.",
+    outputs: ["repo runtime hash", "vsix runtime hash", "version attestation"],
+    verification: ["runtime truth hash attestation"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-attestation-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::RUNTIME_ATTESTATION::INSTALLED_HASH",
+    name: "Installed runtime hash attestation",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "RUNTIME_ATTESTATION",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayApplicationIntegrityGate.ps1",
+    runtimeRole: "Hashes the installed extension runtime when present and fails integrity if the installed runtime is stale relative to the freshly packaged VSIX.",
+    outputs: ["installed runtime hash", "stale runtime decision"],
+    verification: ["runtime truth installed hash attestation"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-attestation-result.json"],
     status: "ACTIVE"
   },
   {
@@ -1581,6 +1778,85 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::PACKAGE::BUILD_INFO::GENERATOR",
+    name: "Runtime build-info generator",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "BUILD_INFO",
+    file: "agent-lee/vscode-extension/scripts/write-build-info.mjs",
+    runtimeRole: "Generates deterministic build info so the running extension can prove whether it matches the source workspace or a packaged VSIX.",
+    outputs: ["agent-lee/vscode-extension/build/runtime-build-info.json"],
+    verification: ["npm run compile"],
+    evidence: ["agent-lee/vscode-extension/build/runtime-build-info.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::BUILD_INFO::ARTIFACT",
+    name: "Runtime build-info artifact",
+    classification: "GENERATED_TRANSIENT",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "BUILD_INFO",
+    file: "agent-lee/vscode-extension/build/runtime-build-info.json",
+    runtimeRole: "Carries version, hash, command, and asset proof for runtime truth and stale VSIX detection.",
+    verification: ["npm run compile", "installed extension check"],
+    evidence: ["agent-lee/vscode-extension/build/runtime-build-info.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::ASSET_CHECK::ROOT",
+    name: "Extension asset check",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "ASSET_CHECK",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionAssetCheck.ps1",
+    runtimeRole: "Verifies icon assets, README image paths, ignore rules, and packaged asset coverage before release.",
+    verification: ["npm run LEEWAY_EXTENSION_ASSET_CHECK"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-asset-check-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::INSTALLED_CHECK::ROOT",
+    name: "Installed extension runtime check",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "INSTALLED_CHECK",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayInstalledExtensionCheck.ps1",
+    runtimeRole: "Detects the installed Agent Lee extension, verifies build info and assets, and flags stale VSIX drift.",
+    verification: ["npm run LEEWAY_EXTENSION_INSTALLED_CHECK"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-installed-extension-check-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::RELEASE::ORCHESTRATOR",
+    name: "Release packaging orchestrator",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "RELEASE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionReleasePackage.ps1",
+    runtimeRole: "Runs release-only checks, builds the VSIX, inspects packaged contents, and writes release evidence.",
+    verification: ["npm run LEEWAY_EXTENSION_RELEASE_PACKAGE"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-release-package-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::DEV_RELOAD::ROOT",
+    name: "Source dev reload workflow",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "DEV_RELOAD",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionDevReload.ps1",
+    runtimeRole: "Promotes Extension Development Host as the normal source loop and writes dev reload evidence.",
+    verification: ["npm run LEEWAY_EXTENSION_DEV_RELOAD"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-dev-reload-result.json"],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::PACKAGE::QUARANTINE::DIST_EXTENSION_JS",
     name: "Historical dist start-path quarantine",
     classification: "QUARANTINE",
@@ -1605,10 +1881,25 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     verification: ["npm run LEEWAY_APPLICATION_INTEGRITY_GATE"],
     evidence: [
       "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json",
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json",
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-attestation-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json",
       "agent-lee/vscode-extension/test-evidence/leeway-construction-law-result.json",
       "agent-lee/receipts/leeway_application_integrity_gate_*.md"
     ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::GENERATED_APP_HARNESS::ROOT",
+    name: "Generated app governance harness",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "GENERATED_APP_HARNESS",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayGeneratedAppHarness.ps1",
+    runtimeRole: "Proves LeeWay-created app planning includes Paired AdminOS, draft/published projection, owner education, proposal agents, MCP governance, and static-only exception handling.",
+    verification: ["npm run LEEWAY_GENERATED_APP_HARNESS_GATE"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-generated-app-harness-result.json"],
     status: "ACTIVE"
   },
   {
@@ -1667,6 +1958,119 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::ROOT",
+    name: "LeeWay identity pulse law root",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/governance/law/leeway-identity-pulse-law.md",
+    runtimeRole: "Defines the living LeeWay law for origin, lineage, trust, authority, induction, and no-anonymous-object activation.",
+    verification: ["identity pulse gate", "application integrity gate"],
+    evidence: [
+      "agent-lee/governance/identity/leeway-identity-pulse.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-identity-pulse-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::ORIGIN_CLASSIFIER",
+    name: "LeeWay identity pulse origin classifier",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/vscode-extension/src/leeway-application/leewayIdentityPulse.ts",
+    runtimeRole: "Defines origin statuses, strict surfaces, trust semantics, and managed pulse objects for pass 1.",
+    verification: ["identity pulse gate", "application identity graph gate"],
+    evidence: ["agent-lee/governance/identity/leeway-identity-pulse.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::LEEWAY_BORN_WATERMARK",
+    name: "LeeWay born watermark overlay",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: ".codex/skills/leeway-application-standards/references/leeway-identity-pulse-law.md",
+    runtimeRole: "Teaches the repo-local standards overlay how LeeWay-born and imported objects differ for trust and activation.",
+    verification: ["identity pulse gate"],
+    evidence: ["agent-lee/governance/identity/leeway-identity-pulse.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::FOREIGN_ENTITY_INDUCTION",
+    name: "Foreign entity induction skill overlay",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: ".codex/skills/leeway-application-standards/SKILL.md",
+    runtimeRole: "Extends local LeeWay instructions so imports, uploads, downloads, restores, and tool or LLM output must be inducted before activation.",
+    verification: ["identity pulse gate"],
+    evidence: ["agent-lee/governance/identity/leeway-identity-pulse.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::UNKNOWN_OBJECT_QUARANTINE",
+    name: "Unknown object quarantine gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayIdentityPulseGate.ps1",
+    runtimeRole: "Finds unrecognized governed files in strict or audit scope and marks them for classification, quarantine, or refusal of authority.",
+    verification: ["identity pulse gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-identity-pulse-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::HASH_ATTESTATION",
+    name: "Identity pulse hash attestation",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayIdentityPulseGate.ps1",
+    runtimeRole: "Attests hashes for governed files, repo runtime, VSIX runtime, and installed runtime as identity pulse artifacts.",
+    verification: ["identity pulse gate", "runtime truth hash attestation"],
+    evidence: [
+      "agent-lee/governance/identity/leeway-identity-pulse.json",
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-attestation-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::IDENTITY_PULSE::FIRST_SEEN_LEDGER",
+    name: "Identity pulse first-seen ledger",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/governance/identity/leeway-identity-pulse.json",
+    runtimeRole: "Persists first-seen, last-seen, origin, hash, trust, and receipt metadata for pulse-tracked objects.",
+    verification: ["identity pulse gate"],
+    evidence: ["agent-lee/governance/identity/leeway-identity-pulse.json"],
+    status: "GENERATED"
+  },
+  {
+    id: "LEEWAY_APP::GATE::IDENTITY_PULSE",
+    name: "LeeWay identity pulse gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GATE",
+    pipeline: "IDENTITY_PULSE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayIdentityPulseGate.ps1",
+    runtimeRole: "Builds and verifies the living identity pulse registry for active files, runtime controls, commands, state keys, artifacts, docs, and imported trust boundaries.",
+    verification: ["identity pulse gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-identity-pulse-result.json",
+      "agent-lee/governance/identity/leeway-identity-pulse.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::GOVERNANCE::DOCTOR::BASELINE",
     name: "Agent Lee doctor baseline",
     classification: "GOVERNANCE_GATE",
@@ -1680,6 +2084,87 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::DOCS::README::ROOT",
+    name: "VS Code extension README root",
+    classification: "PRODUCTION_RUNTIME",
+    owner: "AGENT_LEE",
+    domain: "DOCS",
+    pipeline: "README",
+    file: "agent-lee/vscode-extension/README.md",
+    runtimeRole: "Owns the packaged README surface and its governed descriptive contract for the extension.",
+    verification: ["identity pulse gate", "npx vsce package --allow-star-activation"],
+    evidence: [
+      "agent-lee/governance/identity/leeway-identity-pulse.json",
+      "agent-lee/vscode-extension/agent-lee-leeway-coding-system-1.2.11.vsix"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::DOCS::README_ASSETS::MEDIA",
+    name: "VS Code extension README media assets",
+    classification: "PACKAGING",
+    owner: "AGENT_LEE",
+    domain: "DOCS",
+    pipeline: "README_ASSETS",
+    file: "agent-lee/vscode-extension/README.md",
+    runtimeRole: "Owns the packaged README image assets that must never drift into anonymous or mismatched media.",
+    verification: ["identity pulse gate", "npx vsce package --allow-star-activation"],
+    evidence: ["agent-lee/governance/identity/leeway-identity-pulse.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::DOCS::README::LIVE_PROOF",
+    name: "README live proof surface",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "DOCS",
+    pipeline: "README",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayReadmeLiveProof.ps1",
+    runtimeRole: "Proves README version, image order, and source/package/installed/live proof alignment for the extension documentation surface.",
+    verification: ["README live proof", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-readme-live-proof-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::ASSET::ACTIVITYBAR_ICON",
+    name: "Activity Bar icon asset",
+    classification: "PACKAGING",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "ASSET",
+    file: "agent-lee/vscode-extension/media/leeway-activity.svg",
+    runtimeRole: "Provides the packaged monochrome Activity Bar icon so the Agent Lee view remains visible and theme-safe in VS Code.",
+    verification: ["extension asset check", "release packaging"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-asset-check-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::ASSET::CHAT_AVATAR",
+    name: "Chat avatar asset",
+    classification: "PACKAGING",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "ASSET",
+    file: "agent-lee/vscode-extension/media/agent-lee-chat-avatar.svg",
+    runtimeRole: "Provides the dedicated Agent Lee chat header avatar for the live webview identity surface.",
+    verification: ["extension asset check", "live visual validation"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-live-visual-validation-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::ASSET::REGISTRY",
+    name: "LeeWay asset registry",
+    classification: "PACKAGING",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "ASSET",
+    file: "agent-lee/vscode-extension/src/core/branding/leewayAssetRegistry.ts",
+    runtimeRole: "Defines the canonical LeeWay asset IDs, ownership, source/package/install paths, and evidence requirements for all owner-facing extension branding surfaces.",
+    verification: ["extension asset check", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-asset-registry-check-result.json"],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::GOVERNANCE::COMPLIANCE::LEEWAY_HEADER",
     name: "LeeWay header compliance",
     classification: "GOVERNANCE_GATE",
@@ -1690,6 +2175,35 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     runtimeRole: "Validates LeeWay header presence and governed file compliance.",
     verification: ["LeeWay compliance scan"],
     evidence: ["reports/Doctor/**/agent-lee-doctor.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::DEV::WORKFLOW::LAUNCH_CONFIG",
+    name: "Extension development launch configuration",
+    classification: "CONFIGURATION",
+    owner: "LEEWAY",
+    domain: "DEV",
+    pipeline: "WORKFLOW",
+    file: ".vscode/launch.json",
+    runtimeRole: "Makes F5 launch the Extension Development Host against the Agent Lee source tree.",
+    verification: ["dev reload workflow"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-dev-reload-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::DEV::WORKFLOW::TASK_CONFIG",
+    name: "Extension development task configuration",
+    classification: "CONFIGURATION",
+    owner: "LEEWAY",
+    domain: "DEV",
+    pipeline: "WORKFLOW",
+    file: ".vscode/tasks.json",
+    runtimeRole: "Defines compile, dev reload, and release package tasks so source development replaces VSIX reinstall loops.",
+    verification: ["dev reload workflow", "release packaging"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-extension-dev-reload-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-extension-release-package-result.json"
+    ],
     status: "ACTIVE"
   },
   {
@@ -1735,6 +2249,23 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     registeredCommands: [...VISUAL_VSCODE_COMMANDS],
     verification: ["application identity graph gate"],
     evidence: ["agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::COMMAND::VOICE_BRIDGE::SURFACE",
+    name: "Voice bridge command surface",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "COMMAND",
+    pipeline: "VOICE_BRIDGE",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Registers internal voice-bridge runtime status and transcript handling commands used by the governed local transcript lane.",
+    registeredCommands: [...VOICE_BRIDGE_VSCODE_COMMANDS],
+    verification: ["application identity graph gate", "voice bridge check"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-application-identity-graph-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-voice-bridge-check-result.json"
+    ],
     status: "ACTIVE"
   },
   {
@@ -1786,6 +2317,345 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     status: "ACTIVE"
   },
   {
+    id: "LEEWAY_APP::UI::RUNTIME_SMOKE::WEBVIEW_BUTTON_BRIDGE",
+    name: "Runtime truth webview button bridge harness",
+    classification: "TEST_HARNESS",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "RUNTIME_SMOKE",
+    file: "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-harness.cjs",
+    runtimeRole: "Executes the generated webview HTML and inline script in a dynamic harness, verifies core button behavior, and attests the live host/webview bridge.",
+    verification: ["runtime-truth-webview-button-bridge-harness"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json"],
+    status: "TEST_ONLY"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::VOICE_ENABLED",
+    name: "Voice enabled control",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed voice-enabled toggle, persisted hydration, and command mapping for LeeWay live voice output.",
+    commandsEmitted: ["leewayVoiceSettingsChanged"],
+    commandsHandled: ["leewayVoiceSettingsChanged"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::MUTE_TOGGLE",
+    name: "Voice mute toggle control",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed mute toggle for LeeWay live voice playback.",
+    commandsEmitted: ["leewayVoiceMuteToggled"],
+    commandsHandled: ["leewayVoiceMuteToggled"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::STOP_SPEAKING",
+    name: "Voice stop speaking control",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed stop-speaking control for LeeWay live voice playback.",
+    commandsEmitted: ["leewayVoiceStopRequested"],
+    commandsHandled: ["leewayVoiceStopRequested"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::TEST_VOICE",
+    name: "Voice test control",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed test-voice control for LeeWay live voice audible output proof.",
+    commandsEmitted: ["leewayVoiceTestRequested"],
+    commandsHandled: ["leewayVoiceTestRequested", "leewayVoiceSpeakRequested"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_RATE",
+    name: "Speech rate control",
+    classification: "CONFIGURATION",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed speech-rate slider and its persisted runtime effect on the LeeWay live route.",
+    commandsEmitted: ["leewayVoiceSettingsChanged"],
+    commandsHandled: ["leewayVoiceSettingsChanged"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_VOLUME",
+    name: "Speech volume control",
+    classification: "CONFIGURATION",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed speech-volume slider and its persisted runtime effect on the LeeWay live route.",
+    commandsEmitted: ["leewayVoiceSettingsChanged"],
+    commandsHandled: ["leewayVoiceSettingsChanged"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::VOICE_CONTROL::AUTO_SPEAK_RESPONSES",
+    name: "Auto speak responses control",
+    classification: "CONFIGURATION",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "VOICE_CONTROL",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns the governed auto-speak toggle for assistant responses.",
+    commandsEmitted: ["leewayVoiceSettingsChanged"],
+    commandsHandled: ["leewayVoiceSettingsChanged"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "application identity graph gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::LIVE_ROUTE::AUDIBLE_OUTPUT_PROOF",
+    name: "Live voice audible output proof surface",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "LIVE_ROUTE",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Surfaces visible proof that the LeeWay-owned route generated playable audio artifacts and lifecycle evidence.",
+    eventsHandled: ["LEEWAY_VOICE_STATUS_CHANGED", "LEEWAY_VOICE_PLAYBACK_STARTED", "LEEWAY_VOICE_PLAYBACK_COMPLETED", "LEEWAY_VOICE_SEGMENT_PLAYED"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "npm run LEEWAY_APPLICATION_INTEGRITY_GATE"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::LIVE_ROUTE::FIRST_AUDIO_LATENCY",
+    name: "Live voice first-audio latency evidence",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "LIVE_ROUTE",
+    file: "agent-lee/voice/Speak-AgentLeeCloned.ps1",
+    runtimeRole: "Measures and emits first-audio latency for each LeeWay-owned live voice playback segment.",
+    eventsEmitted: ["LEEWAY_VOICE_FIRST_AUDIO"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "npm run LEEWAY_APPLICATION_INTEGRITY_GATE"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::LIVE_ROUTE::MULTI_SEGMENT_PLAYBACK",
+    name: "Live voice multi-segment playback evidence",
+    classification: "PLAYBACK_GATE",
+    owner: "LAVR",
+    domain: "VOICE",
+    pipeline: "LIVE_ROUTE",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Tracks planned versus played LeeWay live voice segments and proves multi-segment completion.",
+    eventsHandled: ["LEEWAY_VOICE_SEGMENT_PLAYED", "LEEWAY_VOICE_PLAYBACK_COMPLETED"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "lavr-playback-gate-dynamic-harness"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json",
+      "agent-lee/vscode-extension/test-evidence/lavr-playback-gate-dynamic-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::VOICE::LIVE_ROUTE::CLONE_ENGINE_ERROR_SURFACE",
+    name: "Live voice clone engine error surface",
+    classification: "EVENT_ROUTE",
+    owner: "LEEWAY",
+    domain: "VOICE",
+    pipeline: "LIVE_ROUTE",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Surfaces live clone engine failures visibly in the governed UI instead of allowing silent voice failure.",
+    eventsHandled: ["LEEWAY_VOICE_PLAYBACK_FAILED"],
+    verification: ["runtime-truth-live-voice-audible-output-harness", "npm run LEEWAY_APPLICATION_INTEGRITY_GATE"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::RUNTIME_TRUTH::ACTIVE_RUNTIME_ATTESTATION",
+    name: "Active runtime attestation",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "UI",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayActiveRuntimeAttestation.ps1",
+    runtimeRole: "Proves the active runtime version, UI generation, host/runtime IDs, build hash, and split-brain truth across source, package, install, and live host evidence.",
+    verification: ["active runtime attestation", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-active-runtime-attestation-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::UI::RUNTIME_TRUTH::LIVE_HOST_SELF_ATTESTATION",
+    name: "Live host self-attestation",
+    classification: "EVIDENCE",
+    owner: "LEEWAY",
+    domain: "UI",
+    pipeline: "RUNTIME_TRUTH",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Writes a host-authored attestation from inside extension activation so live runtime truth comes from the running extension host instead of indirect log inference.",
+    verification: ["active runtime attestation", "runtime incident closure gate"],
+    evidence: [
+      "AppData/Roaming/Code/User/globalStorage/leeway.agent-lee-leeway-coding-system/live-host-attestation-current.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-live-extension-host-locator-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::INSTALLED_CLEANUP::STALE_INSTANCE_QUARANTINE",
+    name: "Installed stale-instance quarantine",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "INSTALLED_CLEANUP",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionInstallCurrent.ps1",
+    runtimeRole: "Quarantines stale extension folders across all discovered VS Code extension roots, records cleanup evidence, and reinstalls only the intended governed VSIX lane.",
+    verification: ["installed extension check", "active runtime attestation"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-extension-stale-instance-cleanup-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_QUARANTINE::PACKAGE::LEGACY_UPDATE_LANE",
+    name: "Legacy update lane quarantine",
+    classification: "QUARANTINE",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "QUARANTINE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionUpdate.ps1",
+    runtimeRole: "Prevents the historical direct-update script from acting as an independent installer by routing all calls into the governed stale-instance quarantine lane.",
+    verification: ["installed extension check", "active runtime attestation"],
+    evidence: ["agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionUpdate.ps1"],
+    status: "DELETE_PENDING"
+  },
+  {
+    id: "LEEWAY_APP::UI::SURFACE::RIGHT_SIDE_OPEN_BEHAVIOR",
+    name: "Right-side open behavior truth surface",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "UI",
+    pipeline: "SURFACE",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Owns best-effort right-side opening behavior, truthful fallback reporting, and owner-visible surface placement telemetry.",
+    registeredCommands: ["agentLee.openRightSurface", "agentLee.openSidebar", "agentLee.openPanel"],
+    verification: ["runtime truth webview button bridge harness", "live visual validation"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/runtime-truth-webview-button-bridge-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-extension-live-visual-validation-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::WORKFLOW::PROMPT_INTENT_CLASSIFICATION",
+    name: "Prompt intent classification workflow",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "WORKFLOW",
+    pipeline: "PROMPT_INTENT_CLASSIFICATION",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Classifies incoming prompts before workspace-heavy loading or mutation routing begins.",
+    commandsHandled: ["sendMessage"],
+    verification: ["simple prompt fast-lane check", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-simple-prompt-fastlane-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::WORKFLOW::FAST_LANE_GREETING",
+    name: "Greeting fast-lane workflow",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "WORKFLOW",
+    pipeline: "FAST_LANE_GREETING",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Answers simple greetings without broad workspace ingestion and records timing telemetry for the owner-visible fast lane.",
+    commandsHandled: ["sendMessage"],
+    verification: ["simple prompt fast-lane check", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-simple-prompt-fastlane-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::WORKFLOW::WORKSPACE_CONTEXT_LOAD",
+    name: "Workspace context load workflow",
+    classification: "COMMAND_ROUTE",
+    owner: "AGENT_LEE",
+    domain: "WORKFLOW",
+    pipeline: "WORKSPACE_CONTEXT_LOAD",
+    file: "agent-lee/vscode-extension/src/extension.ts",
+    runtimeRole: "Loads broader workspace context only when the classified request requires it and reports that cost truthfully.",
+    commandsHandled: ["sendMessage", "scanWorkspace", "inspectWorkspace"],
+    verification: ["simple prompt fast-lane check", "application integrity gate"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-simple-prompt-fastlane-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-application-integrity-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::PACKAGE::UPDATE_CHANNEL::TRUTH",
+    name: "Update channel truth surface",
+    classification: "PACKAGING",
+    owner: "LEEWAY",
+    domain: "PACKAGE",
+    pipeline: "UPDATE_CHANNEL",
+    file: "agent-lee/vscode-extension/src/core/extensionRuntimeTruth.ts",
+    runtimeRole: "Classifies dev host, local VSIX, marketplace, Open VSX, private registry, or unknown update channels without misrepresenting auto-update capabilities.",
+    verification: ["installed extension check", "update channel truth check"],
+    evidence: [
+      "agent-lee/vscode-extension/test-evidence/leeway-installed-extension-check-result.json",
+      "agent-lee/vscode-extension/test-evidence/leeway-update-channel-truth-result.json"
+    ],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GOVERNANCE::EVIDENCE_CONSISTENCY::ROOT",
+    name: "Evidence consistency root",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "EVIDENCE_CONSISTENCY",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayEvidenceConsistencyCheck.ps1",
+    runtimeRole: "Scans receipts and evidence files for contradictions and blocks stale PASS claims from outliving newer live FAIL proof.",
+    verification: ["evidence consistency check", "runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-evidence-consistency-result.json"],
+    status: "ACTIVE"
+  },
+  {
+    id: "LEEWAY_APP::GATE::RUNTIME_INCIDENT_CLOSURE",
+    name: "Runtime incident closure gate",
+    classification: "GOVERNANCE_GATE",
+    owner: "LEEWAY",
+    domain: "GATE",
+    pipeline: "RUNTIME_INCIDENT_CLOSURE",
+    file: "agent-lee/vscode-extension/scripts/Invoke-LeeWayRuntimeIncidentClosureGate.ps1",
+    runtimeRole: "Runs the full runtime alignment closure sequence and reports PASS, PARTIAL, or FAIL only when all critical surfaces agree.",
+    verification: ["runtime incident closure gate"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/leeway-runtime-incident-closure-result.json"],
+    status: "ACTIVE"
+  },
+  {
     id: "LEEWAY_APP::TEST::LAVR::RUNTIME_SMOKE",
     name: "LAVR runtime smoke harness",
     classification: "TEST_HARNESS",
@@ -1822,6 +2692,19 @@ export const LEEWAY_APPLICATION_IDENTITY_GRAPH: LeeWayApplicationIdentityNode[] 
     runtimeRole: "Exercises playback stop/cancel and stale segment suppression behavior.",
     verification: ["lavr-playback-gate-dynamic-harness"],
     evidence: ["agent-lee/vscode-extension/test-evidence/lavr-playback-gate-dynamic-result.json"],
+    status: "TEST_ONLY"
+  },
+  {
+    id: "LEEWAY_APP::TEST::LAVR::AUDIBLE_OUTPUT_DYNAMIC",
+    name: "LAVR audible output dynamic harness",
+    classification: "TEST_HARNESS",
+    owner: "LAVR",
+    domain: "TEST",
+    pipeline: "LAVR",
+    file: "agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-harness.cjs",
+    runtimeRole: "Executes the generated webview HTML, hydrates governed voice controls, and proves LeeWay live voice audible-output routing, latency capture, multi-segment completion, and visible error surfacing.",
+    verification: ["runtime-truth-live-voice-audible-output-harness"],
+    evidence: ["agent-lee/vscode-extension/test-evidence/runtime-truth-live-voice-audible-output-result.json"],
     status: "TEST_ONLY"
   }
 ];

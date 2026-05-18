@@ -39,7 +39,7 @@ function createLeewayBrowserVoiceFallback(){
     dispatcher.emit("LAVR_SESSION_STARTED", { provider:"leeway-agent-voice-browser-fallback" });
     var micBtn=document.getElementById("micBtn");
     if(micBtn) micBtn.style.opacity = "1";
-    setAttachmentMeta("Realtime mic session is live.", true);
+    setAttachmentMeta("Browser speech is available. This is a fallback input path, not full LeeWay Voice authority.", true);
   };
 
   recognition.onresult = function(event){
@@ -156,7 +156,7 @@ function createLeewayBrowserVoiceFallback(){
     }
     dispatcher.emit("LAVR_SESSION_CLOSED", { reason:"stream_ended" });
     dispatcher.emit("LAVR_SESSION_DISCONNECTED", { reason:"stream_ended" });
-    setAttachmentMeta("Realtime mic session paused.", true);
+      setAttachmentMeta("Browser speech fallback is paused. Typed input remains available.", true);
   };
 
   recognition.onerror = function(event){
@@ -166,7 +166,7 @@ function createLeewayBrowserVoiceFallback(){
       state.status = "error";
       state.lastError = "Microphone permission denied.";
       window.agentLeeMicShouldRun = false;
-      setAttachmentMeta("Microphone permission is blocked in this WebView.", true);
+      setAttachmentMeta("Microphone permission is required before LeeWay Voice can listen.", true);
       dispatcher.emit("LAVR_ERROR", { message:state.lastError });
       return;
     }

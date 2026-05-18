@@ -28,6 +28,7 @@ No LLM output may become LeeWay action until it has passed through a LeeWay Agen
 - No generated artifact in production unless classified and verified.
 - No patch over duplicate code when removal or quarantine is the correct repair.
 - No action, rejection, quarantine, conversion, or agent induction without a LeeWay Tracer Pack.
+- No object without identity pulse, origin status, hash, lineage, verification path, and receipt.
 - No feature is complete until the identity graph gate and the application integrity gate pass.
 
 ## Permanent construction sequence
@@ -45,8 +46,9 @@ No LLM output may become LeeWay action until it has passed through a LeeWay Agen
 11. Remove or quarantine stale paths instead of patching around them.
 12. Run the construction law gate.
 13. Run the identity graph gate.
-14. Run the application integrity gate.
-15. Write evidence and receipt.
+14. Run the identity pulse gate.
+15. Run the application integrity gate.
+16. Write evidence and receipt.
 
 ## Required closure
 

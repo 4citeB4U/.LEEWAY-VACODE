@@ -1,0 +1,700 @@
+{
+  "gate": "LEEWAY_RUNTIME_TRUTH_LIVE_VOICE_ROUTE",
+  "generatedAt": "2026-05-18T04:43:30.561Z",
+  "passed": true,
+  "checks": [
+    {
+      "name": "active voice manifest loads",
+      "pass": true,
+      "details": {
+        "routeCount": 4
+      }
+    },
+    {
+      "name": "non-LeeWay engine is not default and not normal fallback",
+      "pass": true,
+      "details": {
+        "allowNonLeewayDefault": false
+      }
+    },
+    {
+      "name": "primary/compact/branded/text routes are registered",
+      "pass": true,
+      "details": {
+        "routeIds": [
+          "leeway.voice.primary.clone.live",
+          "leeway.voice.compact.clone.live",
+          "leeway.voice.branded.live",
+          "leeway.voice.text.emergency"
+        ]
+      }
+    },
+    {
+      "name": "primary clone route is selected when healthy",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "leeway": {
+            "LEEWAY_HEADER": "DO NOT REMOVE",
+            "REGION": "CORE",
+            "TAG": "CORE.AGENT_LEE.VOICE.LIVE_ROUTE_MANIFEST",
+            "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+          },
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.primary.clone.live",
+        "selectedRouteKind": "clone",
+        "selectedRouteHealthy": true,
+        "policyViolations": [],
+        "visibleStatus": "LeeWay live voice route active: leeway.voice.primary.clone.live",
+        "emergencyActive": false,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": true,
+            "selected": true,
+            "reason": "Selected Agent Lee live clone identity is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.compact.clone.live",
+            "kind": "compact-clone",
+            "priority": 1,
+            "healthy": true,
+            "selected": false,
+            "reason": "Compact LeeWay clone route is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": true,
+            "selected": false,
+            "reason": "Branded LeeWay live voice route is ready.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": false,
+            "reason": "LeeWay text-only emergency route is always available.",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "compact clone route is selected when primary is unhealthy",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "leeway": {
+            "LEEWAY_HEADER": "DO NOT REMOVE",
+            "REGION": "CORE",
+            "TAG": "CORE.AGENT_LEE.VOICE.LIVE_ROUTE_MANIFEST",
+            "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+          },
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.compact.clone.live",
+        "selectedRouteKind": "compact-clone",
+        "selectedRouteHealthy": true,
+        "policyViolations": [],
+        "visibleStatus": "LeeWay live voice route active: leeway.voice.compact.clone.live",
+        "emergencyActive": false,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": false,
+            "selected": false,
+            "reason": "Selected Agent Lee live clone identity is missing or unhealthy.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.compact.clone.live",
+            "kind": "compact-clone",
+            "priority": 1,
+            "healthy": true,
+            "selected": true,
+            "reason": "Compact LeeWay clone route is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": true,
+            "selected": false,
+            "reason": "Branded LeeWay live voice route is ready.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": false,
+            "reason": "LeeWay text-only emergency route is always available.",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "branded route is selected only after clone and compact clone are unavailable",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true,
+                "enabled": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true,
+                "enabled": false
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false,
+                "enabled": true
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true,
+                "enabled": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.branded.live",
+        "selectedRouteKind": "branded",
+        "selectedRouteHealthy": true,
+        "policyViolations": [],
+        "visibleStatus": "LeeWay live voice route active: leeway.voice.branded.live",
+        "emergencyActive": false,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": false,
+            "selected": false,
+            "reason": "Selected Agent Lee live clone identity is missing or unhealthy.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": true,
+            "selected": true,
+            "reason": "Branded LeeWay live voice route is ready.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": false,
+            "reason": "LeeWay text-only emergency route is always available.",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "text-only emergency activates when no live LeeWay-owned route is healthy",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "leeway": {
+            "LEEWAY_HEADER": "DO NOT REMOVE",
+            "REGION": "CORE",
+            "TAG": "CORE.AGENT_LEE.VOICE.LIVE_ROUTE_MANIFEST",
+            "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+          },
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.text.emergency",
+        "selectedRouteKind": "text-only",
+        "selectedRouteHealthy": false,
+        "policyViolations": [],
+        "visibleStatus": "LeeWay live voice routes are unavailable. Text-only emergency is active.",
+        "emergencyActive": true,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": false,
+            "selected": false,
+            "reason": "Selected Agent Lee live clone identity is missing or unhealthy.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.compact.clone.live",
+            "kind": "compact-clone",
+            "priority": 1,
+            "healthy": false,
+            "selected": false,
+            "reason": "Compact LeeWay clone route is unavailable.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": false,
+            "selected": false,
+            "reason": "Branded LeeWay live voice route is unavailable.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": true,
+            "reason": "LeeWay text-only emergency route is always available.",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "non-LeeWay default engine is rejected",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "leeway": {
+            "LEEWAY_HEADER": "DO NOT REMOVE",
+            "REGION": "CORE",
+            "TAG": "CORE.AGENT_LEE.VOICE.LIVE_ROUTE_MANIFEST",
+            "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+          },
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.text.emergency",
+        "selectedRouteKind": "text-only",
+        "selectedRouteHealthy": false,
+        "policyViolations": [
+          "LEEWAY_APP::VOICE::POLICY::NO_FOREIGN_DEFAULT"
+        ],
+        "visibleStatus": "LeeWay live voice rejected the current configuration (LEEWAY_APP::VOICE::POLICY::NO_FOREIGN_DEFAULT). Text-only emergency is active.",
+        "emergencyActive": true,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": true,
+            "selected": false,
+            "reason": "Selected Agent Lee live clone identity is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.compact.clone.live",
+            "kind": "compact-clone",
+            "priority": 1,
+            "healthy": true,
+            "selected": false,
+            "reason": "Compact LeeWay clone route is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": true,
+            "selected": false,
+            "reason": "Branded LeeWay live voice route is ready.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": true,
+            "reason": "Emergency selected due to policy violation: LEEWAY_APP::VOICE::POLICY::NO_FOREIGN_DEFAULT",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "external provider routes are rejected",
+      "pass": true,
+      "details": {
+        "manifest": {
+          "leeway": {
+            "LEEWAY_HEADER": "DO NOT REMOVE",
+            "REGION": "CORE",
+            "TAG": "CORE.AGENT_LEE.VOICE.LIVE_ROUTE_MANIFEST",
+            "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+          },
+          "voice": {
+            "mode": "live",
+            "ownership": "leeway-owned-only",
+            "fallbackPolicy": "leeway_live_identity_first",
+            "requireStreamingInput": true,
+            "requireStreamingOutput": true,
+            "allowExternalProviders": false,
+            "allowUsageBasedFallback": false,
+            "allowNonLeewayDefault": false,
+            "routes": [
+              {
+                "id": "leeway.voice.primary.clone.live",
+                "priority": 0,
+                "kind": "clone",
+                "engine": "primary",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.compact.clone.live",
+                "priority": 1,
+                "kind": "compact-clone",
+                "engine": "compact",
+                "streaming": true,
+                "identityRequired": true
+              },
+              {
+                "id": "leeway.voice.branded.live",
+                "priority": 2,
+                "kind": "branded",
+                "engine": "branded",
+                "streaming": true,
+                "identityRequired": false
+              },
+              {
+                "id": "leeway.voice.text.emergency",
+                "priority": 3,
+                "kind": "text-only",
+                "engine": "none",
+                "streaming": false,
+                "identityRequired": false,
+                "emergencyOnly": true
+              }
+            ]
+          }
+        },
+        "selectedRouteId": "leeway.voice.text.emergency",
+        "selectedRouteKind": "text-only",
+        "selectedRouteHealthy": false,
+        "policyViolations": [
+          "LEEWAY_APP::VOICE::POLICY::LEEWAY_OWNED_ONLY"
+        ],
+        "visibleStatus": "LeeWay live voice rejected the current configuration (LEEWAY_APP::VOICE::POLICY::LEEWAY_OWNED_ONLY). Text-only emergency is active.",
+        "emergencyActive": true,
+        "routes": [
+          {
+            "id": "leeway.voice.primary.clone.live",
+            "kind": "clone",
+            "priority": 0,
+            "healthy": true,
+            "selected": false,
+            "reason": "Selected Agent Lee live clone identity is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.compact.clone.live",
+            "kind": "compact-clone",
+            "priority": 1,
+            "healthy": true,
+            "selected": false,
+            "reason": "Compact LeeWay clone route is ready.",
+            "streaming": true,
+            "identityRequired": true
+          },
+          {
+            "id": "leeway.voice.branded.live",
+            "kind": "branded",
+            "priority": 2,
+            "healthy": true,
+            "selected": false,
+            "reason": "Branded LeeWay live voice route is ready.",
+            "streaming": true,
+            "identityRequired": false
+          },
+          {
+            "id": "leeway.voice.text.emergency",
+            "kind": "text-only",
+            "priority": 3,
+            "healthy": true,
+            "selected": true,
+            "reason": "Emergency selected due to policy violation: LEEWAY_APP::VOICE::POLICY::LEEWAY_OWNED_ONLY",
+            "streaming": false,
+            "identityRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "live voice path proves more than one segment can be emitted when text is long enough",
+      "pass": true,
+      "details": {
+        "routeId": "leeway.voice.primary.clone.live",
+        "segments": [
+          "Agent Lee is online and speaking in multiple segments.",
+          "The runtime should not collapse this into one lonely word."
+        ],
+        "supportsMultiSegment": true,
+        "reason": "LeeWay live route can emit multiple segments."
+      }
+    },
+    {
+      "name": "one-word speech failure is detected by stream lifecycle evidence",
+      "pass": true,
+      "details": {
+        "expectedWords": 7,
+        "emittedWords": 1,
+        "failed": true,
+        "reason": "Speech lifecycle collapsed a multi-word response into one word or less."
+      }
+    },
+    {
+      "name": "voice failure surfaces truthful non-speech diagnostics instead of fake success",
+      "pass": true,
+      "details": {
+        "routeId": "leeway.voice.text.emergency",
+        "segments": [],
+        "supportsMultiSegment": false,
+        "reason": "Text-only emergency does not produce live speech segments."
+      }
+    }
+  ]
+}

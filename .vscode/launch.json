@@ -1,0 +1,25 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "CORE",
+    "TAG": "CORE.RUNTIME.EXTENSION.LAUNCH",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Agent Lee Extension Dev Host",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/agent-lee/vscode-extension",
+        "${workspaceFolder}"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/agent-lee/vscode-extension/out/**/*.js"
+      ],
+      "preLaunchTask": "agent-lee: compile extension"
+    }
+  ]
+}

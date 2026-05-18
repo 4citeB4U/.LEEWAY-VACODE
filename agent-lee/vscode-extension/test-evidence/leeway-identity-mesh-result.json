@@ -1,14 +1,14 @@
 ﻿{
     "gate":  "LEEWAY_IDENTITY_MESH_GATE",
-    "generatedAt":  "2026-05-14T23:08:08.9610285-05:00",
+    "generatedAt":  "2026-05-17T23:43:53.3150173-05:00",
     "workspaceRoot":  "C:\\Users\\Leona\\.leeway-vscode",
     "extensionDir":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension",
-    "version":  "2026-05-14.tracer-pack-pass-1",
+    "version":  "2026-05-16.identity-pulse-pass-1",
     "passed":  true,
     "summary":  {
                     "totalChecks":  10,
                     "failedChecks":  0,
-                    "registeredRecords":  102,
+                    "registeredRecords":  107,
                     "sovereignLayers":  8
                 },
     "checks":  [
@@ -92,7 +92,12 @@
                                   "AUTHORITY",
                                   "QUARANTINE",
                                   "TRACE",
-                                  "CLASS"
+                                  "CLASS",
+                                  "PULSE",
+                                  "OBJECT",
+                                  "ORIGIN",
+                                  "WATERMARK",
+                                  "INDUCTION"
                               ],
                  "sovereignLayers":  [
                                          {
@@ -4251,6 +4256,239 @@
                                      "pipeline":  "GRANTED_OR_DENIED",
                                      "node":  "ROOT",
                                      "classification":  "TRACEABILITY_RECORD",
+                                     "status":  "ACTIVE"
+                                 },
+                                 {
+                                     "actorId":  "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE",
+                                     "authorityId":  "LEEWAY_AUTHORITY::HUMAN_AXIOM::IMMUTABLE",
+                                     "intentId":  "LEEWAY_INTENT::GOVERNANCE::SOVEREIGN_TRACEABILITY::PASS1",
+                                     "promptId":  "LEEWAY_PROMPT::USER::TRACER_PACK_PASS::20260514",
+                                     "transactionId":  "LEEWAY_TX::GOVERNANCE::SOVEREIGN_IDENTITY_MESH::20260514T220000::PASS1",
+                                     "evidenceId":  "LEEWAY_EVIDENCE::GOVERNANCE::IDENTITY_MESH_REGISTRY::PASS1",
+                                     "receiptId":  "LEEWAY_RECEIPT::GOVERNANCE::TRACER_PACK_PASS::20260514T220000",
+                                     "inputs":  [
+
+                                                ],
+                                     "outputs":  [
+                                                     "agent-lee/governance/identity/leeway-identity-pulse.json"
+                                                 ],
+                                     "allowedActions":  [
+                                                            "identify",
+                                                            "map",
+                                                            "verify",
+                                                            "attest",
+                                                            "quarantine",
+                                                            "report"
+                                                        ],
+                                     "forbiddenActions":  [
+                                                              "direct_llm_file_write",
+                                                              "untraced_action",
+                                                              "unapproved_destructive_action"
+                                                          ],
+                                     "verification":  [
+                                                          "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                      ],
+                                     "createdBy":  "human",
+                                     "verifiedBy":  [
+                                                        "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                    ],
+                                     "createdAt":  "2026-05-14T22:00:00.000Z",
+                                     "lastAttestedAt":  "2026-05-14T22:00:00.000Z",
+                                     "id":  "LEEWAY_PULSE::APPLICATION::AGENT_LEE",
+                                     "idType":  "TRACE",
+                                     "name":  "LeeWay identity pulse application root",
+                                     "owner":  "LEEWAY",
+                                     "domain":  "GOVERNANCE",
+                                     "pipeline":  "IDENTITY_PULSE",
+                                     "node":  "APPLICATION_ROOT",
+                                     "classification":  "PULSE_RECORD",
+                                     "status":  "ACTIVE"
+                                 },
+                                 {
+                                     "actorId":  "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE",
+                                     "authorityId":  "LEEWAY_AUTHORITY::HUMAN_AXIOM::IMMUTABLE",
+                                     "intentId":  "LEEWAY_INTENT::GOVERNANCE::SOVEREIGN_TRACEABILITY::PASS1",
+                                     "promptId":  "LEEWAY_PROMPT::USER::TRACER_PACK_PASS::20260514",
+                                     "transactionId":  "LEEWAY_TX::GOVERNANCE::SOVEREIGN_IDENTITY_MESH::20260514T220000::PASS1",
+                                     "evidenceId":  "LEEWAY_EVIDENCE::GOVERNANCE::IDENTITY_MESH_REGISTRY::PASS1",
+                                     "receiptId":  "LEEWAY_RECEIPT::GOVERNANCE::TRACER_PACK_PASS::20260514T220000",
+                                     "inputs":  [
+
+                                                ],
+                                     "outputs":  [
+                                                     "agent-lee/governance/identity/leeway-identity-pulse.json"
+                                                 ],
+                                     "allowedActions":  [
+                                                            "identify",
+                                                            "map",
+                                                            "verify",
+                                                            "attest",
+                                                            "quarantine",
+                                                            "report"
+                                                        ],
+                                     "forbiddenActions":  [
+                                                              "direct_llm_file_write",
+                                                              "untraced_action",
+                                                              "unapproved_destructive_action"
+                                                          ],
+                                     "verification":  [
+                                                          "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                      ],
+                                     "createdBy":  "human",
+                                     "verifiedBy":  [
+                                                        "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                    ],
+                                     "createdAt":  "2026-05-14T22:00:00.000Z",
+                                     "lastAttestedAt":  "2026-05-14T22:00:00.000Z",
+                                     "id":  "LEEWAY_OBJECT::FILE::IDENTITY_PULSE_REGISTRY",
+                                     "idType":  "FILE",
+                                     "name":  "LeeWay identity pulse registry file",
+                                     "owner":  "LEEWAY",
+                                     "domain":  "GOVERNANCE",
+                                     "pipeline":  "IDENTITY_PULSE",
+                                     "node":  "REGISTRY_FILE",
+                                     "classification":  "PULSE_OBJECT",
+                                     "status":  "ACTIVE"
+                                 },
+                                 {
+                                     "actorId":  "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE",
+                                     "authorityId":  "LEEWAY_AUTHORITY::HUMAN_AXIOM::IMMUTABLE",
+                                     "intentId":  "LEEWAY_INTENT::GOVERNANCE::SOVEREIGN_TRACEABILITY::PASS1",
+                                     "promptId":  "LEEWAY_PROMPT::USER::TRACER_PACK_PASS::20260514",
+                                     "transactionId":  "LEEWAY_TX::GOVERNANCE::SOVEREIGN_IDENTITY_MESH::20260514T220000::PASS1",
+                                     "evidenceId":  "LEEWAY_EVIDENCE::GOVERNANCE::IDENTITY_MESH_REGISTRY::PASS1",
+                                     "receiptId":  "LEEWAY_RECEIPT::GOVERNANCE::TRACER_PACK_PASS::20260514T220000",
+                                     "inputs":  [
+
+                                                ],
+                                     "outputs":  [
+
+                                                 ],
+                                     "allowedActions":  [
+                                                            "identify",
+                                                            "map",
+                                                            "verify",
+                                                            "attest",
+                                                            "quarantine",
+                                                            "report"
+                                                        ],
+                                     "forbiddenActions":  [
+                                                              "direct_llm_file_write",
+                                                              "untraced_action",
+                                                              "unapproved_destructive_action"
+                                                          ],
+                                     "verification":  [
+                                                          "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                      ],
+                                     "createdBy":  "human",
+                                     "verifiedBy":  [
+                                                        "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                    ],
+                                     "createdAt":  "2026-05-14T22:00:00.000Z",
+                                     "lastAttestedAt":  "2026-05-14T22:00:00.000Z",
+                                     "id":  "LEEWAY_ORIGIN::LEEWAY_BORN::PASS1",
+                                     "idType":  "CLASS",
+                                     "name":  "LeeWay born origin class",
+                                     "owner":  "LEEWAY",
+                                     "domain":  "GOVERNANCE",
+                                     "pipeline":  "IDENTITY_PULSE",
+                                     "node":  "ORIGIN_LEEWAY_BORN",
+                                     "classification":  "ORIGIN_STATUS",
+                                     "status":  "ACTIVE"
+                                 },
+                                 {
+                                     "actorId":  "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE",
+                                     "authorityId":  "LEEWAY_AUTHORITY::HUMAN_AXIOM::IMMUTABLE",
+                                     "intentId":  "LEEWAY_INTENT::GOVERNANCE::SOVEREIGN_TRACEABILITY::PASS1",
+                                     "promptId":  "LEEWAY_PROMPT::USER::TRACER_PACK_PASS::20260514",
+                                     "transactionId":  "LEEWAY_TX::GOVERNANCE::SOVEREIGN_IDENTITY_MESH::20260514T220000::PASS1",
+                                     "evidenceId":  "LEEWAY_EVIDENCE::GOVERNANCE::IDENTITY_MESH_REGISTRY::PASS1",
+                                     "receiptId":  "LEEWAY_RECEIPT::GOVERNANCE::TRACER_PACK_PASS::20260514T220000",
+                                     "inputs":  [
+
+                                                ],
+                                     "outputs":  [
+
+                                                 ],
+                                     "allowedActions":  [
+                                                            "identify",
+                                                            "map",
+                                                            "verify",
+                                                            "attest",
+                                                            "quarantine",
+                                                            "report"
+                                                        ],
+                                     "forbiddenActions":  [
+                                                              "direct_llm_file_write",
+                                                              "untraced_action",
+                                                              "unapproved_destructive_action"
+                                                          ],
+                                     "verification":  [
+                                                          "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                      ],
+                                     "createdBy":  "human",
+                                     "verifiedBy":  [
+                                                        "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                    ],
+                                     "createdAt":  "2026-05-14T22:00:00.000Z",
+                                     "lastAttestedAt":  "2026-05-14T22:00:00.000Z",
+                                     "id":  "LEEWAY_WATERMARK::LEEWAY_BORN::SOURCE_FILE",
+                                     "idType":  "CLASS",
+                                     "name":  "LeeWay born watermark source file rule",
+                                     "owner":  "LEEWAY",
+                                     "domain":  "GOVERNANCE",
+                                     "pipeline":  "IDENTITY_PULSE",
+                                     "node":  "WATERMARK_SOURCE_FILE",
+                                     "classification":  "WATERMARK_RULE",
+                                     "status":  "ACTIVE"
+                                 },
+                                 {
+                                     "actorId":  "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE",
+                                     "authorityId":  "LEEWAY_AUTHORITY::HUMAN_AXIOM::IMMUTABLE",
+                                     "intentId":  "LEEWAY_INTENT::GOVERNANCE::SOVEREIGN_TRACEABILITY::PASS1",
+                                     "promptId":  "LEEWAY_PROMPT::USER::TRACER_PACK_PASS::20260514",
+                                     "transactionId":  "LEEWAY_TX::GOVERNANCE::SOVEREIGN_IDENTITY_MESH::20260514T220000::PASS1",
+                                     "evidenceId":  "LEEWAY_EVIDENCE::GOVERNANCE::IDENTITY_MESH_REGISTRY::PASS1",
+                                     "receiptId":  "LEEWAY_RECEIPT::GOVERNANCE::TRACER_PACK_PASS::20260514T220000",
+                                     "inputs":  [
+
+                                                ],
+                                     "outputs":  [
+                                                     "temporary_id",
+                                                     "hash",
+                                                     "verification",
+                                                     "receipt"
+                                                 ],
+                                     "allowedActions":  [
+                                                            "identify",
+                                                            "map",
+                                                            "verify",
+                                                            "attest",
+                                                            "quarantine",
+                                                            "report"
+                                                        ],
+                                     "forbiddenActions":  [
+                                                              "direct_llm_file_write",
+                                                              "untraced_action",
+                                                              "unapproved_destructive_action"
+                                                          ],
+                                     "verification":  [
+                                                          "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                      ],
+                                     "createdBy":  "human",
+                                     "verifiedBy":  [
+                                                        "LEEWAY_GATE::IDENTITY_MESH::TRACEABILITY_COMPLETE"
+                                                    ],
+                                     "createdAt":  "2026-05-14T22:00:00.000Z",
+                                     "lastAttestedAt":  "2026-05-14T22:00:00.000Z",
+                                     "id":  "LEEWAY_INDUCTION::FOREIGN_FILE::PASS1",
+                                     "idType":  "TRACE",
+                                     "name":  "Foreign file induction pass 1",
+                                     "owner":  "LEEWAY",
+                                     "domain":  "GOVERNANCE",
+                                     "pipeline":  "IDENTITY_PULSE",
+                                     "node":  "FOREIGN_FILE_INDUCTION",
+                                     "classification":  "INDUCTION_RULE",
                                      "status":  "ACTIVE"
                                  },
                                  {

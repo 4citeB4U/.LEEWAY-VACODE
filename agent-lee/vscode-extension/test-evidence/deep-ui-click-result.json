@@ -1,0 +1,164 @@
+{
+  "installedRoot": "C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3",
+  "sourceRoot": "C:/Users/Leona/.leeway-vscode/agent-lee/vscode-extension",
+  "checks": [
+    {
+      "name": "boot posts agentLeeUiReady",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings top button opens settings",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "history top button opens history",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "new chat posts newConversation",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "paperclip posts pickAttachments",
+      "ok": false,
+      "error": ""
+    },
+    {
+      "name": "mic button handles unavailable speech recognition visibly",
+      "ok": false,
+      "error": ""
+    },
+    {
+      "name": "mute button posts muteVoice",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "work mode select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "approval select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "primary model select posts setState and refreshRuntime",
+      "ok": false,
+      "error": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#primaryModel')\u001b[22m\n\u001b[2m    - locator resolved to <select id=\"primaryModel\" class=\"model-compact\" onchange=\"setPrimaryModel(this.value)\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - did not find some options\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    },
+    {
+      "name": "configuration settings nav switches section",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'configuration\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"switchSettingsSection('configuration')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "settings work mode select posts setState",
+      "ok": false,
+      "error": "page.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#workModeSettings')\u001b[22m\n\u001b[2m    - locator resolved to <select id=\"workModeSettings\" onchange=\"setWorkMode(this.value)\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    58 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - element is not visible\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n"
+    },
+    {
+      "name": "settings auto update toggle posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings Update Now posts updateAgentLeeNow",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"updateAgentLeeNow()\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"ghost-btn\" onclick=\"updateAgentLeeNow()\">Update Now</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "general settings nav switches section",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'general\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" class=\"active\" onclick=\"switchSettingsSection('general')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "require ctrl enter toggle posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "followup queue button posts setState",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"setFollowupBehavior(\\'queue\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"setFollowupBehavior('queue')\">Queue</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "code review detached button posts setState",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"setCodeReviewBehavior(\\'detached\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"setCodeReviewBehavior('detached')\">Detached</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "voice settings nav switches section",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'voice-of-agent-lee\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"switchSettingsSection('voice-of-agent-lee')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "voice default play posts voiceAlTestDefault",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"voiceAlTestDefault()\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"ghost-btn\" onclick=\"voiceAlTestDefault()\">▶ Play Default</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "voice catalog cloned voice play posts voiceAlTestVoice",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"voiceAlTestVoice(\\'developer-reference-voice\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button class=\"ghost-btn\" onclick=\"voiceAlTestVoice('developer-reference-voice')\">▶ Play</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "mcp settings nav renders MCP rows",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'mcp\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"switchSettingsSection('mcp')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "agents settings nav renders agent rows",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'agents\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"switchSettingsSection('agents')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "workers settings nav renders worker rows",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('button[onclick=\"switchSettingsSection(\\'workers\\')\"]')\u001b[22m\n\u001b[2m    - locator resolved to <button type=\"button\" onclick=\"switchSettingsSection('workers')\">…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "settings close button closes modal",
+      "ok": false,
+      "error": "page.click: Element is not visible\nCall log:\n\u001b[2m  - waiting for locator('.settings-head .ghost-btn')\u001b[22m\n\u001b[2m    - locator resolved to 2 elements. Proceeding with the first one: <button class=\"ghost-btn\" onclick=\"toggleSettings(false)\">Close</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n"
+    },
+    {
+      "name": "send posts sendMessage and renders user text",
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "counts": {
+    "totalButtons": 274,
+    "inlineOnclickButtons": 257,
+    "selects": 14,
+    "checkboxes": 49,
+    "postedMessageCount": 8,
+    "postedCommands": [
+      "agentLeeUiReady",
+      "muteVoice",
+      "newConversation",
+      "sendMessage",
+      "setState"
+    ]
+  },
+  "metrics": {
+    "topStandardsBtn": {
+      "width": 44,
+      "height": 44
+    },
+    "topRightBrandingBtn": {
+      "width": 44,
+      "height": 44
+    }
+  },
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-restored-2026-05-07"
+  ]
+}

@@ -23,6 +23,8 @@ No LeeWay action is valid unless the actor, prompt, intent, transaction, node, a
 
 No LLM output may become LeeWay action until it has passed through a LeeWay Agent transaction with actor ID, prompt ID, intent ID, authority check, graph mapping, gate verification, evidence, and receipt.
 
+No object may become active unless it has LeeWay identity pulse coverage with origin status, timestamps, hash, actor lineage, transaction lineage, verification evidence, and receipt.
+
 ## Bound surfaces
 
 - Codex
@@ -43,7 +45,9 @@ No code output is complete unless:
 - every generated artifact is classified
 - every cleanup plan is category-gated
 - every action or attempted action has a LeeWay Tracer Pack when acceptance, rejection, quarantine, conversion, or induction occurs
+- every active object has identity pulse coverage
 - the identity graph gate passes
+- the identity pulse gate passes
 - the identity mesh gate passes
 - the tracer pack gate passes
 - the construction law gate passes
@@ -55,4 +59,5 @@ No code output is complete unless:
 - `.codex/instructions.md`
 - `agent-lee/vscode-extension/src/leeway-application/leewayApplicationIdentityGraph.ts`
 - `agent-lee/vscode-extension/scripts/Invoke-LeeWayApplicationIdentityGraphGate.ps1`
+- `agent-lee/vscode-extension/scripts/Invoke-LeeWayIdentityPulseGate.ps1`
 - `agent-lee/vscode-extension/scripts/Invoke-LeeWayApplicationIntegrityGate.ps1`

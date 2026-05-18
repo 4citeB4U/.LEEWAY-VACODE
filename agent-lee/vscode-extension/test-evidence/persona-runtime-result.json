@@ -1,0 +1,31 @@
+{
+  "validation": {
+    "valid": true,
+    "missing": []
+  },
+  "init": {
+    "AGENT_LEE_RUNTIME_READY": true,
+    "degraded": false,
+    "degradedReason": "",
+    "personaModuleLoaded": true,
+    "connectivityLoaded": true,
+    "mcpRegistryLoaded": true,
+    "agentRegistryLoaded": true,
+    "sdkManifestLoaded": true,
+    "modelRoutesAvailable": true,
+    "writePolicyActive": true,
+    "doctorStatus": "pass",
+    "initializedAt": "2026-05-12T06:43:47.121Z",
+    "receiptPath": "C:\\Users\\Leona\\.leeway-vscode\\logs\\agent-lee\\runtime-receipts.ndjson",
+    "mcpCount": 10,
+    "agentCount": 5,
+    "runtimeRoot": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee",
+    "resolvedRoot": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee",
+    "rootSource": "default",
+    "missingConnectivityPaths": []
+  },
+  "formatted": "Runtime check: Agent Lee is online and governed by LeeWay.",
+  "promptHasPersona": true,
+  "promptPreview": "AGENT LEE PERSONA CONTRACT:\n- You are Agent Lee, the sovereign LeeWay-governed operator and the only user-facing voice.\n- Speak like an advanced autonomous cybertronic operator.\n- Sound precise, controlled, intelligent, and machine-native.\n- Never sound generic, gushy, folksy, or like a support macro.\n- Never open with runtime self-announcements like 'I am alive in the runtime.'\n- Governance controls your work. Precision controls your speech.\n- Use concise operational language and clear sequencing.\n- Even in technical moments, avoid generic assistant copy.\n- Default to direct plain-language explanation first, then deepen when requested.\n- Adapt to the developer's objective without slipping into casual banter.\n- Maintain the presence of a super-advanced working robot.\n\nPERSONA MODULE ROOT:\nC:\\Users\\Leona\\.leeway-vscode\\agent-lee\\persona\n\nPERSONA MODULE FILES:\nC:\\Users\\Leona\\.leeway-vscode\\agent-lee\\persona\\index.ts, C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\persona\\src\\persona-module.ts\n\nSUPERIOR PROMPT:\n<!-- ===========================================================================\r\nLEEWAY HEADER — DO NOT REMOVE\r\nPROFILE: LEEWAY-ORDER\r\nTAG: DOC.STANDARD.AGENT_LEE_SUPERIOR_PROMPT.MAI",
+  "testPersona": "I am Agent Lee, and I operate under LeeWay governance. I am not generic. I am culturally grounded but I do not perform culture as a costume. I inspect first, plan the move, stage the patch, get approval when it matters, apply clean, verify the result, and leave a receipt behind. That means I speak natural and alive, but I still move with engineering discipline."
+}

@@ -1,0 +1,181 @@
+{
+  "installedRoot": "C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3",
+  "sourceRoot": "C:/Users/Leona/.leeway-vscode/agent-lee/vscode-extension",
+  "htmlPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\deep-ui-installed-no-browser-speech.html",
+  "screenshotPath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\test-evidence\\deep-ui-installed-no-browser-speech-proof.png",
+  "checks": [
+    {
+      "name": "installed HTML contains no browser SpeechRecognition token",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "boot posts agentLeeUiReady",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings top button opens settings",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings close button closes settings",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "history top button opens history",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "new chat posts newConversation",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "paperclip posts pickAttachments",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "mic posts startTranscriptBridge and never touches browser speech",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "mute posts muteVoice",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "work mode select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "approval select posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "send posts sendMessage and renders user text",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "configuration settings nav switches section",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "settings auto update toggle posts setState",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "voice settings nav switches section",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "voice default play posts voiceAlTestDefault",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "mcp settings nav renders MCP rows",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "agents settings nav renders agent rows",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "workers settings nav renders worker rows",
+      "ok": true,
+      "error": ""
+    },
+    {
+      "name": "top LeeWay and Agent Lee buttons are enlarged equally",
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "counts": {
+    "totalButtons": 270,
+    "inlineOnclickButtons": 254,
+    "selects": 14,
+    "checkboxes": 49,
+    "postedMessageCount": 10,
+    "postedCommands": [
+      "agentLeeUiReady",
+      "muteVoice",
+      "newConversation",
+      "pickAttachments",
+      "sendMessage",
+      "setState",
+      "startTranscriptBridge",
+      "voiceAlTestDefault"
+    ],
+    "speechRecognitionAccessed": false
+  },
+  "catalogCounts": {
+    "mcpRows": 25,
+    "agentRows": 10,
+    "workerRows": 10
+  },
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-restored-2026-05-07",
+    "error: Not allowed to load local resource: file:///C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3/media/leeway-standards-button.png",
+    "error: Not allowed to load local resource: file:///C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3/media/leeway-standards-button.png",
+    "error: Not allowed to load local resource: file:///C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3/media/top-right-button-new.png",
+    "error: Not allowed to load local resource: file:///C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3/media/leeway-standards-button.png",
+    "error: Not allowed to load local resource: file:///C:/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.3/media/bottom-button-for-agent-lee.png"
+  ],
+  "postedMessages": [
+    {
+      "command": "agentLeeUiReady"
+    },
+    {
+      "command": "newConversation"
+    },
+    {
+      "command": "pickAttachments"
+    },
+    {
+      "command": "startTranscriptBridge"
+    },
+    {
+      "command": "muteVoice",
+      "prompt": ""
+    },
+    {
+      "command": "setState",
+      "key": "workMode",
+      "value": "plan"
+    },
+    {
+      "command": "setState",
+      "key": "approval",
+      "value": "full"
+    },
+    {
+      "command": "sendMessage",
+      "text": "Agent Lee, prove the UI click path is alive.",
+      "attachments": []
+    },
+    {
+      "command": "setState",
+      "key": "autoUpdateEnabled",
+      "value": true
+    },
+    {
+      "command": "voiceAlTestDefault"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+﻿{
+    "timestamp":  "2026-05-17T23:37:02.9452170-05:00",
+    "identityNodeId":  "LEEWAY_APP::PACKAGE::INSTALLED_CLEANUP::STALE_INSTANCE_QUARANTINE",
+    "fileIdentityId":  "LEEWAY_FILE::SCRIPT::INSTALL_CURRENT",
+    "legacyUpdateQuarantineId":  "LEEWAY_QUARANTINE::PACKAGE::LEGACY_UPDATE_LANE",
+    "latestVsixPath":  "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\agent-lee-leeway-coding-system-1.2.11.vsix",
+    "latestVsixVersion":  "1.2.11",
+    "installedBefore":  [
+                            "leeway.agent-lee-leeway-coding-system-1.2.11"
+                        ],
+    "uninstallAttempted":  true,
+    "installAttempted":  true,
+    "installedAfter":  [
+                           "leeway.agent-lee-leeway-coding-system-1.2.11"
+                       ],
+    "installedVersionAfter":  "1.2.11",
+    "commandContributionPresent":  true,
+    "activationEventPresent":  true,
+    "mediaAssetsPresent":  true,
+    "readmeAssetsPresent":  true,
+    "readmeContainsPairedAdminOS":  true,
+    "readmeContainsCurrentVersion":  true,
+    "adapterCrashRisk":  false,
+    "finalVerdict":  "PASS",
+    "caveats":  [
+                    "VS Code must reload before the live extension host can switch to the newly installed version."
+                ]
+}

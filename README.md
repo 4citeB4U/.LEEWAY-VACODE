@@ -9,16 +9,45 @@ DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
 # Agent Lee LeeWay Coding System
 
 <p align="center">
-  <img src="./agent-lee/vscode-extension/media/LeeWayStandardslogo.png" alt="LeeWay Standards logo" width="170" />
+  <img src="./agent-lee/vscode-extension/media/leeway-standards-logo.png" alt="LeeWay Standards logo" width="170" />
 </p>
 
-<p align="center"><strong>Governed AI engineering. Sovereign runtime control. Agent VM orchestration. Proof before trust.</strong></p>
+<p align="center"><strong>Governed AI engineering inside VS Code with runtime truth, controlled installs, LVIS visual workflows, and receipts on every meaningful lane.</strong></p>
 
 <p align="center">
   <img src="./agent-lee/vscode-extension/media/readme-header.png" alt="Agent Lee LeeWay autonomous engineering system in VS Code" width="100%" />
 </p>
 
-From this point forward, this is the authoritative Leeway VS Code sovereign stack and governance structure for the LVIS ecosystem and related Agent Lee systems.
+This repository is the authoritative workspace for the Agent Lee VS Code application, its governed runtime, its LeeWay laws and receipts, and the LVIS visual-intelligence subsystem.
+
+The current packaged and installed extension version in this workspace is `1.2.11`. Source, VSIX, installed files, and the active live extension host are now aligned on that version. The remaining closure work is in live visual proof, README live proof, and evidence-consistency cleanup, not in install/runtime split-brain repair.
+
+## What This Repository Contains
+
+| Area | Purpose |
+| :--- | :--- |
+| `agent-lee/vscode-extension` | The shipped VS Code extension, packaging flow, runtime truth gates, and UI surfaces. |
+| `agent-lee/governance` | LeeWay laws, identity coverage, integrity rules, and governing models. |
+| `agent-lee/voice` | LeeWay live voice runtime, voice bridge, cloned voice assets, and doctrine. |
+| `agent-lee/receipts` | Human-readable receipts for runtime truth, governance passes, repairs, and incidents. |
+| `agent-lee/vscode-extension/test-evidence` | Machine-readable evidence for compile, install, runtime, visual, README, voice, and closure gates. |
+| `agent-lee/vscode-extension/src/visual-intelligence` | LVIS worker routing, panels, schemas, quality gates, and governed asset workflows. |
+
+## Current Platform Elevations
+
+| Elevation | Current State |
+| :--- | :--- |
+| Runtime truth | Source, package, installed runtime, and live host are aligned at `1.2.11`. |
+| Update-channel truth | Local VSIX installs are truthfully classified as `UPDATE_CHANNEL_MANUAL_LOCAL_VSIX`. |
+| Install governance | Same-version stale installs are quarantined instead of trusted blindly. |
+| Live-host attestation | Active host self-attestation now resolves to the current installed build hash. |
+| Identity graph | Runtime, UI, bridge, and command ownership coverage passes. |
+| Asset registry | Activity Bar icon, chat avatar, README assets, and branded buttons are registry-backed. |
+| Right-side surface routing | Agent Lee can prefer a right-side surface when sidebar reveal is not the right UX path. |
+| Runtime diagnosis | Runtime Status, Diagnose Runtime, Show Installed Version, and Show Update Channel are first-class commands. |
+| Voice governance | LeeWay live voice routing, transcript bridge, and status separation are governed explicitly. |
+| LVIS | A governed visual-intelligence subsystem is present for vector, voxel, scene, depth, repair, export, and integration workflows. |
+| Receipt-first verification | Compile, install, runtime, voice, visual, README, and closure lanes all emit evidence artifacts. |
 
 ## Workflow Execution
 
@@ -36,7 +65,40 @@ Agent Lee operates via a strict governance and execution workflow:
 
 ---
 
-## Canonical Leeway VS Code Runtime Stack
+## Extension Surfaces
+
+| Surface | Purpose |
+| :--- | :--- |
+| Activity Bar view | Opens the governed Agent Lee sidebar webview. |
+| Status Bar launcher | Opens the preferred Agent Lee surface and exposes runtime health. |
+| Sidebar chat | Hosts the main Agent Lee session, controls, history, and voice toggles. |
+| Right-side surface | Preferred fallback when a true right-side sidebar reveal is not available. |
+| Runtime diagnostics | Shows installed version, update channel, runtime health, and attestation status. |
+| README surface | Opens the packaged extension README from the installed runtime. |
+| LVIS panel | Opens the governed visual-intelligence panel and system status surface. |
+
+## Key Commands
+
+| Command | Purpose |
+| :--- | :--- |
+| `Agent Lee: Open Chat` | Opens Agent Lee in a panel. |
+| `Agent Lee: Open LeeWay Control Panel` | Opens the governed main control surface. |
+| `Agent Lee: Open Sidebar` | Focuses the Activity Bar sidebar view. |
+| `Agent Lee: Open Right Surface` | Opens the preferred right-side Agent Lee surface. |
+| `Agent Lee: Recover UI Surface` | Restores Agent Lee UI surfaces after stale or hidden state. |
+| `Agent Lee: Runtime Status` | Shows current runtime readiness and proof state. |
+| `Agent Lee: Show Installed Version` | Reports the installed extension version. |
+| `Agent Lee: Show Update Channel` | Reports whether the runtime came from dev host, local VSIX, or a published lane. |
+| `Agent Lee: Install Current Build` | Installs the current managed local VSIX. |
+| `Agent Lee: Diagnose Runtime` | Writes fresh runtime-truth evidence and surfaces mismatches. |
+| `Agent Lee: Open README` | Opens the packaged README surface. |
+| `Agent Lee: Open LVIS Panel` | Opens the LVIS visual-intelligence panel. |
+| `Agent Lee: LVIS System Status` | Shows LVIS worker and route status. |
+| `Agent Lee: New Chat` | Starts a fresh conversation. |
+| `Agent Lee: Stop Voice` | Stops active voice playback. |
+| `Agent Lee: Speak Status` | Speaks the current voice/runtime status lane. |
+
+## Canonical LeeWay VS Code Runtime Stack
 
 ### LLMs
 | Model | Role |
@@ -53,6 +115,25 @@ Agent Lee operates via a strict governance and execution workflow:
 | `echo` | Memory, diagnostics, receipts |
 
 ---
+
+## Runtime Truth And Update Model
+
+Agent Lee treats runtime proof as part of the application, not as an afterthought.
+
+| Lane | What It Proves |
+| :--- | :--- |
+| Build truth | `npm run compile` and `build/runtime-build-info.json` match the source tree. |
+| Package truth | The current VSIX was built from current source and carries the right assets. |
+| Installed truth | The installed extension files match the current build hash. |
+| Live-host truth | The active VS Code extension host self-attests the same build hash as source/install. |
+| Incident closure | Runtime, evidence consistency, identity graph, live visual, README, voice, and update truth are checked together. |
+
+For local side-loaded installs, VS Code marketplace auto-update is not available. The governed update path is:
+
+1. Build and package the current VSIX.
+2. Run `Agent Lee: Install Current Build` or `Invoke-LeeWayExtensionInstallCurrent.ps1`.
+3. Reload VS Code and run `Agent Lee: Diagnose Runtime`.
+4. Confirm active runtime attestation is current.
 
 ## Canonical Agent Lineup
 
@@ -150,6 +231,12 @@ With:
 
 ---
 
+## Voice And Runtime Governance
+
+LeeWay Voice is a governed owner-facing control path, not a raw transcript dump. Runtime health, bridge heartbeat, and degraded-state messages are separated from normal chat so status noise cannot masquerade as conversation.
+
+The live voice lane currently proves route policy and transcript bridge health. Human-audible proof remains a distinct lane and must be marked `PARTIAL` until it is actually heard and accepted in a live VS Code session.
+
 ## Canonical Governance Rules
 
 **Leeway Standards:**
@@ -163,6 +250,7 @@ With:
 - repair loops
 - quality gates
 - no blind edits
+- governed proposal-first public projection, owner education, runtime authority, and traceable identity
 
 ---
 
@@ -196,6 +284,29 @@ With:
 
 ---
 
+## Verification Snapshot
+
+Current verified state in this workspace:
+
+| Gate | Status |
+| :--- | :--- |
+| Source truth | `PASS` |
+| Package truth | `PASS` |
+| Installed truth | `PASS` |
+| Live host truth | `PASS` |
+| Identity graph | `PASS` |
+| Asset registry | `PASS` |
+| Update channel truth | `PASS` |
+| Simple prompt fast lane | `PASS` |
+| Voice route policy | `PASS` |
+| Transcript bridge | `PASS` |
+| Live visual validation | `FAIL` |
+| README live proof | `FAIL` |
+| Human-audible voice | `PARTIAL` |
+| Incident closure | `FAIL` |
+
+This is intentional truth-reporting. The install/runtime cleanup is complete; the remaining closure work is visual proof, README live render proof, and evidence-consistency cleanup.
+
 ## Control Surfaces
 
 The UI is structured around governed panels inside VS Code. The correct buttons provide access to these runtime modes:
@@ -209,21 +320,26 @@ The UI is structured around governed panels inside VS Code. The correct buttons 
    <img src="./agent-lee/vscode-extension/media/bottom-button-for-agent-lee.png" alt="Bottom button reference" width="48%" />
 </p>
 
-## Commands
+## Local Development And Packaging
 
-| Command | Purpose |
-| :--- | :--- |
-| `Agent Lee: Open Chat` | Opens Agent Lee in a panel |
-| `Agent Lee: Open Sidebar` | Focuses the sidebar view |
-| `Agent Lee: Runtime Status` | Shows runtime readiness and proof state |
-| `Agent Lee: Scan Workspace` | Runs LeeWay scanning over the workspace |
-| `Agent Lee: Verify Workspace` | Performs governed verification checks |
-| `Agent Lee: Ask Local Model` | Routes a direct prompt through the local model path |
-| `Agent Lee: Engineer Task` | Starts a governed engineering flow |
-| `Agent Lee: Stop Voice` | Stops active speech playback |
-| `Agent Lee: Open README` | Opens the packaged documentation surface |
+From the repository root:
 
-## Author
+```powershell
+npm install
+```
+
+From `agent-lee/vscode-extension`:
+
+```powershell
+npm install
+npm run compile
+powershell -File .\scripts\Invoke-LeeWayExtensionDevReload.ps1
+powershell -File .\scripts\Invoke-LeeWayExtensionReleasePackage.ps1
+```
+
+The release packaging lane is separate from the dev-host lane and is expected to write build, packaging, install, runtime, and closure evidence under `agent-lee/vscode-extension/test-evidence`.
+
+## Repository Author
 
 **Leonard Lee**  
 Freelance Full-Stack Developer and AI Systems Architect  

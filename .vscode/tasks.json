@@ -1,0 +1,57 @@
+{
+  "leeway": {
+    "LEEWAY_HEADER": "DO NOT REMOVE",
+    "REGION": "CORE",
+    "TAG": "CORE.RUNTIME.EXTENSION.TASKS",
+    "DISCOVERY_PIPELINE": "Voice -> Intent -> Location -> Vertical -> Ranking -> Render"
+  },
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "agent-lee: compile extension",
+      "type": "shell",
+      "command": "npm.cmd",
+      "args": [
+        "run",
+        "compile"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/agent-lee/vscode-extension"
+      },
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "agent-lee: dev reload",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionDevReload.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/agent-lee/vscode-extension"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "agent-lee: release package",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/agent-lee/vscode-extension/scripts/Invoke-LeeWayExtensionReleasePackage.ps1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/agent-lee/vscode-extension"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

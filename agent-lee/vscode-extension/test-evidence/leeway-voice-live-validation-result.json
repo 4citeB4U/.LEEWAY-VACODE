@@ -1,0 +1,11 @@
+﻿{
+    "gate":  "LEEWAY_VOICE_LIVE_VALIDATION",
+    "generatedAt":  "2026-05-17T23:44:06.8055274-05:00",
+    "routePolicyTruth":  "PASS",
+    "transcriptBridgeTruth":  "PASS",
+    "humanAudibleTruth":  "PARTIAL",
+    "voiceAuthorityTruth":  "LEEWAY_VOICE_READY",
+    "humanAudibleProofMissing":  true,
+    "finalVerdict":  "PARTIAL",
+    "limitation":  "This harness executes the generated webview HTML and inline script in JSDOM and simulates host lifecycle updates. It proves route invocation, governed controls, lifecycle hydration, and visible error surfacing, but it does not confirm that a human heard OS audio in a live VS Code renderer."
+}

@@ -1,0 +1,222 @@
+{
+  "date": "2026-05-17T18:44:28.709Z",
+  "packageVersion": "1.2.10",
+  "sourcePath": "C:\\Users\\Leona\\.leeway-vscode\\agent-lee\\vscode-extension\\src\\extension.ts",
+  "checks": [
+    {
+      "name": "webview HTML can be generated",
+      "ok": true,
+      "details": {
+        "htmlLength": 238057
+      }
+    },
+    {
+      "name": "inline script parses",
+      "ok": true,
+      "details": {
+        "pageErrors": []
+      }
+    },
+    {
+      "name": "boot posts agentLeeUiReady",
+      "ok": true,
+      "details": {
+        "postedCommands": [
+          "agentLeeUiReady"
+        ]
+      }
+    },
+    {
+      "name": "Settings button opens expected path",
+      "ok": true,
+      "details": {
+        "className": "settings-backdrop open"
+      }
+    },
+    {
+      "name": "History button opens expected path",
+      "ok": true,
+      "details": {
+        "className": "history-drawer open"
+      }
+    },
+    {
+      "name": "New Chat emits expected command",
+      "ok": true,
+      "details": {
+        "message": {
+          "command": "newConversation"
+        }
+      }
+    },
+    {
+      "name": "Attachments emits expected command",
+      "ok": true,
+      "details": {
+        "message": {
+          "command": "pickAttachments"
+        }
+      }
+    },
+    {
+      "name": "Send emits sendMessage",
+      "ok": true,
+      "details": {
+        "message": {
+          "command": "sendMessage",
+          "text": "Agent Lee, prove the Runtime Truth Layer send path is alive.",
+          "attachments": []
+        }
+      }
+    },
+    {
+      "name": "host has handler for sendMessage",
+      "ok": true,
+      "details": {
+        "handled": true
+      }
+    },
+    {
+      "name": "no missing host handlers for core UI commands",
+      "ok": true,
+      "details": {
+        "missingHostHandlers": []
+      }
+    },
+    {
+      "name": "no script boot exception from missing workflowShell/workflowChevron",
+      "ok": true,
+      "details": {
+        "pageErrors": []
+      }
+    }
+  ],
+  "postedMessages": [
+    {
+      "command": "agentLeeUiReady"
+    },
+    {
+      "command": "newConversation"
+    },
+    {
+      "command": "pickAttachments"
+    },
+    {
+      "command": "sendMessage",
+      "text": "Agent Lee, prove the Runtime Truth Layer send path is alive.",
+      "attachments": []
+    }
+  ],
+  "handledCommands": [
+    "activateClonedVoice",
+    "agentLeeUiAction",
+    "agentLeeUiError",
+    "agentLeeUiReady",
+    "agentLeeUiResponse",
+    "agentVmDiagnosticEvent",
+    "agentVmDiagnosticRecorded",
+    "analyze",
+    "answer",
+    "approval",
+    "approval_wait",
+    "approveAllProposedEdits",
+    "approvePlan",
+    "approvePluginCall",
+    "approveProposedEdit",
+    "ask",
+    "askLocalModel",
+    "attachmentsPicked",
+    "cancelPluginCall",
+    "clearChat",
+    "document",
+    "engineerTask",
+    "execute",
+    "executePlan",
+    "execute_now",
+    "history",
+    "inspect",
+    "installPyCharmTools",
+    "interruptTask",
+    "leewayStartTranscriptBridge",
+    "leewayVoiceEvent",
+    "leewayVoiceInterruptRequested",
+    "leewayVoiceMuteToggled",
+    "leewayVoiceSettingsChanged",
+    "leewayVoiceStatusChanged",
+    "leewayVoiceStopRequested",
+    "leewayVoiceTestRequested",
+    "leewayVoiceToolCompleted",
+    "leewayVoiceTurnCommit",
+    "loadConversation",
+    "loadedConversation",
+    "loading",
+    "modelOptions",
+    "muteVoice",
+    "newConversation",
+    "openReadme",
+    "openReceipts",
+    "openReport",
+    "openTaskFile",
+    "paused",
+    "pickAttachments",
+    "pickVoiceReference",
+    "pluginConfirmation",
+    "pluginConfirmationCleared",
+    "progress",
+    "queued",
+    "ready",
+    "refreshCatalog",
+    "refreshRuntime",
+    "rejectPlan",
+    "rejectProposedEdit",
+    "response",
+    "resume",
+    "resumeParkedTask",
+    "reviewProposedEdit",
+    "runtimeInfo",
+    "runtimeStatus",
+    "runtime_wait",
+    "savePlan",
+    "saveVoiceCloneSettings",
+    "scanSelf",
+    "scanWorkspace",
+    "sendMessage",
+    "setPerformanceProfile",
+    "setState",
+    "status",
+    "steer",
+    "stopTask",
+    "stopVoice",
+    "talkOn",
+    "taskState",
+    "testClonedVoice",
+    "transcribeVoiceReference",
+    "updateAgentLeeNow",
+    "updateTaskPrompt",
+    "useBundledReferenceVoice",
+    "verify",
+    "verifySelf",
+    "verifyWorkspace",
+    "visibleRuntimeState",
+    "voiceAlActivateDefault",
+    "voiceAlCatalogUpdate",
+    "voiceAlCloneAndPreview",
+    "voiceAlDeleteVoice",
+    "voiceAlPickAudio",
+    "voiceAlRecordMic",
+    "voiceAlSaveClone",
+    "voiceAlSetActive",
+    "voiceAlTestDefault",
+    "voiceAlTestVoice",
+    "voiceCloneStatus",
+    "voiceReferencePicked",
+    "voiceReferenceTranscribed"
+  ],
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-runtime-truth-2026-05-15"
+  ],
+  "passed": 11,
+  "failed": 0,
+  "limitation": "This harness executes the generated webview HTML and inline script dynamically in JSDOM with a simulated vscode.postMessage bridge. It does not launch a full VS Code GUI renderer."
+}

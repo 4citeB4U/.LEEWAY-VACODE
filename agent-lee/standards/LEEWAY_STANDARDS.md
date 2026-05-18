@@ -81,6 +81,9 @@ Supporting references:
 - [Packaged validation guide](../docs/Agent-Lee-Packaged-Validation.md)
 - [GitHub policy](../github/GITHUB_POLICY.md)
 - [MCP adapters README](../mcp/adapters/README.md)
+- [LeeWay governance law set](../../references/law-set.md)
+- [LeeWay proposal-before-mutation reference](../../references/proposal-before-mutation.md)
+- [LeeWay audit checks reference](../../references/audit-checks.md)
 
 ## Governance Principles
 
@@ -137,7 +140,7 @@ The application uses a multi-role model hive instead of pretending one model sho
 If those exact models are unavailable, the runtime may fall back to compatible installed alternatives.
 
 Voice is equally governed.
-The locked local speech target is the male Piper model documented in the voice lock, and the voice experience should remain consistent with the same production tuning unless an explicit re-audition is approved.
+The locked local speech target is the LeeWay-owned live clone route documented in the voice lock, and the voice experience should remain consistent with that governed route order unless an explicit re-audition is approved.
 
 ## Memory, Receipts, And Verification
 

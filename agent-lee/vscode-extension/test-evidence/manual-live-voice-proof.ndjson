@@ -1,0 +1,22 @@
+﻿{"eventType":"LEEWAY_VOICE_STATUS_CHANGED","timestamp":"2026-05-16T10:48:05.6375862-05:00","detail":"Agent Lee live voice proof check.","status":"LeeWay live voice clone route received a speak request."}
+
+{"eventType":"LEEWAY_VOICE_STATUS_CHANGED","timestamp":"2026-05-16T10:52:28.9505030-05:00","detail":"Agent Lee live voice proof check.","status":"LeeWay live voice clone route received a speak request."}
+
+{"eventType":"LEEWAY_VOICE_PLAYBACK_STARTED","timestamp":"2026-05-16T10:56:23.6485189-05:00","status":"LeeWay live voice playback is starting.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-4315b08ed5ec4600b2293484745303da.wav"}
+
+{"eventType":"LEEWAY_VOICE_FIRST_AUDIO","timestamp":"2026-05-16T10:56:23.6500420-05:00","firstAudioLatencyMs":234813.04,"status":"LeeWay live voice produced its first playable artifact.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-4315b08ed5ec4600b2293484745303da.wav"}
+
+{"eventType":"LEEWAY_VOICE_SEGMENT_PLAYED","timestamp":"2026-05-16T10:56:24.6511770-05:00","firstAudioLatencyMs":234813.04,"status":"LeeWay live voice segment played.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-4315b08ed5ec4600b2293484745303da.wav"}
+
+{"eventType":"LEEWAY_VOICE_PLAYBACK_COMPLETED","timestamp":"2026-05-16T10:56:24.6511770-05:00","firstAudioLatencyMs":234813.04,"status":"LeeWay live voice playback completed.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-4315b08ed5ec4600b2293484745303da.wav"}
+
+{"eventType":"LEEWAY_VOICE_STATUS_CHANGED","timestamp":"2026-05-16T10:57:23.9009590-05:00","detail":"Agent Lee live voice proof check.","status":"LeeWay live voice clone route received a speak request."}
+
+{"eventType":"LEEWAY_VOICE_PLAYBACK_STARTED","timestamp":"2026-05-16T11:01:19.2378748-05:00","status":"LeeWay live voice playback is starting.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-41b186718fd0422fa3c8b5f8b7845687.wav"}
+
+{"eventType":"LEEWAY_VOICE_FIRST_AUDIO","timestamp":"2026-05-16T11:01:19.2399034-05:00","firstAudioLatencyMs":235452.08,"status":"LeeWay live voice produced its first playable artifact.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-41b186718fd0422fa3c8b5f8b7845687.wav"}
+
+{"eventType":"LEEWAY_VOICE_SEGMENT_PLAYED","timestamp":"2026-05-16T11:01:20.2337850-05:00","firstAudioLatencyMs":235452.08,"status":"LeeWay live voice segment played.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-41b186718fd0422fa3c8b5f8b7845687.wav"}
+
+{"eventType":"LEEWAY_VOICE_PLAYBACK_COMPLETED","timestamp":"2026-05-16T11:01:20.2343066-05:00","firstAudioLatencyMs":235452.08,"status":"LeeWay live voice playback completed.","audioBytes":43564,"outputPath":"C:\\Users\\Leona\\AppData\\Local\\Temp\\agent-lee-cloned-41b186718fd0422fa3c8b5f8b7845687.wav"}
+

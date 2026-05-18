@@ -36,7 +36,14 @@ const SELF_SCAN_EXCLUSIONS = [
   "agent_lee_persona_system/00_readme.md",
   "agent-lee-leeway-coding-system-READY-STABLE.vsix",
   "sdk/leeway-sdk",
-  "scratch_verify_scanner.ts"
+  "scratch_verify_scanner.ts",
+  ".vscode/extensions.json",
+  "auto_update_fix_summary.md",
+  "auto_update_implementation_complete.md",
+  "agent-lee/vscode-extension/receipts",
+  "agent-lee/vscode-extension/src/types",
+  "agent-lee/sdk/schemas",
+  "agent-lee/sdk/leeway-sdk"
 ];
 
 const DISCOVERY_PIPELINE = "Voice → Intent → Location → Vertical → Ranking → Render";
@@ -96,6 +103,7 @@ export function isGovernedLeeWayFile(filePath: string, root: string, mode: "self
     // Exclude voice models metadata and schemas
     if (relative.startsWith("voice/models/") && relative.endsWith(".onnx.json")) return false;
     if (relative.startsWith("sdk/schemas/") && relative.endsWith(".json")) return false;
+    if (relative.endsWith(".d.ts")) return false;
 
     // Explicit exclusions for Agent Lee standalone runtime
     if (SELF_SCAN_EXCLUSIONS.some(ex => relative === ex.toLowerCase() || relative.startsWith(ex.toLowerCase() + "/"))) {

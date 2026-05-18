@@ -25,7 +25,12 @@ export type LeeWayIdentityFamily =
   | "AUTHORITY"
   | "QUARANTINE"
   | "TRACE"
-  | "CLASS";
+  | "CLASS"
+  | "PULSE"
+  | "OBJECT"
+  | "ORIGIN"
+  | "WATERMARK"
+  | "INDUCTION";
 
 export type LeeWayIdentityRecordType =
   | "LAYER"
@@ -89,7 +94,7 @@ export interface LeeWaySovereignLayerAnatomy {
   subIds: string[];
 }
 
-export const LEEWAY_IDENTITY_MESH_VERSION = "2026-05-14.tracer-pack-pass-1";
+export const LEEWAY_IDENTITY_MESH_VERSION = "2026-05-16.identity-pulse-pass-1";
 
 export const LEEWAY_ID_FAMILIES: LeeWayIdentityFamily[] = [
   "APP",
@@ -109,7 +114,12 @@ export const LEEWAY_ID_FAMILIES: LeeWayIdentityFamily[] = [
   "AUTHORITY",
   "QUARANTINE",
   "TRACE",
-  "CLASS"
+  "CLASS",
+  "PULSE",
+  "OBJECT",
+  "ORIGIN",
+  "WATERMARK",
+  "INDUCTION"
 ];
 
 const ROOT_ACTOR_ID = "LEEWAY_ACTOR::HUMAN::OWNER::LEONARD_J_LEE";
@@ -357,6 +367,64 @@ const anatomyRecords = LEEWAY_SOVEREIGN_LAYER_ANATOMY.flatMap((layer) => [
 
 export const LEEWAY_IDENTITY_MESH_RECORDS: LeeWayIdentityRecord[] = [
   ...anatomyRecords,
+  record({
+    id: "LEEWAY_PULSE::APPLICATION::AGENT_LEE",
+    idType: "TRACE",
+    name: "LeeWay identity pulse application root",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    node: "APPLICATION_ROOT",
+    classification: "PULSE_RECORD",
+    status: "ACTIVE",
+    outputs: ["agent-lee/governance/identity/leeway-identity-pulse.json"]
+  }),
+  record({
+    id: "LEEWAY_OBJECT::FILE::IDENTITY_PULSE_REGISTRY",
+    idType: "FILE",
+    name: "LeeWay identity pulse registry file",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    node: "REGISTRY_FILE",
+    classification: "PULSE_OBJECT",
+    status: "ACTIVE",
+    outputs: ["agent-lee/governance/identity/leeway-identity-pulse.json"]
+  }),
+  record({
+    id: "LEEWAY_ORIGIN::LEEWAY_BORN::PASS1",
+    idType: "CLASS",
+    name: "LeeWay born origin class",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    node: "ORIGIN_LEEWAY_BORN",
+    classification: "ORIGIN_STATUS",
+    status: "ACTIVE"
+  }),
+  record({
+    id: "LEEWAY_WATERMARK::LEEWAY_BORN::SOURCE_FILE",
+    idType: "CLASS",
+    name: "LeeWay born watermark source file rule",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    node: "WATERMARK_SOURCE_FILE",
+    classification: "WATERMARK_RULE",
+    status: "ACTIVE"
+  }),
+  record({
+    id: "LEEWAY_INDUCTION::FOREIGN_FILE::PASS1",
+    idType: "TRACE",
+    name: "Foreign file induction pass 1",
+    owner: "LEEWAY",
+    domain: "GOVERNANCE",
+    pipeline: "IDENTITY_PULSE",
+    node: "FOREIGN_FILE_INDUCTION",
+    classification: "INDUCTION_RULE",
+    status: "ACTIVE",
+    outputs: ["temporary_id", "hash", "verification", "receipt"]
+  }),
   record({
     id: "LEEWAY_FILE::GOVERNANCE::IDENTITY_MESH_REGISTRY",
     idType: "FILE",

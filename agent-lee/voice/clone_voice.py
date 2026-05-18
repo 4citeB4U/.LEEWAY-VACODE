@@ -1,6 +1,21 @@
+"""
+LEEWAY_HEADER - DO NOT REMOVE
+
+REGION: CORE
+TAG: CORE.AGENT_LEE.VOICE.CLONE_SCRIPT
+DISCOVERY_PIPELINE: Voice -> Intent -> Location -> Vertical -> Ranking -> Render
+PURPOSE: LeeWay-owned local F5-TTS clone entrypoint for Agent Lee speech synthesis.
+"""
+
 import argparse
 import os
+import tempfile
 import soundfile as sf
+
+NUMBA_CACHE_DIR = os.path.join(tempfile.gettempdir(), "agent-lee-numba-cache")
+os.makedirs(NUMBA_CACHE_DIR, exist_ok=True)
+os.environ.setdefault("NUMBA_CACHE_DIR", NUMBA_CACHE_DIR)
+
 from f5_tts.api import F5TTS
 
 def main():

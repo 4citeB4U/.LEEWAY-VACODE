@@ -1,0 +1,192 @@
+{
+  "gate": "LEEWAY_RUNTIME_TRUTH_LIVE_VOICE_AUDIBLE_OUTPUT",
+  "generatedAt": "2026-05-17T18:44:31.487Z",
+  "packageVersion": "1.2.10",
+  "checks": [
+    {
+      "name": "voice controls render with LeeWay IDs",
+      "ok": true,
+      "details": {
+        "requiredControls": [
+          "LEEWAY_APP::UI::VOICE_CONTROL::VOICE_ENABLED",
+          "LEEWAY_APP::UI::VOICE_CONTROL::MUTE_TOGGLE",
+          "LEEWAY_APP::UI::VOICE_CONTROL::STOP_SPEAKING",
+          "LEEWAY_APP::UI::VOICE_CONTROL::TEST_VOICE",
+          "LEEWAY_APP::UI::VOICE_CONTROL::AUTO_SPEAK_RESPONSES",
+          "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_RATE",
+          "LEEWAY_APP::UI::VOICE_CONTROL::SPEECH_VOLUME"
+        ]
+      }
+    },
+    {
+      "name": "voice settings hydrate",
+      "ok": true,
+      "details": {
+        "voiceEnabledText": "Voice Enabled",
+        "voiceAutoSpeak": true,
+        "voiceRate": "1.1",
+        "voiceVolume": "0.75"
+      }
+    },
+    {
+      "name": "Test Voice emits the correct command",
+      "ok": true,
+      "details": {
+        "messages": [
+          {
+            "command": "leewayVoiceTestRequested",
+            "text": "This is Agent Lee using the developer cloned voice path inside LeeWay."
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stop Speaking emits the correct command",
+      "ok": true,
+      "details": {
+        "messages": [
+          {
+            "command": "leewayVoiceStopRequested"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Mute toggle emits the correct command",
+      "ok": true,
+      "details": {
+        "messages": [
+          {
+            "command": "leewayVoiceMuteToggled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "speech rate and volume controls emit state updates",
+      "ok": true,
+      "details": {
+        "messages": [
+          {
+            "command": "leewayVoiceSettingsChanged",
+            "key": "voiceAutoSpeak",
+            "value": false
+          },
+          {
+            "command": "leewayVoiceSettingsChanged",
+            "key": "voiceRate",
+            "value": 1.25
+          },
+          {
+            "command": "leewayVoiceSettingsChanged",
+            "key": "voiceVolume",
+            "value": 0.9
+          }
+        ]
+      }
+    },
+    {
+      "name": "live voice route produces multi-segment plan proof",
+      "ok": true,
+      "details": {
+        "routeId": "leeway.voice.primary.clone.live",
+        "segments": [
+          "Agent Lee is proving multi segment playback here.",
+          "The response is intentionally long enough to require more than one live clone",
+          "segment."
+        ],
+        "supportsMultiSegment": true,
+        "reason": "LeeWay live route can emit multiple segments."
+      }
+    },
+    {
+      "name": "live voice route produces an audio-ready lifecycle event",
+      "ok": true,
+      "details": {
+        "statusText": "Voice: On | route=leeway.voice.primary.clone.live | first-audio=187ms | segments=2/2",
+        "proofText": "LeeWay live voice completed 2/2 segments."
+      }
+    },
+    {
+      "name": "first-audio latency is recorded",
+      "ok": true,
+      "details": {
+        "statusText": "Voice: On | route=leeway.voice.primary.clone.live | first-audio=187ms | segments=2/2",
+        "proofText": "LeeWay live voice completed 2/2 segments."
+      }
+    },
+    {
+      "name": "multi-segment playback state machine completes",
+      "ok": true,
+      "details": {
+        "statusText": "Voice: On | route=leeway.voice.primary.clone.live | first-audio=187ms | segments=2/2",
+        "proofText": "LeeWay live voice completed 2/2 segments."
+      }
+    },
+    {
+      "name": "failure path surfaces visible error",
+      "ok": true,
+      "details": {
+        "errorText": "Clone engine failed to produce a playable audio artifact."
+      }
+    }
+  ],
+  "postedMessages": [
+    {
+      "command": "agentLeeUiReady"
+    },
+    {
+      "command": "leewayStartTranscriptBridge"
+    },
+    {
+      "command": "leewayVoiceEvent",
+      "event": {
+        "type": "LAVR_SESSION_CONNECTED",
+        "timestamp": 1779043471478,
+        "provider": "leeway-agent-voice-local",
+        "lavrSessionId": "lavr-session-mpa4jrzo-3q7vb2"
+      }
+    },
+    {
+      "command": "leewayVoiceEvent",
+      "event": {
+        "type": "LAVR_SESSION_STARTED",
+        "timestamp": 1779043471478,
+        "provider": "leeway-agent-voice-local",
+        "lavrSessionId": "lavr-session-mpa4jrzo-3q7vb2"
+      }
+    },
+    {
+      "command": "leewayVoiceTestRequested",
+      "text": "This is Agent Lee using the developer cloned voice path inside LeeWay."
+    },
+    {
+      "command": "leewayVoiceStopRequested"
+    },
+    {
+      "command": "leewayVoiceMuteToggled"
+    },
+    {
+      "command": "leewayVoiceSettingsChanged",
+      "key": "voiceAutoSpeak",
+      "value": false
+    },
+    {
+      "command": "leewayVoiceSettingsChanged",
+      "key": "voiceRate",
+      "value": 1.25
+    },
+    {
+      "command": "leewayVoiceSettingsChanged",
+      "key": "voiceVolume",
+      "value": 0.9
+    }
+  ],
+  "pageErrors": [],
+  "consoleMessages": [
+    "log: UI version: chat-ui-runtime-truth-2026-05-16"
+  ],
+  "passed": 11,
+  "failed": 0,
+  "limitation": "This harness executes the generated webview HTML and inline script in JSDOM and simulates host lifecycle updates. It proves route invocation, governed controls, lifecycle hydration, and visible error surfacing, but it does not confirm that a human heard OS audio in a live VS Code renderer."
+}

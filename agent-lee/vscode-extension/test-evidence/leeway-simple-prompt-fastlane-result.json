@@ -1,0 +1,16 @@
+﻿{
+    "gate":  "LEEWAY_SIMPLE_PROMPT_FASTLANE",
+    "generatedAt":  "2026-05-17T23:43:22.9923928-05:00",
+    "prompt":  "Hello.",
+    "proofScope":  "SOURCE_ONLY",
+    "classification":  "GREETING",
+    "fastLaneUsed":  true,
+    "workspaceScanSkipped":  true,
+    "responseStartedMs":  0,
+    "responseCompletedMs":  0,
+    "sourceHasGreetingClassifier":  true,
+    "sourceHasFastLaneBranch":  true,
+    "sourceHasFastLaneReceipt":  true,
+    "finalVerdict":  "PASS",
+    "limitation":  "This check proves source-governed fast-lane logic and receipt fields. It does not yet execute a live Hello prompt in VS Code."
+}

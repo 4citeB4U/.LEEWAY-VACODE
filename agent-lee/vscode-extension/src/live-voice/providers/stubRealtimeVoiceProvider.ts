@@ -53,6 +53,9 @@ function createLeewayLocalVoiceRuntime(){
   return {
     id:"leeway-agent-voice-local",
     connect:function(){
+      if(state.connected && state.listening && window.agentLeeMicShouldRun){
+        return;
+      }
       clearHealthMonitor();
       resetLeewayVoiceTurnState();
       state.status = "connecting";
@@ -64,7 +67,7 @@ function createLeewayLocalVoiceRuntime(){
       window.agentLeeMicShouldRun = true;
       dispatcher.emit("LAVR_SESSION_CONNECTED", { provider:"leeway-agent-voice-local" });
       dispatcher.emit("LAVR_SESSION_STARTED", { provider:"leeway-agent-voice-local" });
-      setAttachmentMeta("LeeWay Agent Voice local session connected. Transcript bridge: http://127.0.0.1:7671/transcript.", true);
+      setAttachmentMeta("Local transcript bridge is available as a fallback. Voice input will be labeled and governed.", true);
       startHealthMonitor();
     },
     disconnect:function(reason){

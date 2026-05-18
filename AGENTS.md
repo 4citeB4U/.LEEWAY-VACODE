@@ -16,8 +16,12 @@ This repository is governed by LeeWay Standards. Agent Lee must read this file b
 ## Non-negotiable rules
 
 - Do not claim work was completed unless a real edit, command, receipt, or verification exists.
-- All code generation, refactoring, repair, cleanup, and packaging work in this repository must follow the LeeWay Application Standards skill and LeeWay construction law.
+- All code generation, refactoring, repair, cleanup, and packaging work in this repository must follow the LeeWay Application Standards skill, the LeeWay governance model law, and the LeeWay construction law.
+- Before writing code in this repository, identify the LeeWay node, pipeline, classification, owner, affected screen ID, action ID, workflow ID, authority lane, and verification path.
+- Before writing code in this repository, identify the LeeWay node, pipeline, classification, owner, and verification path.
 - Do not create active code, commands, events, routes, files, gates, evidence, receipts, or pipelines without LeeWay identity graph coverage and verification.
+- Do not create active files, commands, events, gates, receipts, or runtime paths without LeeWay identity graph coverage.
+- Run the LeeWay construction law gate, identity graph gate, and application integrity gate before declaring governed work complete.
 - All proposed edits must appear as pending edits before application.
 - Use VS Code public APIs for edit visibility: `WorkspaceEdit`, `DiffEditor`, `CodeLens`, `TextEditorDecorationType`, and WebView messages.
 - Every governed file must include a LeeWay header, valid `REGION`, valid `TAG`, and `DISCOVERY_PIPELINE`.

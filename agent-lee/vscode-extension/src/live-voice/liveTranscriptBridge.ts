@@ -27,6 +27,11 @@ import * as vscode from "vscode";
 import { agentLeeLiveTaskEvents } from "./liveTaskEvents";
 import { performanceGovernor } from "../performance/performanceGovernor";
 import { runtimeBudgetStore } from "../performance/runtimeBudget.store";
+import {
+  containsBlockedStatusPhrase,
+  createVoiceEventId,
+  type LeeWayVoiceBridgeMessage
+} from "../core/voice/leewayVoiceTruth";
 
 export interface TranscriptBridgeOptions {
   port?: number;
@@ -46,9 +51,9 @@ export class AgentLeeTranscriptBridge {
     this.token = options.token;
   }
 
-  start(): Promise<void> {
+  start(): Promise<boolean> {
     if (this.server) {
-      return Promise.resolve();
+      return Promise.resolve(true);
     }
 
     this.server = http.createServer(async (req, res) => {
@@ -67,9 +72,9 @@ export class AgentLeeTranscriptBridge {
         agentLeeLiveTaskEvents.emit(
           "task.started",
           `Local transcript bridge is listening on ${this.host}:${this.port}.`,
-          { severity: "success", speak: true }
+          { severity: "success", speak: false }
         );
-        resolve();
+        resolve(false);
       });
     });
   }
@@ -87,7 +92,7 @@ export class AgentLeeTranscriptBridge {
         agentLeeLiveTaskEvents.emit(
           "task.finished",
           "Local transcript bridge stopped.",
-          { severity: "info", speak: true }
+          { severity: "info", speak: false }
         );
         resolve();
       });
@@ -149,9 +154,23 @@ export class AgentLeeTranscriptBridge {
     }
 
     const body = await readJsonBody(req);
-    const text = String(body.text ?? "").trim();
+    const parsed = parseBridgeMessage(body);
     const budget = runtimeBudgetStore.getBudget();
 
+    if (parsed.type === "VOICE_STATUS") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, accepted: false, classifiedAs: "VOICE_STATUS", status: parsed.status }));
+      return;
+    }
+
+    if (parsed.type === "VOICE_ERROR") {
+      await vscode.commands.executeCommand("agentLee.voiceBridge.handleRuntimeStatus", parsed);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, accepted: false, classifiedAs: "VOICE_ERROR", errorId: parsed.errorId }));
+      return;
+    }
+
+    const text = String(parsed.text || "").trim();
     if (!text) {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ ok: false, error: "Missing transcript text." }));
@@ -167,14 +186,56 @@ export class AgentLeeTranscriptBridge {
       return;
     }
 
-    await vscode.commands.executeCommand(
-      "agentLee.liveVoice.handleTranscript",
-      text
+    const handled = await vscode.commands.executeCommand<boolean>(
+      "agentLee.voiceBridge.handleTranscript",
+      parsed
     );
+    if (!handled) {
+      await vscode.commands.executeCommand(
+        "agentLee.liveVoice.handleTranscript",
+        text
+      );
+    }
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, accepted: true, text }));
+    res.end(JSON.stringify({ ok: true, accepted: true, classifiedAs: "VOICE_TRANSCRIPT", transcriptId: parsed.transcriptId, text }));
   }
+}
+
+function parseBridgeMessage(body: Record<string, unknown>): LeeWayVoiceBridgeMessage {
+  const timestamp = String(body.timestamp || new Date().toISOString());
+  const rawType = String(body.type || "").toUpperCase();
+  const text = String(body.text || body.message || "").trim();
+
+  if (rawType === "STATUS" || rawType === "VOICE_STATUS" || containsBlockedStatusPhrase(text)) {
+    return {
+      type: "VOICE_STATUS",
+      status: String(body.status || "LOCAL_TRANSCRIPT_AVAILABLE") as any,
+      message: text || "Local transcript bridge is available.",
+      timestamp,
+      source: "local-bridge"
+    };
+  }
+
+  if (rawType === "ERROR" || rawType === "VOICE_ERROR") {
+    return {
+      type: "VOICE_ERROR",
+      errorId: String(body.errorId || createVoiceEventId("voice-error")),
+      message: text || "Local transcript bridge error.",
+      timestamp,
+      source: String(body.source || "local-bridge")
+    };
+  }
+
+  return {
+    type: "VOICE_TRANSCRIPT",
+    transcriptId: String(body.transcriptId || createVoiceEventId("voice-transcript")),
+    text,
+    confidence: typeof body.confidence === "number" ? body.confidence : undefined,
+    isFinal: body.isFinal === undefined ? true : Boolean(body.isFinal),
+    timestamp,
+    source: "local-transcript"
+  };
 }
 
 function readJsonBody(

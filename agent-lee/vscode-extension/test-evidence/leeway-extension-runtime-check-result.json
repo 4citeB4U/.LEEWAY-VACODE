@@ -1,0 +1,60 @@
+﻿{
+    "timestamp":  "2026-05-17T23:43:22.6162513-05:00",
+    "identityNodeId":  "LEEWAY_APP::PACKAGE::INSTALLED_CLEANUP::STALE_INSTANCE_QUARANTINE",
+    "fileIdentityId":  "LEEWAY_FILE::SCRIPT::INSTALLED_EXTENSION_CHECK",
+    "sourceVersion":  "1.2.11",
+    "installedVersion":  "1.2.11",
+    "installedPath":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+    "installedCandidates":  [
+                                {
+                                    "path":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+                                    "root":  "C:\\Users\\Leona\\.vscode\\extensions",
+                                    "version":  "1.2.11"
+                                }
+                            ],
+    "duplicateInstallRoots":  [
+                                  "C:\\Users\\Leona\\.vscode\\extensions"
+                              ],
+    "duplicateInstallPaths":  [
+                                  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11"
+                              ],
+    "packageJsonIconPath":  "media/leeway-activity.svg",
+    "packageIconPath":  "media/leeway-standards-logo.png",
+    "readmeAssetPaths":  [
+                             "media/leeway-logo.svg",
+                             "media/leeway-standards-logo.png",
+                             "media/readme-header.png",
+                             "media/readme-system-flow.png"
+                         ],
+    "installedAssetsPresent":  {
+                                   "media/leeway-activity.svg":  true,
+                                   "media/agent-lee-chat-avatar.svg":  true,
+                                   "media/leeway-logo.svg":  true,
+                                   "media/top-right-button-new.png":  true,
+                                   "media/bottom-button-for-agent-lee.png":  true,
+                                   "media/leeway-standards-button.png":  true,
+                                   "media/leeway-standards-logo.png":  true,
+                                   "media/readme-header.png":  true,
+                                   "media/readme-system-flow.png":  true
+                               },
+    "missingInstalledAssets":  [
+
+                               ],
+    "readmeContainsBrandingText":  true,
+    "readmeContainsPairedAdminOS":  true,
+    "readmeContainsRuntimeTruth":  true,
+    "repoRuntimeHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "installedRuntimeHash":  "2AEB3B3A5EBAB5730485E8BEB443E58522415610A76D50C3A50CBFC64C65F426",
+    "staleDetected":  false,
+    "staleReason":  [
+
+                    ],
+    "liveRuntime":  {
+                        "version":  "1.2.11",
+                        "path":  "C:\\Users\\Leona\\.vscode\\extensions\\leeway.agent-lee-leeway-coding-system-1.2.11",
+                        "status":  "activated",
+                        "error":  "",
+                        "logPath":  "C:\\Users\\Leona\\AppData\\Roaming\\Code\\logs\\20260517T233753\\window1\\exthost\\exthost.log"
+                    },
+    "finalVerdict":  "PASS"
+}

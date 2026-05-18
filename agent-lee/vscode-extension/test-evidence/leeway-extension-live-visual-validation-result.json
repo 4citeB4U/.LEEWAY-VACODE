@@ -1,0 +1,153 @@
+{
+  "timestamp": "2026-05-18T04:43:21.063Z",
+  "validationMode": "INSTALLED_EXTENSION",
+  "extensionVersion": "1.2.11",
+  "runtimeSourceMode": "UPDATE_CHANNEL_MANUAL_LOCAL_VSIX",
+  "preferredSurfaceMode": "right_panel",
+  "activityBarIconVisible": true,
+  "activityBarIconNotBlank": true,
+  "sidebarOpened": true,
+  "openSidebarCommandWorked": false,
+  "statusBarVisible": true,
+  "chatAvatarVisible": true,
+  "topRightButtonVisible": true,
+  "bottomButtonVisible": true,
+  "standardsButtonVisible": true,
+  "readmePreviewAvailable": false,
+  "readmeOrderCorrect": false,
+  "readmeHeaderVisible": false,
+  "readmeSystemFlowVisible": false,
+  "runtimeHealthVisible": true,
+  "staleRuntimeDetected": false,
+  "screenshots": [
+    "test-evidence/vscode-live-activitybar-icon.png",
+    "test-evidence/vscode-sidebar-open.png",
+    "test-evidence/vscode-readme-open.png"
+  ],
+  "manualObservationNotes": {
+    "statusBarAriaLabel": "Agent Lee: Ready, Agent Lee runtime status: Ready\nUpdate channel: UPDATE_CHANNEL_MANUAL_LOCAL_VSIX\nInstalled runtime status: current\nAuto-update: AUTO_UPDATE_NOT_AVAILABLE_FOR_LOCAL_VSIX\nClick to open the preferred right-side surface. Run Agent Lee: Diagnose Runtime for the full proof.",
+    "installedRuntimeStatus": "current",
+    "observedInstalledVersion": "1.2.11",
+    "preferredSurfaceUrl": "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/fake.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8",
+    "sidebarTextSample": "Agent Lee Chat\nCurrent conversation\nHistory\nNew Chat\nSettings\nGetting the room set...\n📎\n🎤\nMute\nText, image, audio, and mic input ready.\nMODE: EXECUTE\nMODE: PLAN\nMODE: ASK\nACCESS: DEFAULT\nACCESS: BALANCED\nACCESS: FULL\nMODEL: qwen2.5-coder:14b\nMODEL: qwen2.5-coder:14b\nMODEL: qwen2.5-coder:7b\nMODEL: deepseek-coder-v2:16b\nMODEL: llama3.1:8b\nSend\nAgent Lee enforces LeeWay Standards in every response.\nLocal private runtime",
+    "readmeFrameUrls": [
+      "vscode-file://vscode-app/c:/Users/Leona/AppData/Local/Programs/Microsoft%20VS%20Code/0958016b2a/resources/app/out/vs/code/electron-browser/workbench/workbench.html",
+      "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/index.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8&parentId=1&origin=a3066dfb-2daf-44c5-b9a9-c0e11971290e&swVersion=5&extensionId=leeway.agent-lee-leeway-coding-system&platform=electron&vscode-resource-base-authority=vscode-resource.vscode-cdn.net&parentOrigin=vscode-file%3A%2F%2Fvscode-app",
+      "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/fake.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8"
+    ],
+    "activityBarPngAnalysis": {
+      "width": 48,
+      "height": 48,
+      "totalPixels": 2304,
+      "nonTransparentPixels": 2304,
+      "nonTransparentRatio": 1,
+      "distinctColorCount": 10
+    },
+    "sidebarImages": {
+      "chatAvatar": {
+        "alt": "Agent Lee chat avatar",
+        "visible": true,
+        "src": "https://file%2B.vscode-resource.vscode-cdn.net/c%3A/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.11/media/agent-lee-chat-avatar.svg",
+        "naturalWidth": 150,
+        "naturalHeight": 150,
+        "clientWidth": 32,
+        "clientHeight": 32,
+        "complete": true
+      },
+      "logo": {
+        "alt": "LeeWay logo",
+        "visible": false,
+        "src": "",
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "clientWidth": 0,
+        "clientHeight": 0,
+        "complete": false
+      },
+      "topRight": {
+        "alt": "LeeWay",
+        "visible": true,
+        "src": "https://file%2B.vscode-resource.vscode-cdn.net/c%3A/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.11/media/top-right-button-new.png",
+        "naturalWidth": 136,
+        "naturalHeight": 40,
+        "clientWidth": 99,
+        "clientHeight": 34,
+        "complete": true
+      },
+      "standardsButton": {
+        "alt": "LeeWay Standards button",
+        "visible": true,
+        "src": "https://file%2B.vscode-resource.vscode-cdn.net/c%3A/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.11/media/leeway-standards-button.png",
+        "naturalWidth": 100,
+        "naturalHeight": 79,
+        "clientWidth": 25,
+        "clientHeight": 20,
+        "complete": true
+      },
+      "standardsLogo": {
+        "alt": "LeeWay Standards logo",
+        "visible": true,
+        "src": "https://file%2B.vscode-resource.vscode-cdn.net/c%3A/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.11/media/leeway-standards-logo.png",
+        "naturalWidth": 490,
+        "naturalHeight": 222,
+        "clientWidth": 40,
+        "clientHeight": 18,
+        "complete": true
+      },
+      "bottomButton": {
+        "alt": "Bottom Button",
+        "visible": true,
+        "src": "https://file%2B.vscode-resource.vscode-cdn.net/c%3A/Users/Leona/.vscode/extensions/leeway.agent-lee-leeway-coding-system-1.2.11/media/bottom-button-for-agent-lee.png",
+        "naturalWidth": 189,
+        "naturalHeight": 39,
+        "clientWidth": 97,
+        "clientHeight": 20,
+        "complete": true
+      }
+    },
+    "readmeImages": {
+      "logo": {
+        "alt": "LeeWay Logo",
+        "visible": false,
+        "src": "",
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "clientWidth": 0,
+        "clientHeight": 0,
+        "complete": false
+      },
+      "header": {
+        "alt": "Agent Lee LeeWay Coding System",
+        "visible": false,
+        "src": "",
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "clientWidth": 0,
+        "clientHeight": 0,
+        "complete": false
+      },
+      "systemFlow": {
+        "alt": "Agent Lee System Flow",
+        "visible": false,
+        "src": "",
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "clientWidth": 0,
+        "clientHeight": 0,
+        "complete": false
+      },
+      "standardsLogo": {
+        "alt": "LeeWay Standards Logo",
+        "visible": false,
+        "src": "",
+        "naturalWidth": 0,
+        "naturalHeight": 0,
+        "clientWidth": 0,
+        "clientHeight": 0,
+        "complete": false
+      }
+    },
+    "readmeImageOrder": []
+  },
+  "finalVerdict": "FAIL"
+}

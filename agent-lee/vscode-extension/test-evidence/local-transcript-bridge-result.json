@@ -1,0 +1,50 @@
+{
+  "registeredCommands": [
+    "agentLee.liveVoice.blockFile",
+    "agentLee.liveVoice.currentStatus",
+    "agentLee.liveVoice.emitEvent",
+    "agentLee.liveVoice.handleTranscript",
+    "agentLee.liveVoice.pauseTask",
+    "agentLee.liveVoice.reopenActiveDiff",
+    "agentLee.liveVoice.resumeTask",
+    "agentLee.liveVoice.sessionSummary",
+    "agentLee.liveVoice.speakStatus",
+    "agentLee.liveVoice.startTranscriptBridge",
+    "agentLee.liveVoice.stopSpeaking",
+    "agentLee.liveVoice.stopTranscriptBridge",
+    "agentLee.liveVoice.unblockFile"
+  ],
+  "spoken": [
+    "Local transcript bridge is listening on 127.0.0.1:7671.",
+    "Agent Lee transcript bridge is live. Send transcripts to http://127.0.0.1:7671/transcript.",
+    "Local transcript bridge stopped.",
+    "Agent Lee transcript bridge is stopped."
+  ],
+  "healthStatus": 200,
+  "health": {
+    "ok": true,
+    "service": "agent-lee-transcript-bridge",
+    "running": true
+  },
+  "transcriptStatus": 200,
+  "transcriptResponse": {
+    "ok": true,
+    "accepted": true,
+    "text": "Agent Lee local transcript bridge proof. This came through the local bridge, not browser speech recognition."
+  },
+  "executedCommands": [
+    {
+      "name": "agentLee.liveVoice.handleTranscript",
+      "args": [
+        "Agent Lee local transcript bridge proof. This came through the local bridge, not browser speech recognition."
+      ]
+    },
+    {
+      "name": "agentLee.liveVoice.chat",
+      "args": [
+        "Agent Lee local transcript bridge proof. This came through the local bridge, not browser speech recognition."
+      ]
+    }
+  ],
+  "ok": true
+}

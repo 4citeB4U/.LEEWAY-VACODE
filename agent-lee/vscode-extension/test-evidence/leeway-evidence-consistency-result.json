@@ -1,0 +1,50 @@
+﻿{
+    "gate":  "LEEWAY_EVIDENCE_CONSISTENCY",
+    "generatedAt":  "2026-05-17T23:41:38.7229002-05:00",
+    "status":  "FAIL",
+    "contradictions":  [
+                           {
+                               "id":  "CONTRADICTION::VOICE_ROUTE_PASS_VS_HUMAN_AUDIBLE_PARTIAL",
+                               "severity":  "medium",
+                               "proofScope":  [
+                                                  "LIVE_RUNTIME",
+                                                  "HUMAN_AUDIBLE"
+                                              ],
+                               "detail":  "Voice route policy is healthy, but human-audible proof is still incomplete."
+                           },
+                           {
+                               "id":  "CONTRADICTION::PACKAGE_ICON_VS_ACTIVITYBAR_ICON_CONFLATED",
+                               "severity":  "medium",
+                               "proofScope":  [
+                                                  "SOURCE_ONLY",
+                                                  "INSTALLED_ONLY"
+                                              ],
+                               "detail":  "Evidence vocabulary conflates the Activity Bar icon with the package icon."
+                           },
+                           {
+                               "id":  "CONTRADICTION::README_SOURCE_PASS_VS_LIVE_FAIL",
+                               "severity":  "medium",
+                               "proofScope":  [
+                                                  "SOURCE_ONLY",
+                                                  "LIVE_RUNTIME"
+                                              ],
+                               "detail":  "README source proof passed while live README render proof failed."
+                           }
+                       ],
+    "rules":  [
+                  "Latest live runtime evidence wins over older source/package claims.",
+                  "Source-only proof must be labeled SOURCE_ONLY.",
+                  "Package-only proof must be labeled PACKAGE_ONLY.",
+                  "Installed-directory proof must be labeled INSTALLED_ONLY.",
+                  "Live UI proof must be labeled LIVE_RUNTIME.",
+                  "Actual heard-audio proof must be labeled HUMAN_AUDIBLE.",
+                  "No PASS receipt may survive newer live FAIL evidence."
+              ],
+    "proofLabels":  {
+                        "sourceOnly":  "SOURCE_ONLY",
+                        "packageOnly":  "PACKAGE_ONLY",
+                        "installedOnly":  "INSTALLED_ONLY",
+                        "liveRuntime":  "LIVE_RUNTIME",
+                        "humanAudible":  "HUMAN_AUDIBLE"
+                    }
+}
