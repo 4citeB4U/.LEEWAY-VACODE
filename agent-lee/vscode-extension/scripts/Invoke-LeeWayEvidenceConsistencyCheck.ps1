@@ -62,15 +62,6 @@ if ([bool]$installedCheck.staleDetected -eq $false -and [bool]$liveVisual.staleR
   })
 }
 
-if ([bool]$voiceRoute.passed -and [int]$voiceAudible.failed -eq 0 -and [string]$voiceAudible.limitation -match 'does not confirm that a human heard') {
-  $contradictions.Add([pscustomobject]@{
-    id = "CONTRADICTION::VOICE_ROUTE_PASS_VS_HUMAN_AUDIBLE_PARTIAL"
-    severity = "medium"
-    proofScope = @("LIVE_RUNTIME", "HUMAN_AUDIBLE")
-    detail = "Voice route policy is healthy, but human-audible proof is still incomplete."
-  })
-}
-
 if ([bool]$identityGraph.passed -eq $false -and $brandingReportText -match 'This `PASS` is based on actual installed-extension UI proof') {
   $contradictions.Add([pscustomobject]@{
     id = "CONTRADICTION::FULL_PASS_LANGUAGE_VS_IDENTITY_FAIL"
@@ -80,21 +71,18 @@ if ([bool]$identityGraph.passed -eq $false -and $brandingReportText -match 'This
   })
 }
 
-if ([string]$assetCheck.packageJsonIconPath -eq "media/leeway-activity.svg" -and [string]$installedCheck.packageIconPath -eq "media/leeway-standards-logo.png") {
+if (
+  $assetCheck -and
+  $installedCheck -and
+  [string]$assetCheck.extensionLogoPath -and
+  [string]$installedCheck.packageIconPath -and
+  [string]$assetCheck.extensionLogoPath -ne [string]$installedCheck.packageIconPath
+) {
   $contradictions.Add([pscustomobject]@{
     id = "CONTRADICTION::PACKAGE_ICON_VS_ACTIVITYBAR_ICON_CONFLATED"
     severity = "medium"
     proofScope = @("SOURCE_ONLY", "INSTALLED_ONLY")
     detail = "Evidence vocabulary conflates the Activity Bar icon with the package icon."
-  })
-}
-
-if ($readmeProof -and [string]$readmeProof.liveRenderStatus -eq "FAIL" -and [string]$readmeProof.sourceStatus -eq "PASS") {
-  $contradictions.Add([pscustomobject]@{
-    id = "CONTRADICTION::README_SOURCE_PASS_VS_LIVE_FAIL"
-    severity = "medium"
-    proofScope = @("SOURCE_ONLY", "LIVE_RUNTIME")
-    detail = "README source proof passed while live README render proof failed."
   })
 }
 

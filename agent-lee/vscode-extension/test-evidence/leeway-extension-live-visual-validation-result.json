@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-18T04:43:21.063Z",
+  "timestamp": "2026-05-18T05:10:56.079Z",
   "validationMode": "INSTALLED_EXTENSION",
   "extensionVersion": "1.2.11",
   "runtimeSourceMode": "UPDATE_CHANNEL_MANUAL_LOCAL_VSIX",
@@ -28,12 +28,12 @@
     "statusBarAriaLabel": "Agent Lee: Ready, Agent Lee runtime status: Ready\nUpdate channel: UPDATE_CHANNEL_MANUAL_LOCAL_VSIX\nInstalled runtime status: current\nAuto-update: AUTO_UPDATE_NOT_AVAILABLE_FOR_LOCAL_VSIX\nClick to open the preferred right-side surface. Run Agent Lee: Diagnose Runtime for the full proof.",
     "installedRuntimeStatus": "current",
     "observedInstalledVersion": "1.2.11",
-    "preferredSurfaceUrl": "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/fake.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8",
+    "preferredSurfaceUrl": "vscode-webview://0m1vf4asd59pqjc9nooec68sefs1ob409k61a49v5aidrs6nfcar/fake.html?id=dc12703c-46f1-4378-8e77-586b18f8a8a3",
     "sidebarTextSample": "Agent Lee Chat\nCurrent conversation\nHistory\nNew Chat\nSettings\nGetting the room set...\n📎\n🎤\nMute\nText, image, audio, and mic input ready.\nMODE: EXECUTE\nMODE: PLAN\nMODE: ASK\nACCESS: DEFAULT\nACCESS: BALANCED\nACCESS: FULL\nMODEL: qwen2.5-coder:14b\nMODEL: qwen2.5-coder:14b\nMODEL: qwen2.5-coder:7b\nMODEL: deepseek-coder-v2:16b\nMODEL: llama3.1:8b\nSend\nAgent Lee enforces LeeWay Standards in every response.\nLocal private runtime",
     "readmeFrameUrls": [
       "vscode-file://vscode-app/c:/Users/Leona/AppData/Local/Programs/Microsoft%20VS%20Code/0958016b2a/resources/app/out/vs/code/electron-browser/workbench/workbench.html",
-      "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/index.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8&parentId=1&origin=a3066dfb-2daf-44c5-b9a9-c0e11971290e&swVersion=5&extensionId=leeway.agent-lee-leeway-coding-system&platform=electron&vscode-resource-base-authority=vscode-resource.vscode-cdn.net&parentOrigin=vscode-file%3A%2F%2Fvscode-app",
-      "vscode-webview://03c2ngjljgm0mkod6mg7o83i6jpfnn0vqmj8b53tsi395d1itqfu/fake.html?id=a8da9b21-9cf4-43ad-a1cc-af9e2cea13b8"
+      "vscode-webview://0m1vf4asd59pqjc9nooec68sefs1ob409k61a49v5aidrs6nfcar/index.html?id=dc12703c-46f1-4378-8e77-586b18f8a8a3&parentId=1&origin=6f00402d-6c15-473c-a5af-a5eba51e30b3&swVersion=5&extensionId=leeway.agent-lee-leeway-coding-system&platform=electron&vscode-resource-base-authority=vscode-resource.vscode-cdn.net&parentOrigin=vscode-file%3A%2F%2Fvscode-app",
+      "vscode-webview://0m1vf4asd59pqjc9nooec68sefs1ob409k61a49v5aidrs6nfcar/fake.html?id=dc12703c-46f1-4378-8e77-586b18f8a8a3"
     ],
     "activityBarPngAnalysis": {
       "width": 48,

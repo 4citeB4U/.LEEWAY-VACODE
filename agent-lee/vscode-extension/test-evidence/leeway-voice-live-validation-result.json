@@ -1,6 +1,6 @@
 ﻿{
     "gate":  "LEEWAY_VOICE_LIVE_VALIDATION",
-    "generatedAt":  "2026-05-17T23:44:06.8055274-05:00",
+    "generatedAt":  "2026-05-18T00:11:42.2014648-05:00",
     "routePolicyTruth":  "PASS",
     "transcriptBridgeTruth":  "PASS",
     "humanAudibleTruth":  "PARTIAL",

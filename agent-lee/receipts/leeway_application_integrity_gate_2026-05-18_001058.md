@@ -1,0 +1,32 @@
+﻿# LeeWay Application Integrity Gate Receipt
+
+- Generated: 2026-05-18T00:11:41.2871899-05:00
+- Gate: LEEWAY_APPLICATION_INTEGRITY_GATE
+- Extension: C:\Users\Leona\.leeway-vscode\agent-lee\vscode-extension
+- Result: FAIL
+- Total checks: 20
+- Failed checks: 5
+- Evidence JSON: C:\Users\Leona\.leeway-vscode\agent-lee\vscode-extension\test-evidence\leeway-application-integrity-result.json
+- VSIX: C:\Users\Leona\.leeway-vscode\agent-lee\vscode-extension\agent-lee-leeway-coding-system-1.2.11.vsix
+- Doctor report: C:\Users\Leona\.leeway-vscode\reports\Doctor\doctor-20260518-001130\agent-lee-doctor.json
+
+- [PASS] npm run compile: Exit code: 0
+- [PASS] runtime-smoke-voice-provider-harness: Exit code: 0
+- [FAIL] runtime-truth-webview-button-bridge-harness: Exit code: 1
+- [PASS] runtime-truth-live-voice-route-harness: Exit code: 0
+- [FAIL] runtime-truth-live-voice-audible-output-harness: Exit code: 1
+- [PASS] lavr-host-router-dynamic-harness: Exit code: 0
+- [PASS] lavr-playback-gate-dynamic-harness: Exit code: 0
+- [FAIL] npx vsce package --allow-star-activation: Exit code: 1
+- [PASS] VSIX exists after packaging: C:\Users\Leona\.leeway-vscode\agent-lee\vscode-extension\agent-lee-leeway-coding-system-1.2.11.vsix
+- [FAIL] VSIX stale artifact and cloud-provider leakage scan: Hits: 6; Files: 435
+- [PASS] runtime truth hash attestation: Package version: 1.2.11; Repo/VSIX hash match: True
+- [PASS] runtime truth installed hash attestation: Installed runtime status: current
+- [PASS] command emitted-vs-handled audit: Missing handlers: 0
+- [PASS] application identity graph gate: Failed checks: 0; Registered nodes: 139; Registered files: 86
+- [PASS] identity pulse gate: Failed checks: 0; Objects tracked: 383; Unknown audit files: 30
+- [PASS] construction law gate: Failed checks: 0; Total checks: 12
+- [PASS] identity mesh gate: Failed checks: 0; Registered records: 107; Sovereign layers: 8
+- [PASS] tracer pack gate: Failed checks: 0; Tracer IDs: 10
+- [PASS] doctor baseline: Exit code: 0
+- [FAIL] LeeWay compliance scan: Failed checks: 7; LeeWay score: 93.17; Blocking files: 25
